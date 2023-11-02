@@ -1,0 +1,18 @@
+License agreement
+
+The copyright of "NetRadio" belongs to the author of this software, Wilhelm Happe
+
+With installing, copying or any other use of "NetRadio" you are accepting this
+license agreement.
+
+1. Terms of use
+"NetRadio" is freeware. You may use this software without charge for any purpose, including commercial use, without time limit.
+
+2. Copying
+You may give away exact copies of this software, as long as you do not modify the original contents of the package (adding or removing files, changing file contents) and do not charge a fee for the distribution, except an appropriate fee for the media. You may not bundle this software with a commercial program or program collection without express written consent of the author.
+
+3. Support
+You are not entitled for support by the author. Nevertheless the author will try to help on any questions regarding the program. Support is solely offered by email.
+
+4. NO WARRANTY
+USAGE OF THE PRORAM "NetRadio" IS AT YOUR OWN RISK! IN NO EVENT WILL THE AUTHOR WILHELM HAPPE BE LIABLE FOR ANY DAMAGE CAUSED BY THE USE OR THE DISTRIBUTION OF THE PROGRAM "NetRadio". IN NO CASE THE AUTHOR CAN BE HELD RESPONSIBLE FOR LOST PROFIT, LOST DATA OR DIRECT OR CONSEQUENTIAL DAMAGE TO HARD- OR SOFTWARE CAUSED BY THE USE OF OR THE IMPOSSIBILITY TO USE THE SOFTWARE.
