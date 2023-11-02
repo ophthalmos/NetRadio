@@ -1,0 +1,17 @@
+Lizenzvereinbarung
+
+Das Copyright an "NetRadio" liegt bei dem Autor dieser Software, Wilhelm Happe.
+
+Mit der Installation, der Vervielfältigung oder anderweitigen Verwendung von "NetRadio" stimmen Sie dieser Lizenzvereinbarung zu.
+
+1. Nutzungserlaubnis
+"NetRadio" ist Freeware. Sie sind berechtigt, das Programm kostenlos und zeitlich uneingeschränkt sowohl privat als auch geschäftlich zu nutzen.
+
+2. Vervielfältigung
+Sie sind berechtigt, dieses Programm inklusive aller zugehörigen Dateien an Dritte weiterzugeben, solange Sie exakte Kopien ohne Veränderung (Weglassen oder Hinzufügen von Dateien, Änderungen an den Dateien) anfertigen und keinerlei Gebühren für die Weitergabe verlangen, außer gegebenenfalls einer angemessenen Kostenpauschale für den Datenträger. Sie dürfen dieses Programm keinem kommerziellen Programm oder einer Programmsammlung beilegen, außer mit schriftlicher Erlaubnis des Autors.
+
+3. Support
+Sie haben keinen Anspruch auf Produktunterstützung ("Support") durch den Autor. Der Autor ist aber bemüht, Supportanfragen zu beantworten. Produktunterstützung wird ausschließlich per Email angeboten.
+
+4. Haftungsausschluss
+DIE BENUTZUNG DES PROGRAMMS "NetRadio" ERFOLGT AUF EIGENE GEFAHR! DER AUTOR WILHELM HAPPE IST NICHT FÜR SCHÄDEN VERANTWORTLICH, DIE DURCH VERWENDUNG ODER VERBREITUNG DER SOFTWARE "NetRadio" VERURSACHT WERDEN. IN KEINEM FALL IST DER AUTOR VERANTWORTLICH FÜR ENTGANGENEN UMSATZ ODER GEWINN, DEN VERLUST VON DATEN SOWIE UNMITTELBARE ODER MITTELBARE FOLGESCHÄDEN AN HARD- UND SOFTWARE, DIE DURCH DEN GEBRAUCH ODER DIE UNMÖGLICHKEIT DES GEBRAUCHS DER SOFTWARE VERURSACHT WURDEN.
