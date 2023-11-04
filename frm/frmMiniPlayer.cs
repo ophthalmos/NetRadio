@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace NetRadio
 {
@@ -12,6 +13,7 @@ namespace NetRadio
     {
         internal static Point MpMousePos => MousePosition; //{  get { return MousePosition; } }
         internal ProgressBarEx MpVolProgBar { get { return volProgressBar; } set { volProgressBar = value; } }
+        internal Button MpBtnAOT { get { return btnAOT; } set { btnAOT = value; } }
         internal ComboBox MpCmBxStations { get { return cmBxStations; } set { cmBxStations = value; } }
         internal Button MpBtnPlay { get { return btnPlayPause; } set { btnPlayPause = value; } }
         internal PictureBox MpPBLevel { get { return pictureBoxLevel; } set { pictureBoxLevel = value; } }
@@ -139,8 +141,11 @@ namespace NetRadio
 
         private void BtnPlayPause_Click(object sender, EventArgs e) { OnPlayPause(null); }
         private void BtnReload_Click(object sender, EventArgs e) { OnPlayerReset(null); }
-        private void CloseToolStripMenuItem_Click(object sender, EventArgs e) { OnFormHide(null); }
-
+        private void CloseToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if ((ModifierKeys & Keys.Shift) == Keys.Shift) { Application.Exit(); }
+            else { OnFormHide(null); }
+        }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
@@ -312,16 +317,16 @@ namespace NetRadio
             else { toolTip.SetToolTip(labelD2, null); } // ToolTip zurücksetzen
         }
 
-        private void ToolTip_Draw(object sender, DrawToolTipEventArgs e)
-        {
-            e.DrawBackground();
-            e.DrawBorder();
-            e.DrawText();
-            System.Reflection.PropertyInfo h = toolTip.GetType().GetProperty("Handle", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            IntPtr handle = (IntPtr)h.GetValue(toolTip); // ToolTip t = (ToolTip)sender;
-            Point location = Cursor.Position;
-            NativeMethods.MoveWindow(handle, location.X + 2, location.Y - 20, e.Bounds.Width, e.Bounds.Height, false);
-        }
+        //private void ToolTip_Draw(object sender, DrawToolTipEventArgs e)
+        //{
+        //    e.DrawBackground();
+        //    e.DrawBorder();
+        //    e.DrawText();
+        //    System.Reflection.PropertyInfo h = toolTip.GetType().GetProperty("Handle", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        //    IntPtr handle = (IntPtr)h.GetValue(toolTip); // ToolTip t = (ToolTip)sender;
+        //    Point location = Cursor.Position;
+        //    NativeMethods.MoveWindow(handle, location.X + 20, location.Y - 20, e.Bounds.Width, e.Bounds.Height, false);
+        //}
 
         private void TimerVolTT_Tick(object sender, EventArgs e)
         {
@@ -410,6 +415,20 @@ namespace NetRadio
                     rightMouseBtnDown = false;
                     btnRestore.Invalidate();
                 }
+            }
+        }
+
+        private void MiniPlayer_Shown(object sender, EventArgs e)
+        {
+            if (TopMost)
+            {
+                btnAOT.Image = Properties.Resources.pinpush;
+                btnAOT.BackColor = Color.Maroon;
+            }
+            else
+            {
+                btnAOT.Image = Properties.Resources.pinout;
+                btnAOT.BackColor = SystemColors.ControlDark;
             }
         }
 
