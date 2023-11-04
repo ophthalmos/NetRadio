@@ -86,7 +86,7 @@
             btnRestore.Size = new System.Drawing.Size(26, 26);
             btnRestore.TabIndex = 2;
             btnRestore.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            toolTip.SetToolTip(btnRestore, "Main Window (Esc)");
+            toolTip.SetToolTip(btnRestore, "Main Window (Esc)\r\nRight-Click or Shift:\r\nQuit Application");
             btnRestore.UseVisualStyleBackColor = false;
             btnRestore.Click += BtnRestore_Click;
             btnRestore.Paint += BtnRestore_Paint;
@@ -159,7 +159,7 @@
             closeToolStripMenuItem.Name = "closeToolStripMenuItem";
             closeToolStripMenuItem.ShortcutKeyDisplayString = "Alt+F4";
             closeToolStripMenuItem.Size = new System.Drawing.Size(242, 22);
-            closeToolStripMenuItem.Text = "Close (🡽Main)";
+            closeToolStripMenuItem.Text = "Close";
             closeToolStripMenuItem.Click += CloseToolStripMenuItem_Click;
             // 
             // volProgressBar
@@ -239,11 +239,6 @@
             btnAOT.UseVisualStyleBackColor = false;
             btnAOT.Click += BtnAOT_Click;
             // 
-            // toolTip
-            // 
-            toolTip.OwnerDraw = true;
-            toolTip.Draw += ToolTip_Draw;
-            // 
             // btnReload
             // 
             btnReload.BackColor = System.Drawing.SystemColors.ControlDark;
@@ -311,6 +306,7 @@
             Activated += MiniPlayer_Activated;
             Deactivate += MiniPlayer_Deactivate;
             FormClosing += MiniPlayer_FormClosing;
+            Shown += MiniPlayer_Shown;
             MouseDoubleClick += MiniPlayer_MouseDoubleClick;
             MouseDown += MiniPlayer_MouseDown;
             panel.ResumeLayout(false);

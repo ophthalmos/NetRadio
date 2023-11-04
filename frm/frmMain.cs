@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
+using System.Diagnostics.Eventing.Reader;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
@@ -222,7 +223,7 @@ namespace NetRadio
                                 if (string.IsNullOrEmpty(xtr.Value)) { strOutputDevice = "Default"; }
                                 else { strOutputDevice = xtr.Value; }
                             }
-                            else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "MiniPlayer")
+                            else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "BalloonTips")
                             {
                                 xtr.MoveToAttribute("Enabled");
                                 if (int.TryParse(xtr.Value, out int intEnabeld)) { cbShowBalloonTip.Checked = showBalloonTip = Convert.ToBoolean(Convert.ToInt16(intEnabeld)); }
@@ -231,8 +232,8 @@ namespace NetRadio
                             else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "AlwaysOnTop")
                             {
                                 xtr.MoveToAttribute("Enabled");
-                                if (int.TryParse(xtr.Value, out int intEnabeld)) { cbAlwaysOnTop.Checked = alwaysOnTop = Convert.ToBoolean(Convert.ToInt16(intEnabeld)); }
-                                else { cbAlwaysOnTop.Checked = false; }
+                                if (int.TryParse(xtr.Value, out int intEnabeld)) { miniPlayer.TopMost = cbAlwaysOnTop.Checked = alwaysOnTop = Convert.ToBoolean(Convert.ToInt16(intEnabeld)); }
+                                else { miniPlayer.TopMost = cbAlwaysOnTop.Checked = false; } // s. MiniPlayer_Shown-Event in frmMiniPlayer.cs
                             }
                             else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "LogHistory")
                             {
@@ -1503,7 +1504,9 @@ namespace NetRadio
             {
                 if (cbAlwaysOnTop.Checked) { alwaysOnTop = true; }
                 else { alwaysOnTop = false; }
-                TopMost = alwaysOnTop;
+                miniPlayer.TopMost = TopMost = alwaysOnTop;
+                miniPlayer.MpBtnAOT.Image = alwaysOnTop ? Properties.Resources.pinpush : Properties.Resources.pinout;
+                miniPlayer.MpBtnAOT.BackColor = alwaysOnTop ? Color.Maroon : SystemColors.ControlDark;
                 somethingToSave = true;
             }
         }
@@ -1688,6 +1691,11 @@ namespace NetRadio
                     }
                 case Keys.Q | Keys.Control: { Close(); return true; } // exitFlag = true;
                 case Keys.F1 | Keys.Control | Keys.Shift: { helpRequested = false; StartXMLFile(xmlPath); return true; }
+                case Keys.F4 | Keys.Control | Keys.Shift:
+                    {
+                        if (Visible && NativeMethods.HitTest(Bounds, Handle, PointToScreen(Point.Empty))) { Hide(); } // "Tray-Modus"
+                    }
+                    return true;
             }
             return base.ProcessCmdKey(ref msg, keyData);
         }
@@ -1746,6 +1754,12 @@ namespace NetRadio
 
         private void FrmMain_FormClosing(object sender, FormClosingEventArgs e)
         {// Form.Closed and Form.Closing events are not raised when the Application.Exit method is called; use Form.Close
+            if (e.CloseReason == CloseReason.UserClosing && ((ModifierKeys & Keys.Shift) == Keys.Shift || (ModifierKeys & Keys.Control) == Keys.Control))
+            {
+                e.Cancel = true;
+                Hide();
+                return;
+            }
             SystemEvents.PowerModeChanged -= new PowerModeChangedEventHandler(PowerMode_Changed);
             timerLevel.Stop();
             spectrumTimer.Stop();
@@ -1796,7 +1810,7 @@ namespace NetRadio
                 xw.WriteAttributeString("Device", strOutputDevice);
                 xw.WriteEndElement(); // für Output
 
-                xw.WriteStartElement("MiniPlayer");
+                xw.WriteStartElement("BalloonTips");
                 xw.WriteAttributeString("Enabled", showBalloonTip == true ? "1" : "0");
                 xw.WriteEndElement(); // für MiniPlayer
 
