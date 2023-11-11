@@ -52,6 +52,10 @@ namespace NetRadio
             return new StringFormat() { Alignment = align, LineAlignment = StringAlignment.Center };
         }
 
+        //public static void TaskDialogMessage(string text, string heading, string caption, TaskDialogIcon icon)
+        //{
+        //    TaskDialog.ShowDialog(Form.ActiveForm, new TaskDialogPage() { Text = text, Heading = heading, Caption = caption, Buttons = { TaskDialogButton.OK, }, Icon = icon});
+        //}
 
         public static string StationLong(string caption)
         {

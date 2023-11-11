@@ -138,6 +138,7 @@ namespace NetRadio
             gbOutput = new GroupBox();
             cmbxOutput = new ComboBox();
             gbMiscel = new GroupBox();
+            cbClose2Tray = new CheckBox();
             cbAutoStopRecording = new CheckBox();
             cbShowBalloonTip = new CheckBox();
             cbAlwaysOnTop = new CheckBox();
@@ -1571,7 +1572,7 @@ namespace NetRadio
             gbAutoRecord.Margin = new Padding(4, 3, 4, 3);
             gbAutoRecord.Name = "gbAutoRecord";
             gbAutoRecord.Padding = new Padding(4, 3, 4, 3);
-            gbAutoRecord.Size = new System.Drawing.Size(121, 53);
+            gbAutoRecord.Size = new System.Drawing.Size(121, 50);
             gbAutoRecord.TabIndex = 6;
             gbAutoRecord.TabStop = false;
             gbAutoRecord.Text = "Scheduled tasks";
@@ -1604,11 +1605,11 @@ namespace NetRadio
             // 
             gbOutput.Controls.Add(cmbxOutput);
             gbOutput.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            gbOutput.Location = new System.Drawing.Point(9, 283);
+            gbOutput.Location = new System.Drawing.Point(9, 286);
             gbOutput.Margin = new Padding(4, 3, 4, 3);
             gbOutput.Name = "gbOutput";
             gbOutput.Padding = new Padding(4, 3, 4, 3);
-            gbOutput.Size = new System.Drawing.Size(378, 53);
+            gbOutput.Size = new System.Drawing.Size(378, 49);
             gbOutput.TabIndex = 5;
             gbOutput.TabStop = false;
             gbOutput.Text = "Output device";
@@ -1630,24 +1631,38 @@ namespace NetRadio
             // gbMiscel
             // 
             gbMiscel.BackColor = System.Drawing.SystemColors.ControlLightLight;
+            gbMiscel.Controls.Add(cbClose2Tray);
             gbMiscel.Controls.Add(cbAutoStopRecording);
             gbMiscel.Controls.Add(cbShowBalloonTip);
             gbMiscel.Controls.Add(cbAlwaysOnTop);
             gbMiscel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            gbMiscel.Location = new System.Drawing.Point(9, 165);
+            gbMiscel.Location = new System.Drawing.Point(9, 159);
             gbMiscel.Margin = new Padding(4, 3, 4, 3);
             gbMiscel.Name = "gbMiscel";
             gbMiscel.Padding = new Padding(4, 3, 4, 3);
-            gbMiscel.Size = new System.Drawing.Size(379, 111);
+            gbMiscel.Size = new System.Drawing.Size(379, 121);
             gbMiscel.TabIndex = 2;
             gbMiscel.TabStop = false;
             gbMiscel.Text = "Miscellaneous";
+            // 
+            // cbClose2Tray
+            // 
+            cbClose2Tray.AutoSize = true;
+            cbClose2Tray.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            cbClose2Tray.Location = new System.Drawing.Point(9, 45);
+            cbClose2Tray.Margin = new Padding(4, 3, 4, 3);
+            cbClose2Tray.Name = "cbClose2Tray";
+            cbClose2Tray.Size = new System.Drawing.Size(355, 23);
+            cbClose2Tray.TabIndex = 4;
+            cbClose2Tray.Text = "Close button minimizes to tray instead of terminating";
+            cbClose2Tray.UseVisualStyleBackColor = true;
+            cbClose2Tray.CheckedChanged += CbClose2Tray_CheckedChanged;
             // 
             // cbAutoStopRecording
             // 
             cbAutoStopRecording.AutoSize = true;
             cbAutoStopRecording.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            cbAutoStopRecording.Location = new System.Drawing.Point(9, 82);
+            cbAutoStopRecording.Location = new System.Drawing.Point(9, 93);
             cbAutoStopRecording.Margin = new Padding(4, 3, 4, 3);
             cbAutoStopRecording.Name = "cbAutoStopRecording";
             cbAutoStopRecording.Size = new System.Drawing.Size(329, 23);
@@ -1660,7 +1675,7 @@ namespace NetRadio
             // 
             cbShowBalloonTip.AutoSize = true;
             cbShowBalloonTip.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            cbShowBalloonTip.Location = new System.Drawing.Point(9, 53);
+            cbShowBalloonTip.Location = new System.Drawing.Point(9, 69);
             cbShowBalloonTip.Margin = new Padding(4, 3, 4, 3);
             cbShowBalloonTip.Name = "cbShowBalloonTip";
             cbShowBalloonTip.Size = new System.Drawing.Size(318, 23);
@@ -1673,7 +1688,7 @@ namespace NetRadio
             // 
             cbAlwaysOnTop.AutoSize = true;
             cbAlwaysOnTop.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            cbAlwaysOnTop.Location = new System.Drawing.Point(9, 24);
+            cbAlwaysOnTop.Location = new System.Drawing.Point(9, 21);
             cbAlwaysOnTop.Margin = new Padding(4, 3, 4, 3);
             cbAlwaysOnTop.Name = "cbAlwaysOnTop";
             cbAlwaysOnTop.Size = new System.Drawing.Size(270, 23);
@@ -1690,7 +1705,7 @@ namespace NetRadio
             gbAutostart.Margin = new Padding(4, 3, 4, 3);
             gbAutostart.Name = "gbAutostart";
             gbAutostart.Padding = new Padding(4, 3, 4, 3);
-            gbAutostart.Size = new System.Drawing.Size(116, 53);
+            gbAutostart.Size = new System.Drawing.Size(116, 50);
             gbAutostart.TabIndex = 0;
             gbAutostart.TabStop = false;
             gbAutostart.Text = "Autostart";
@@ -1718,7 +1733,7 @@ namespace NetRadio
             gbPreselection.Margin = new Padding(4, 3, 4, 3);
             gbPreselection.Name = "gbPreselection";
             gbPreselection.Padding = new Padding(4, 3, 4, 3);
-            gbPreselection.Size = new System.Drawing.Size(123, 53);
+            gbPreselection.Size = new System.Drawing.Size(123, 50);
             gbPreselection.TabIndex = 0;
             gbPreselection.TabStop = false;
             gbPreselection.Text = "Autoplay";
@@ -1757,11 +1772,11 @@ namespace NetRadio
             gbHotkeys.Controls.Add(cmbxHotkey);
             gbHotkeys.Controls.Add(cbHotkey);
             gbHotkeys.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            gbHotkeys.Location = new System.Drawing.Point(9, 69);
+            gbHotkeys.Location = new System.Drawing.Point(9, 66);
             gbHotkeys.Margin = new Padding(4, 3, 4, 3);
             gbHotkeys.Name = "gbHotkeys";
             gbHotkeys.Padding = new Padding(4, 3, 4, 3);
-            gbHotkeys.Size = new System.Drawing.Size(379, 89);
+            gbHotkeys.Size = new System.Drawing.Size(379, 87);
             gbHotkeys.TabIndex = 1;
             gbHotkeys.TabStop = false;
             gbHotkeys.Text = "Global hotkey";
@@ -1770,7 +1785,7 @@ namespace NetRadio
             // 
             lblHKInfo.AutoSize = true;
             lblHKInfo.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            lblHKInfo.Location = new System.Drawing.Point(6, 46);
+            lblHKInfo.Location = new System.Drawing.Point(6, 43);
             lblHKInfo.Margin = new Padding(4, 0, 4, 0);
             lblHKInfo.Name = "lblHKInfo";
             lblHKInfo.Size = new System.Drawing.Size(360, 38);
@@ -1810,7 +1825,7 @@ namespace NetRadio
             // 
             cbHotkey.AutoSize = true;
             cbHotkey.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            cbHotkey.Location = new System.Drawing.Point(9, 21);
+            cbHotkey.Location = new System.Drawing.Point(8, 20);
             cbHotkey.Margin = new Padding(4, 3, 4, 3);
             cbHotkey.Name = "cbHotkey";
             cbHotkey.Size = new System.Drawing.Size(158, 23);
@@ -3130,6 +3145,7 @@ namespace NetRadio
         private Panel panelLevel;
         private ImageList imageList;
         private TabPage tpMiniplayer;
+        private CheckBox cbClose2Tray;
     }
 }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -29,12 +30,17 @@ namespace NetRadio
         public const int WM_NCLBUTTONDBLCLK = 0x00A3;
         public const int SW_SHOWNOACTIVATE = 4; // similar to SW_SHOWNORMAL, except that the window is not activated.
         public const int HT_CAPTION = 0x2;
-        public static readonly int WM_SHOWME = RegisterWindowMessage("WM_SHOWME");
+        public const int WM_COPYDATA = 0x004A;
+
+        public static readonly int WM_SHOWNETRADIO = RegisterWindowMessage("WM_SHOWNETRADIO");
         private delegate bool CallBackPtr(int hwnd, int lParam);
         private static CallBackPtr callBackPtr;
         public static List<IntPtr> enumedwindowPtrs = new();
         public static List<Rectangle> enumedwindowRects = new();
+        private delegate bool EnumThreadDelegate(IntPtr hWnd, IntPtr lParam);
 
+        //public enum MessageFilterInfo : uint { None = 0, AlreadyAllowed = 1, AlreadyDisAllowed = 2, AllowedHigher = 3 }
+        //public enum ChangeWindowMessageFilterExAction : uint { Reset = 0, Allow = 1, DisAllow = 2 }
         private enum KeyStates { None = 0, Down = 1, Toggled = 2 }
 
         private static KeyStates GetKeyState(Keys key)
@@ -73,6 +79,22 @@ namespace NetRadio
             return true;
         }
 
+        public static IEnumerable<IntPtr> EnumerateWinHandles(int processId)
+        {
+            List<IntPtr> handles = new();
+            foreach (ProcessThread thread in Process.GetProcessById(processId).Threads)
+            {
+                EnumThreadWindows(thread.Id, (hWnd, lParam) => { handles.Add(hWnd); return true; }, IntPtr.Zero);
+            }
+            return handles;
+        }
+
+        [DllImport("user32.dll")]
+        public static extern int GetWindowTextLength(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        static extern bool EnumThreadWindows(int dwThreadId, EnumThreadDelegate lpfn, IntPtr lParam);
+
         [DllImport("user32.dll")]
         internal static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
@@ -81,20 +103,20 @@ namespace NetRadio
         [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
         public static extern short GetKeyState(int key);
 
-        //[DllImport("PowrProf.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
-        //public static extern bool SetSuspendState(bool hiberate, bool forceCritical, bool disableWakeEvent);
+        //[DllImport("user32.dll", SetLastError = true)]
+        //public static extern bool ChangeWindowMessageFilterEx(IntPtr hWnd, uint msg, ChangeWindowMessageFilterExAction action, ref CHANGEFILTERSTRUCT changeInfo);
 
-        [DllImport("User32.dll")]
-        public static extern bool MoveWindow(IntPtr h, int x, int y, int width, int height, bool redraw);
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        public static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
 
-        [DllImportAttribute("user32.dll")]
+        [DllImport("user32.dll")]
         public static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
 
-        [DllImportAttribute("user32.dll")]
+        [DllImport("user32.dll")]
         public static extern bool ReleaseCapture();
 
         [DllImport("uxtheme", ExactSpelling = true, CharSet = CharSet.Unicode)]
-        public extern static Int32 SetWindowTheme(IntPtr hWnd, String textSubAppName, String textSubIdList);
+        public static extern int SetWindowTheme(IntPtr hWnd, string textSubAppName, string textSubIdList);
 
         public enum Modifiers : uint { Alt = 0x0001, Control = 0x0002, Shift = 0x0004, Win = 0x0008 }
 
@@ -110,16 +132,11 @@ namespace NetRadio
         [DllImport("wininet.dll", SetLastError = true)]
         public static extern bool InternetGetConnectedState(out int lpdwFlags, int dwReserved);
 
-        //public enum ConnectionStates { Modem = 0x1, LAN = 0x2, Proxy = 0x4, RasInstalled = 0x10, Offline = 0x20, Configured = 0x40, }
-
         [DllImport("user32.dll", SetLastError = true)]
         public static extern int GetWindowLong(IntPtr hWnd, int nIndex);
 
         [DllImport("shell32.dll", CharSet = CharSet.Unicode, ExactSpelling = true, PreserveSig = false)]
         internal static extern string SHGetKnownFolderPath([MarshalAs(UnmanagedType.LPStruct)] Guid rfid, uint dwFlags, IntPtr hToken = default);
-
-        //[DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        //internal static extern IntPtr SendMessage(IntPtr hwnd, int wMsg, int wParam, int lParam);
 
         [DllImport("user32")]
         public static extern bool PostMessage(IntPtr hwnd, int msg, IntPtr wparam, IntPtr lparam);
@@ -171,5 +188,20 @@ namespace NetRadio
             public int Right;       // x position of lower-right corner
             public int Bottom;      // y position of lower-right corner
         }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct COPYDATASTRUCT
+        {
+            public IntPtr dwData; // The data to be passed to the receiving application. This member can be IntPtr.Zero.
+            public int cbData; // The size, in bytes, of the data pointed to by the lpData member.
+            public IntPtr lpData; // The data to be passed to the receiving application. This member can be IntPtr.Zero.
+        }
+
+        //[StructLayout(LayoutKind.Sequential)]
+        //public struct CHANGEFILTERSTRUCT
+        //{
+        //    public uint size;
+        //    public MessageFilterInfo info;
+        //}
     }
 }

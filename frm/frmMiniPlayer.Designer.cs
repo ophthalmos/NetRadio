@@ -86,7 +86,7 @@
             btnRestore.Size = new System.Drawing.Size(26, 26);
             btnRestore.TabIndex = 2;
             btnRestore.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            toolTip.SetToolTip(btnRestore, "Main Window (Esc)\r\nRight-Click or Shift:\r\nQuit Application");
+            toolTip.SetToolTip(btnRestore, "Main Window (Esc)\r\nWith Shift-Key: Exit");
             btnRestore.UseVisualStyleBackColor = false;
             btnRestore.Click += BtnRestore_Click;
             btnRestore.Paint += BtnRestore_Paint;

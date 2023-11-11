@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "NetRadio": {
+      "commandName": "Project",
+      "commandLineArgs": "-f -11 -p"
+    }
+  }
+}

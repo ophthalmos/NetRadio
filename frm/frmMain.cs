@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
-using System.Diagnostics.Eventing.Reader;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
@@ -29,6 +28,8 @@ namespace NetRadio
     public partial class FrmMain : Form
     {
         internal static HttpClient MainHttpClient { get { return httpClient; } }
+        internal static bool MainClose2Tray { get { return close2Tray; } }
+
         private readonly string _myUserAgent = "NetRadio";
         [FixedAddressValueType()]
         internal IntPtr _myUserAgentPtr;
@@ -56,8 +57,10 @@ namespace NetRadio
         private readonly Version _curVersion = Assembly.GetExecutingAssembly().GetName().Version;
         private static bool alwaysOnTop;
         private static bool logHistory = true;
+        private static bool showTrayInfo = true;
         private static bool autoStopRecording;
-        private static bool startMin;
+        private static bool startMini; // Miniplayer Command line
+        private static bool startTray; // TrayModus Command line
         private static bool updateAvailable;
         private bool somethingToSave;
         private bool radioBtnChanged; // ersetzt auf Station-Tab nothingToSave
@@ -65,6 +68,7 @@ namespace NetRadio
         private static readonly string appName = Application.ProductName; // "NetRadio";
         private static readonly string appPath = Application.ExecutablePath; // EXE-Pfad
         private readonly string xmlPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), appName, appName + ".xml");
+        private readonly string bakPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), appName, appName + ".bak");
         private string hkLetter = string.Empty; // Flag für existierenden Hotkey. AUSNAHME: Programmstart
         private static int lastHotkeyPress;
         private int rowIndexFromMouseDown;
@@ -73,7 +77,8 @@ namespace NetRadio
         private int rowIndexOfItemUnderMouseToDrop;
         private string autostartStation;
         private bool firstEmptyStart = false;
-        private bool showBalloonTip = true;
+        private static bool close2Tray = false;
+        private bool showBalloonTip = false;
         private bool keepActionsActive;
         private float channelVolume = 1.0f;
         private readonly int stationSum = 25; // Rows = stationSum * 2
@@ -151,26 +156,26 @@ namespace NetRadio
                 if (_flacPlugIn <= 0)
                 {
                     MessageBox.Show(Utilities.GetErrorDescription(Bass.BASS_ErrorGetCode()), "bassflac.dll", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
+                    Environment.Exit(0); return;
                 }
                 _opusPlugIn = Bass.BASS_PluginLoad("bassopus.dll");
                 if (_opusPlugIn <= 0)
                 {
                     MessageBox.Show(Utilities.GetErrorDescription(Bass.BASS_ErrorGetCode()), "bassopus.dll", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
+                    Environment.Exit(0); return;
                 }
                 _hlsPlugIn = Bass.BASS_PluginLoad("basshls.dll");
                 if (_hlsPlugIn <= 0)
                 {
                     MessageBox.Show(Utilities.GetErrorDescription(Bass.BASS_ErrorGetCode()), "basshls.dll", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
+                    Environment.Exit(0); return;
                 }
                 myStreamCreateURL = new DOWNLOADPROC(MyDownloadProc); // Internet stream download callback function
             }
             else
             {
                 MessageBox.Show("This application failed to start because bass.dll was not found.\nRe-installing the application may fix this problem.", appName, MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+                Environment.Exit(0); return;
             }
 
             Bass.BASS_ChannelGetAttribute(_stream, BASSAttribute.BASS_ATTRIB_VOL, ref channelVolume);
@@ -179,128 +184,147 @@ namespace NetRadio
             lblUpdate.Text = "Current version: " + _curVersion.ToString();
             for (int j = 0; j < stationSum * 4; j++) { dgvStations.Rows.Add("", ""); } // dgvStations.Rows.Add(stationSum); ist wahrscheinlich schlechter, weil Cell.Value = null entsteht
 
-            xmlPath = Utilities.IsInnoSetupValid(Path.GetDirectoryName(appPath)) ? xmlPath : Path.ChangeExtension(appPath, ".xml"); // Portable-Version; prüft auch Debugger.IsAttached
-
             tableActions.Columns.Add("Enabled", typeof(bool));
             tableActions.Columns.Add("Task", typeof(string));
             tableActions.Columns.Add("Station", typeof(string));
             tableActions.Columns.Add("Time", typeof(string));
 
+            if (!Utilities.IsInnoSetupValid(Path.GetDirectoryName(appPath)))  // Portable-Version; prüft auch Debugger.IsAttached
+            {
+                xmlPath = Path.ChangeExtension(appPath, ".xml");
+                bakPath = Path.ChangeExtension(appPath, ".bak");
+            }
+
+            if (File.Exists(xmlPath) && (!File.Exists(bakPath) || File.GetLastWriteTime(bakPath).Date < DateTime.Now.Date.AddDays(-1)))
+            {
+                File.Copy(xmlPath, bakPath, true);
+                File.SetLastWriteTime(bakPath, DateTime.Now);
+            }
 
             if (File.Exists(xmlPath))
             {
-                using (XmlTextReader xtr = new(xmlPath))
+                using XmlTextReader xtr = new(xmlPath);
+                xtr.WhitespaceHandling = WhitespaceHandling.None; // Whitespace zwischen Elementen
+                try
                 {
-                    xtr.WhitespaceHandling = WhitespaceHandling.None; // Whitespace zwischen Elementen
-                    try
+                    int j = 0;
+                    while (xtr.Read())
                     {
-                        int j = 0;
-                        while (xtr.Read())
+                        if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "Station")
                         {
-                            if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "Station")
-                            {
-                                if (j < dgvStations.RowCount)
-                                {// tritt ein wenn der User die Datei außerhalb des Programms editiert oder der Programmier die Zeilenzahl reduziert
-                                    xtr.MoveToAttribute("Name");
-                                    dgvStations.Rows[j].Cells[0].Value = xtr.Value;
-                                    xtr.MoveToAttribute("URL");
-                                    dgvStations.Rows[j].Cells[1].Value = xtr.Value;
-                                }
-                                j++;
+                            if (j < dgvStations.RowCount)
+                            {// tritt ein wenn der User die Datei außerhalb des Programms editiert oder der Programmier die Zeilenzahl reduziert
+                                xtr.MoveToAttribute("Name");
+                                dgvStations.Rows[j].Cells[0].Value = xtr.Value;
+                                xtr.MoveToAttribute("URL");
+                                dgvStations.Rows[j].Cells[1].Value = xtr.Value;
                             }
-                            else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "Hotkey")
+                            j++;
+                        }
+                        else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "Hotkey")
+                        {
+                            xtr.MoveToAttribute("Enabled");
+                            if (int.TryParse(xtr.Value, out int intEnabeld)) { cbHotkey.Checked = lblHotkey.Enabled = cmbxHotkey.Enabled = Convert.ToBoolean(Convert.ToInt16(intEnabeld)); }
+                            else { cbHotkey.Checked = lblHotkey.Enabled = cmbxHotkey.Enabled = false; }
+                            xtr.MoveToAttribute("Letter");
+                            if (string.IsNullOrEmpty(xtr.Value)) { lblHotkey.Enabled = cmbxHotkey.Enabled = cbHotkey.Checked = false; }
+                            else { if (cbHotkey.Checked && new Regex("^[A-Z0-9]$").IsMatch(xtr.Value)) { cmbxHotkey.Text = hkLetter = xtr.Value; } } // You won't be able to register a hotkey before the window is created
+                        }
+                        else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "Output")
+                        {
+                            xtr.MoveToAttribute("Device");
+                            if (string.IsNullOrEmpty(xtr.Value)) { strOutputDevice = "Default"; }
+                            else { strOutputDevice = xtr.Value; }
+                        }
+                        else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "CloseToTray")
+                        {
+                            xtr.MoveToAttribute("Enabled");
+                            if (int.TryParse(xtr.Value, out int intEnabeld)) { cbClose2Tray.Checked = close2Tray = Convert.ToBoolean(Convert.ToInt16(intEnabeld)); }
+                            else { cbClose2Tray.Checked = false; }
+                        }
+                        else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "BalloonTips")
+                        {
+                            xtr.MoveToAttribute("Enabled");
+                            if (int.TryParse(xtr.Value, out int intEnabeld)) { cbShowBalloonTip.Checked = showBalloonTip = Convert.ToBoolean(Convert.ToInt16(intEnabeld)); }
+                            else { cbShowBalloonTip.Checked = false; }
+                        }
+                        else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "AlwaysOnTop")
+                        {
+                            xtr.MoveToAttribute("Enabled");
+                            if (int.TryParse(xtr.Value, out int intEnabeld)) { miniPlayer.TopMost = cbAlwaysOnTop.Checked = alwaysOnTop = Convert.ToBoolean(Convert.ToInt16(intEnabeld)); }
+                            else { miniPlayer.TopMost = cbAlwaysOnTop.Checked = false; } // s. MiniPlayer_Shown-Event in frmMiniPlayer.cs
+                        }
+                        else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "LogHistory")
+                        {
+                            xtr.MoveToAttribute("Enabled");
+                            if (int.TryParse(xtr.Value, out int intEnabeld)) { cbLogHistory.Checked = logHistory = Convert.ToBoolean(Convert.ToInt16(intEnabeld)); }
+                            else { cbLogHistory.Checked = false; }
+                        }
+                        else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "ShowTrayInfo")
+                        {
+                            xtr.MoveToAttribute("Enabled");
+                            if (int.TryParse(xtr.Value, out int intEnabeld)) { showTrayInfo = Convert.ToBoolean(Convert.ToInt16(intEnabeld)); }
+                            else { showTrayInfo = true; }
+                        }
+                        else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "AutoStopRecording")
+                        {
+                            xtr.MoveToAttribute("Enabled");
+                            if (int.TryParse(xtr.Value, out int intEnabeld)) { cbAutoStopRecording.Checked = autoStopRecording = Convert.ToBoolean(Convert.ToInt16(intEnabeld)); }
+                            else { cbAutoStopRecording.Checked = false; }
+                        }
+                        else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "Volume")
+                        {
+                            xtr.MoveToAttribute("Value");
+                            int volume = int.TryParse(xtr.Value, out int intVolume) ? intVolume : (int)channelVolume * 100;
+                            volume = volume > 100 ? 100 : volume < 0 ? 0 : volume;
+                            channelVolume = Convert.ToSingle(volume) / 100f;
+                            Bass.BASS_ChannelSetAttribute(_stream, BASSAttribute.BASS_ATTRIB_VOL, channelVolume);
+                            miniPlayer.MpVolProgBar.Value = volProgressBar.Value = volume;
+                            lblVolume.Text = volProgressBar.Value.ToString();
+                        }
+                        else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "FormLocation")
+                        {
+                            xtr.MoveToAttribute("PosX");
+                            formPosX = xtr.Value;
+                            xtr.MoveToAttribute("PosY");
+                            formPosY = xtr.Value;
+                        }
+                        else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "MiniLocation")
+                        {
+                            xtr.MoveToAttribute("PosX");
+                            miniPosX = xtr.Value;
+                            xtr.MoveToAttribute("PosY");
+                            miniPosY = xtr.Value;
+                        }
+                        else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "Autostart")
+                        {
+                            xtr.MoveToAttribute("Station");
+                            if (int.TryParse(xtr.Value, out int intStation))
                             {
-                                xtr.MoveToAttribute("Enabled");
-                                if (int.TryParse(xtr.Value, out int intEnabeld)) { cbHotkey.Checked = lblHotkey.Enabled = cmbxHotkey.Enabled = Convert.ToBoolean(Convert.ToInt16(intEnabeld)); }
-                                else { cbHotkey.Checked = lblHotkey.Enabled = cmbxHotkey.Enabled = false; }
-                                xtr.MoveToAttribute("Letter");
-                                if (string.IsNullOrEmpty(xtr.Value)) { lblHotkey.Enabled = cmbxHotkey.Enabled = cbHotkey.Checked = false; }
-                                else { if (cbHotkey.Checked && new Regex("^[A-Z0-9]$").IsMatch(xtr.Value)) { cmbxHotkey.Text = hkLetter = xtr.Value; } } // You won't be able to register a hotkey before the window is created
-                            }
-                            else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "Output")
-                            {
-                                xtr.MoveToAttribute("Device");
-                                if (string.IsNullOrEmpty(xtr.Value)) { strOutputDevice = "Default"; }
-                                else { strOutputDevice = xtr.Value; }
-                            }
-                            else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "BalloonTips")
-                            {
-                                xtr.MoveToAttribute("Enabled");
-                                if (int.TryParse(xtr.Value, out int intEnabeld)) { cbShowBalloonTip.Checked = showBalloonTip = Convert.ToBoolean(Convert.ToInt16(intEnabeld)); }
-                                else { cbShowBalloonTip.Checked = false; }
-                            }
-                            else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "AlwaysOnTop")
-                            {
-                                xtr.MoveToAttribute("Enabled");
-                                if (int.TryParse(xtr.Value, out int intEnabeld)) { miniPlayer.TopMost = cbAlwaysOnTop.Checked = alwaysOnTop = Convert.ToBoolean(Convert.ToInt16(intEnabeld)); }
-                                else { miniPlayer.TopMost = cbAlwaysOnTop.Checked = false; } // s. MiniPlayer_Shown-Event in frmMiniPlayer.cs
-                            }
-                            else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "LogHistory")
-                            {
-                                xtr.MoveToAttribute("Enabled");
-                                if (int.TryParse(xtr.Value, out int intEnabeld)) { cbLogHistory.Checked = logHistory = Convert.ToBoolean(Convert.ToInt16(intEnabeld)); }
-                                else { cbLogHistory.Checked = false; }
-                            }
-                            else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "AutoStopRecording")
-                            {
-                                xtr.MoveToAttribute("Enabled");
-                                if (int.TryParse(xtr.Value, out int intEnabeld)) { cbAutoStopRecording.Checked = autoStopRecording = Convert.ToBoolean(Convert.ToInt16(intEnabeld)); }
-                                else { cbAutoStopRecording.Checked = false; }
-                            }
-                            else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "Volume")
-                            {
-                                xtr.MoveToAttribute("Value");
-                                int volume = int.TryParse(xtr.Value, out int intVolume) ? intVolume : (int)channelVolume * 100;
-                                volume = volume > 100 ? 100 : volume < 0 ? 0 : volume;
-                                channelVolume = Convert.ToSingle(volume) / 100f;
-                                Bass.BASS_ChannelSetAttribute(_stream, BASSAttribute.BASS_ATTRIB_VOL, channelVolume);
-                                miniPlayer.MpVolProgBar.Value = volProgressBar.Value = volume;
-                                lblVolume.Text = volProgressBar.Value.ToString();
-                            }
-                            else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "FormLocation")
-                            {
-                                xtr.MoveToAttribute("PosX");
-                                formPosX = xtr.Value;
-                                xtr.MoveToAttribute("PosY");
-                                formPosY = xtr.Value;
-                            }
-                            else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "MiniLocation")
-                            {
-                                xtr.MoveToAttribute("PosX");
-                                miniPosX = xtr.Value;
-                                xtr.MoveToAttribute("PosY");
-                                miniPosY = xtr.Value;
-                            }
-                            else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "Autostart")
-                            {
-                                xtr.MoveToAttribute("Station");
-                                if (int.TryParse(xtr.Value, out int intStation))
-                                {
-                                    if (intStation > 0 && intStation <= stationSum) { cmbxStation.Text = autostartStation = xtr.Value; }
-                                }
-                            }
-                            else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "KeepActionsActive")
-                            {
-                                xtr.MoveToAttribute("Enabled");
-                                if (int.TryParse(xtr.Value, out int intEnabeld)) { keepActionsActive = Convert.ToBoolean(Convert.ToInt16(intEnabeld)); }
-                            }
-                            if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "Action")
-                            {
-                                xtr.MoveToAttribute("Enabled");
-                                if (!bool.TryParse(xtr.Value, out bool enabled)) { enabled = false; }
-                                else if (enabled == true) { cbActions.Checked = true; }
-                                xtr.MoveToAttribute("Task");
-                                string task = xtr.Value;
-                                xtr.MoveToAttribute("Station");
-                                string station = xtr.Value;
-                                xtr.MoveToAttribute("Time");
-                                string time = xtr.Value;
-                                tableActions.Rows.Add(enabled, task, station, time);
+                                if (intStation > 0 && intStation <= stationSum) { cmbxStation.Text = autostartStation = xtr.Value; }
                             }
                         }
+                        else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "KeepActionsActive")
+                        {
+                            xtr.MoveToAttribute("Enabled");
+                            if (int.TryParse(xtr.Value, out int intEnabeld)) { keepActionsActive = Convert.ToBoolean(Convert.ToInt16(intEnabeld)); }
+                        }
+                        if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "Action")
+                        {
+                            xtr.MoveToAttribute("Enabled");
+                            if (!bool.TryParse(xtr.Value, out bool enabled)) { enabled = false; }
+                            else if (enabled == true) { cbActions.Checked = true; }
+                            xtr.MoveToAttribute("Task");
+                            string task = xtr.Value;
+                            xtr.MoveToAttribute("Station");
+                            string station = xtr.Value;
+                            xtr.MoveToAttribute("Time");
+                            string time = xtr.Value;
+                            tableActions.Rows.Add(enabled, task, station, time);
+                        }
                     }
-                    catch (XmlException ex) { MessageBox.Show(ex.Message, Text, MessageBoxButtons.OK, MessageBoxIcon.Error); }
                 }
+                catch (XmlException ex) { MessageBox.Show(ex.Message, Text, MessageBoxButtons.OK, MessageBoxIcon.Error); }
             }
             else
             {// MessageBox.Show("\"" + xmlPath + "\"  is not found.");
@@ -311,40 +335,32 @@ namespace NetRadio
                 firstEmptyStart = true;
             }
             foreach (DataGridViewColumn column in dgvStations.Columns) { column.SortMode = DataGridViewColumnSortMode.NotSortable; }
-            //bool activateScheduler = false;
-            string[] args = Environment.GetCommandLineArgs();
-            foreach (string x in args)
-            {
-                if (x.Contains("min"))
-                {
-                    startMin = true; // siehe frmMain_Shown-Event
-                    Opacity = 0; // sonst wird GUI kurz angezeigt - unschön
-                }
-                //else if (x.Contains("schedule") || x.Contains("activate")) { activateScheduler = true; }
-            }
+
             if (keepActionsActive && tableActions.AsEnumerable().Any(row => row.Field<bool>("Enabled") == true)) { cbActions.Checked = true; }
-            for (int i = 1; i < args.Length; i++) // Kommandozeilenargumente werden vor Autostart-Einstellungen benutzt
+
+            string[] args = Environment.GetCommandLineArgs().Skip(1).ToArray();
+            if (args.Length > 0)
             {
-                if (!args[i].Contains(':') && int.TryParse(args[i], out int intStation))
+                for (int i = 0; i < args.Length; i++) // Kommandozeilenargumente werden vor Autostart-Einstellungen benutzt
                 {
-                    string btnName = "rbtn" + Math.Abs(intStation).ToString("D2");
-                    Control[] controls = tcMain.TabPages[0].Controls.Find(btnName, true);
-                    if (controls.Length == 1 && controls[0] is RadioButton)
+                    if (Regex.IsMatch(args[i], @"[/-][1-9][0-5]?") && int.TryParse(args[i], out int intStation))
                     {
-                        autoStartRadioButton = controls[0] as RadioButton; // foundBtn.Checked = true;
-                        break;
+                        string btnName = "rbtn" + Math.Abs(intStation).ToString("D2");
+                        Control[] controls = tcMain.TabPages[0].Controls.Find(btnName, true);
+                        if (controls.Length == 1 && controls[0] is RadioButton) { autoStartRadioButton = controls[0] as RadioButton; } // foundBtn.Checked = true;
+                    }
+                    else if (Regex.IsMatch(args[i], @"[/-](m|min)"))
+                    {
+                        startMini = true; // siehe frmMain_Shown-Event
+                        Opacity = 0; // sonst wird GUI kurz angezeigt - unschön
+                    }
+                    else if (Regex.IsMatch(args[i], @"[/-](t|tray)"))
+                    {
+                        startTray = true; // siehe frmMain_Shown-Event
+                        Opacity = 0; // sonst wird GUI kurz angezeigt - unschön
                     }
                 }
             }
-
-            //Regex checkTime = new(@"^(?i)(0?[1-9]|1[0-9]|2[0-4]):([0-5][0-9])(:[0-5][0-9])?( AM| PM)?$"); // This will work for these format (case insensitive): 08:09:00 AM, 08:09 AM, 8:30 AM, 8:30:59
-            //string commandLine = string.Join(" ", args.Select(s => s.Contains(' ') ? "\"" + s + "\"" : s));
-            //if (checkTime.IsMatch(commandLine))
-            //{
-            //    /* Timer für AutoRecording einbauen und Zeitdifferenz berechnen  */
-            //    /* Recording-Button mit Uhrzeit beschriften (z.B. statt Grafik)  */
-            //} 
-
             if (autoStartRadioButton == null && !string.IsNullOrEmpty(autostartStation)) // kein Kommandozeilenargumente - dann Autostart-Einstellungen benutzen
             { //MessageBox.Show(autostartStation);
                 string btnName = "rbtn" + autostartStation.PadLeft(2, '0');
@@ -614,7 +630,11 @@ namespace NetRadio
                 if (tcMain.SelectedTab == tpSectrum) { StatusStrip_SingleLabel(false, lblD2.Text); }
                 if (logHistory) { AddToHistory(_tagInfo.ToString()); }
                 lblD4.Text = _tagInfo.filename;
-                if (showBalloonTip && ActiveForm != miniPlayer && ActiveForm != this) { notifyIcon.ShowBalloonTip(2, "Now playing: ", lblD2.Text, ToolTipIcon.None); } // && minClose
+                if (showBalloonTip)
+                {
+                    IntPtr foregroundWin = NativeMethods.GetForegroundWindow();
+                    if (foregroundWin != miniPlayer.Handle && foregroundWin != Handle) { notifyIcon.ShowBalloonTip(2, "Now playing: ", lblD2.Text, ToolTipIcon.None); }
+                }
             }
             else { lblD4.Text = dgvStations.Rows[_currentButtonNum - 1].Cells[1].Value.ToString(); }
         }
@@ -699,6 +719,16 @@ namespace NetRadio
 
         private void FrmMain_Load(object sender, EventArgs e)
         {
+            //NativeMethods.CHANGEFILTERSTRUCT changeFilter = new NativeMethods.CHANGEFILTERSTRUCT();
+            //changeFilter.size = (uint)Marshal.SizeOf(changeFilter);
+            //changeFilter.info = 0;
+            //if (!NativeMethods.ChangeWindowMessageFilterEx(Handle, NativeMethods.WM_COPYDATA, NativeMethods.ChangeWindowMessageFilterExAction.Allow, ref changeFilter))
+            //{
+            //    int error = Marshal.GetLastWin32Error();
+            //    MessageBox.Show(string.Format("The error {0} occured.", error));
+            //} // https://www.codeproject.com/Tips/1017834/How-to-Send-Data-from-One-Process-to-Another-in-Cs
+
+
             //FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(Path.Combine(Path.GetDirectoryName(appPath), "bass_aac.dll"));
             lblCredits.Text = "Acknowledgments" + Environment.NewLine +
                 "NetRadio uses libraries for streaming and audio playback:" + Environment.NewLine +
@@ -826,7 +856,7 @@ namespace NetRadio
                         {
                             bool foo = false; // one second more
                             if (Utilities.PingGoogleSuccess(Bass.BASS_GetConfig(BASSConfig.BASS_CONFIG_NET_TIMEOUT))) { foo = true; }
-                            await System.Threading.Tasks.Task.Delay(1000).ConfigureAwait(false);
+                            await Task.Delay(1000).ConfigureAwait(false);
                             if (foo) { break; }
                             else if (i == max)
                             {
@@ -844,7 +874,60 @@ namespace NetRadio
 
         protected override void WndProc(ref Message m)
         {
-            if (m.Msg == NativeMethods.WM_SHOWME) { ShowMe(); } // another instance is started
+            if (m.Msg == NativeMethods.WM_COPYDATA)
+            {
+                NativeMethods.COPYDATASTRUCT copyData = (NativeMethods.COPYDATASTRUCT)Marshal.PtrToStructure(m.LParam, typeof(NativeMethods.COPYDATASTRUCT));
+                if ((int)copyData.dwData == 2)
+                {
+                    string arguments = Marshal.PtrToStringUni(copyData.lpData);
+                    if (!string.IsNullOrEmpty(arguments))
+                    {
+                        string[] args = arguments.Split('|');
+                        for (int i = 0; i < args.Length; i++)
+                        {
+                            if (Regex.IsMatch(args[i], @"[/-][1-9][0-5]?") && int.TryParse(args[i], out int intStation))
+                            {
+                                string btnName = "rbtn" + Math.Abs(intStation).ToString("D2");
+                                Control[] controls = tcMain.TabPages[0].Controls.Find(btnName, true);
+                                if (controls.Length == 1 && controls[0] is RadioButton rb && rb.Enabled)
+                                {
+                                    rb.Checked = true; // (controls[0] as RadioButton).Checked = true;  // löst StartPlaying aus (BtnReset_Click in RadioButton_CheckedChanged)
+                                    int index = miniPlayer.MpCmBxStations.FindStringExact(Utilities.StationLong(dgvStations.Rows[Convert.ToInt32(rb.Tag.ToString()) - 1].Cells[0].Value.ToString()));
+                                    if (index >= 0 && miniPlayer.MpCmBxStations.SelectedIndex != index) { miniPlayer.MpCmBxStations.SelectedIndex = index; }
+                                }
+                            }
+                            else if (Regex.IsMatch(args[i], @"[/-](m|min)"))
+                            {
+                                ShowMiniPlayer();
+                                Hide(); //ShowInTaskbar = false; verträgt sich nicht mit GlobalHotkey => zerstört Handle
+                                tcMain.SelectedIndex = 0;
+                            }
+                            else if (Regex.IsMatch(args[i], @"[/-](t|tray)"))
+                            {
+                                Hide();
+                                miniPlayer.Hide();
+                            }
+                            else if (Regex.IsMatch(args[i], @"[/-](f|full)"))
+                            {
+                                ShowMe();
+                                miniPlayer.Hide();
+                            }
+                            else if (Regex.IsMatch(args[i], @"[/-](p|play)"))
+                            {
+                                if (_stream != 0 && Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PAUSED) { BASSChannelPlay(); }
+                                else if (btnReset.Enabled) { BtnReset_Click(null, null); }
+                            }
+                            else if (Regex.IsMatch(args[i], @"[/-](s|stop)"))
+                            {
+                                if (Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PLAYING) { BASSChannelPause(); }
+                            }
+                            else if (Regex.IsMatch(args[i], @"[/-](e|exit)")) { Application.Exit(); }
+                        }
+                    }
+                }
+                else { MessageBox.Show(string.Format("Unrecognized data type = {0}.", (int)copyData.dwData), appName, MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            }
+            else if (m.Msg == NativeMethods.WM_SHOWNETRADIO) { ShowMe(); } // another instance is started
             else if (m.Msg == NativeMethods.WM_HOTKEY)
             {
                 int keyPressTick = Environment.TickCount;
@@ -881,10 +964,12 @@ namespace NetRadio
             if (index >= 0 && miniPlayer.MpCmBxStations.SelectedIndex != index) { miniPlayer.MpCmBxStations.SelectedIndex = index; }
             miniPlayer.MpCmBxStations.Select(0, 0);
             miniPlayer.MpPBLevel.Focus(); // Focus von MpCmBxStations weg nehmen 
+            Application.DoEvents(); // für Autostart wichtig, damit GUI im fertigen Zustand angezeigt wird
             miniPlayer.Show();
             bool top = miniPlayer.TopMost; // get our current "TopMost" value (ours will always be false though)
             miniPlayer.TopMost = true; // make our form jump to the top of everything
             miniPlayer.TopMost = top; // set it back to whatever it was
+            miniPlayer.Activate();
         }
 
         private void ShowMe()
@@ -1105,47 +1190,58 @@ namespace NetRadio
             timerResume.Stop();
             if (Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PLAYING)
             {
-                if (Bass.BASS_ChannelPause(_stream))
-                {
-                    timerLevel.Stop();
-                    spectrumTimer.Stop();
-                    foreach (VerticalProgressBar vp in tpSectrum.Controls.OfType<VerticalProgressBar>()) { vp.Value = 0; }
-                    pbLevel.Image = null;
-                    miniPlayer.MpPBLevel.Image = null;
-                    btnPlayStop.Image = Properties.Resources.play_white;
-                    miniPlayer.MpBtnPlay.Image = Properties.Resources.play_white;
-                    timerPause.Enabled = true;
-                    playPauseToolStripMenuItem.Text = "Play"; // btnPlayStop.Text = 
-                    playPauseToolStripMenuItem.Image = Properties.Resources.play;
-                    btnPlayStop.BackColor = Color.Maroon;
-                    miniPlayer.MpBtnPlay.BackColor = Color.Maroon;
-                }
+                BASSChannelPause();
             }
             else if (_stream != 0 && Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PAUSED)
             {
-                if (Bass.BASS_ChannelPlay(_stream, false)) // false: Song beginnt von neuem, true: Spielt von aktueller position weiter
-                {
-                    btnPlayStop.Image = Properties.Resources.pause_white;
-                    miniPlayer.MpBtnPlay.Image = Properties.Resources.pause_white;
-                    timerLevel.Start();
-                    spectrumTimer.Start();
-                    timerPause.Enabled = false;
-                    playPauseToolStripMenuItem.Text = "Pause"; // btnPlayStop.Text = 
-                    playPauseToolStripMenuItem.Image = Properties.Resources.pause;
-                    btnPlayStop.BackColor = SystemColors.ControlDark;
-                    miniPlayer.MpBtnPlay.BackColor = SystemColors.ControlDark;
-                    if (lblD4.Text.Contains(_downloads)) // Recording fand gerade statt, lblD4 enthält DownloadDateinamen
-                    {
-                        lblD4.ForeColor = SystemColors.ControlText;
-                        lblD4.Cursor = Cursors.Default;
-                        BASS_CHANNELINFO info = Bass.BASS_ChannelGetInfo(_stream);
-                        if (info != null) { lblD4.Text = info.filename; }
-                        else { lblD4.Text = string.Empty; }
-                    }
-                }
+                BASSChannelPlay();
             }
             else { BtnReset_Click(null, null); }
         }
+
+        private void BASSChannelPause()
+        {
+            if (Bass.BASS_ChannelPause(_stream))
+            {
+                timerLevel.Stop();
+                spectrumTimer.Stop();
+                foreach (VerticalProgressBar vp in tpSectrum.Controls.OfType<VerticalProgressBar>()) { vp.Value = 0; }
+                pbLevel.Image = null;
+                miniPlayer.MpPBLevel.Image = null;
+                btnPlayStop.Image = Properties.Resources.play_white;
+                miniPlayer.MpBtnPlay.Image = Properties.Resources.play_white;
+                timerPause.Enabled = true;
+                playPauseToolStripMenuItem.Text = "Play"; // btnPlayStop.Text = 
+                playPauseToolStripMenuItem.Image = Properties.Resources.play;
+                btnPlayStop.BackColor = Color.Maroon;
+                miniPlayer.MpBtnPlay.BackColor = Color.Maroon;
+            }
+        }
+
+        private void BASSChannelPlay()
+        {
+            if (Bass.BASS_ChannelPlay(_stream, false)) // false: Song beginnt von neuem, true: Spielt von aktueller position weiter
+            {
+                btnPlayStop.Image = Properties.Resources.pause_white;
+                miniPlayer.MpBtnPlay.Image = Properties.Resources.pause_white;
+                timerLevel.Start();
+                spectrumTimer.Start();
+                timerPause.Enabled = false;
+                playPauseToolStripMenuItem.Text = "Pause"; // btnPlayStop.Text = 
+                playPauseToolStripMenuItem.Image = Properties.Resources.pause;
+                btnPlayStop.BackColor = SystemColors.ControlDark;
+                miniPlayer.MpBtnPlay.BackColor = SystemColors.ControlDark;
+                if (lblD4.Text.Contains(_downloads)) // Recording fand gerade statt, lblD4 enthält DownloadDateinamen
+                {
+                    lblD4.ForeColor = SystemColors.ControlText;
+                    lblD4.Cursor = Cursors.Default;
+                    BASS_CHANNELINFO info = Bass.BASS_ChannelGetInfo(_stream);
+                    if (info != null) { lblD4.Text = info.filename; }
+                    else { lblD4.Text = string.Empty; }
+                }
+            }
+        }
+
 
         private void TimerPause_Tick(object sender, EventArgs e)
         { //Server unterbricht nach ca. 30 Sekunden die Verbindung (ohne Info), dem kommen wir zuvor mittels zwangsweisem ReLoad 
@@ -1227,7 +1323,7 @@ namespace NetRadio
         private void UpdateCaption_lblD1(string caption)
         {
             lblD1.Text = Utilities.StationLong(caption); // Regex.Replace(caption, @"\s+", " "); // doppelte Leerzeichen entfernen
-            MiniPlayer.MpLblD1_Text(lblD1.Text);
+            //MiniPlayer.MpLblD1_Text(lblD1.Text);
         }
 
         private void RewriteButtonText() // initial FrmMain_Load und dann TcMain_SelectedIndexChanged 
@@ -1502,12 +1598,11 @@ namespace NetRadio
         {
             if (cbAlwaysOnTop.Focused)
             {
-                if (cbAlwaysOnTop.Checked) { alwaysOnTop = true; }
-                else { alwaysOnTop = false; }
-                miniPlayer.TopMost = TopMost = alwaysOnTop;
+                miniPlayer.TopMost = TopMost = alwaysOnTop = cbAlwaysOnTop.Checked;
                 miniPlayer.MpBtnAOT.Image = alwaysOnTop ? Properties.Resources.pinpush : Properties.Resources.pinout;
                 miniPlayer.MpBtnAOT.BackColor = alwaysOnTop ? Color.Maroon : SystemColors.ControlDark;
                 somethingToSave = true;
+                Activate();
             }
         }
 
@@ -1536,21 +1631,20 @@ namespace NetRadio
             miniPlayer.Hide();
             miniPlayer.Opacity = 1;
             if (!string.IsNullOrEmpty(hkLetter) && new Regex("^[A-Z]+$").IsMatch(hkLetter)) { RegisterHK(hkLetter); } // Hotkey kann erst registriert werden, wenn das Fenster erstellt wurde
-            if (startMin)
+            if (startMini || startTray)
             {
-                startMin = false;
                 Hide();
                 Opacity = 1; // nach Hide //notifyIcon.ShowBalloonTip(1, Text, "Autostart", ToolTipIcon.Info);
-                if (int.TryParse(autostartStation, out int i) && i > 0) { UpdateCaption_lblD1(dgvStations.Rows[i - 1].Cells[0].Value.ToString()); }
-                ShowMiniPlayer();
+                if (autoStartRadioButton != null && int.TryParse(autoStartRadioButton.Tag.ToString(), out int i) && i > 0) { UpdateCaption_lblD1(dgvStations.Rows[i - 1].Cells[0].Value.ToString()); }
             }
+            if (startMini) { ShowMiniPlayer(); }
             if (alwaysOnTop) { TopMost = true; }
             Application.DoEvents();
             if (autoStartRadioButton != null)
             {
                 autoStartRadioButton.Checked = true;
                 autoStartRadioButton.Focus();
-            } //else { MessageBox.Show(this.ActiveControl.Name); }; tcMa
+            }
         }
 
         private void FrmMain_KeyDown(object sender, KeyEventArgs e)
@@ -1691,7 +1785,7 @@ namespace NetRadio
                     }
                 case Keys.Q | Keys.Control: { Close(); return true; } // exitFlag = true;
                 case Keys.F1 | Keys.Control | Keys.Shift: { helpRequested = false; StartXMLFile(xmlPath); return true; }
-                case Keys.F4 | Keys.Control | Keys.Shift:
+                case Keys.F4 | Keys.Control:
                     {
                         if (Visible && NativeMethods.HitTest(Bounds, Handle, PointToScreen(Point.Empty))) { Hide(); } // "Tray-Modus"
                     }
@@ -1753,8 +1847,8 @@ namespace NetRadio
         }
 
         private void FrmMain_FormClosing(object sender, FormClosingEventArgs e)
-        {// Form.Closed and Form.Closing events are not raised when the Application.Exit method is called; use Form.Close
-            if (e.CloseReason == CloseReason.UserClosing && ((ModifierKeys & Keys.Shift) == Keys.Shift || (ModifierKeys & Keys.Control) == Keys.Control))
+        {// Application.Exit() => e.CloseReason == CloseReason.ApplicationExitCall
+            if (e.CloseReason == CloseReason.UserClosing && close2Tray && (ModifierKeys & Keys.Shift) == 0)
             {
                 e.Cancel = true;
                 Hide();
@@ -1775,7 +1869,7 @@ namespace NetRadio
             if (somethingToSave || radioBtnChanged) { SaveConfig(); }
         }
 
-        private void SaveConfig()
+        private void SaveConfig() // FrmMain_FormClosing | TcMain_SelectedIndexChanged
         {
             string strVolume = ((int)(channelVolume * 100f)).ToString();
             XmlWriterSettings xwSettings = new()
@@ -1791,16 +1885,6 @@ namespace NetRadio
                 xw.WriteStartDocument();
                 xw.WriteStartElement("NetRadio");
 
-                for (int i = 0; i < dgvStations.RowCount; ++i)
-                {
-                    xw.WriteStartElement("Station");
-                    object v = dgvStations.Rows[i].Cells[0].Value;
-                    xw.WriteAttributeString("Name", v != null ? dgvStations.Rows[i].Cells[0].Value.ToString() : "");
-                    v = dgvStations.Rows[i].Cells[1].Value;
-                    xw.WriteAttributeString("URL", v != null ? dgvStations.Rows[i].Cells[1].Value.ToString() : "");
-                    xw.WriteEndElement(); // für Radio
-                }
-
                 xw.WriteStartElement("Hotkey");
                 xw.WriteAttributeString("Enabled", cbHotkey.Checked == true ? "1" : "0");
                 xw.WriteAttributeString("Letter", hkLetter); // HIER FEHLT NOCH WAS
@@ -1810,17 +1894,25 @@ namespace NetRadio
                 xw.WriteAttributeString("Device", strOutputDevice);
                 xw.WriteEndElement(); // für Output
 
-                xw.WriteStartElement("BalloonTips");
-                xw.WriteAttributeString("Enabled", showBalloonTip == true ? "1" : "0");
-                xw.WriteEndElement(); // für MiniPlayer
-
                 xw.WriteStartElement("AlwaysOnTop");
                 xw.WriteAttributeString("Enabled", alwaysOnTop == true ? "1" : "0");
                 xw.WriteEndElement(); // für AlwaysOnTop
 
+                xw.WriteStartElement("CloseToTray");
+                xw.WriteAttributeString("Enabled", close2Tray == true ? "1" : "0");
+                xw.WriteEndElement(); // für CloseToTray
+
+                xw.WriteStartElement("BalloonTips");
+                xw.WriteAttributeString("Enabled", showBalloonTip == true ? "1" : "0");
+                xw.WriteEndElement(); // für MiniPlayer
+
                 xw.WriteStartElement("LogHistory");
                 xw.WriteAttributeString("Enabled", logHistory == true ? "1" : "0");
                 xw.WriteEndElement(); // für LogHistory
+
+                xw.WriteStartElement("ShowTrayInfo");
+                xw.WriteAttributeString("Enabled", showTrayInfo == true ? "1" : "0");
+                xw.WriteEndElement(); // für ShowTrayInfo
 
                 xw.WriteStartElement("AutoStopRecording");
                 xw.WriteAttributeString("Enabled", autoStopRecording == true ? "1" : "0");
@@ -1858,6 +1950,16 @@ namespace NetRadio
                     xw.WriteEndElement(); // für Action
                 }
 
+                for (int i = 0; i < dgvStations.RowCount; ++i)
+                {
+                    xw.WriteStartElement("Station");
+                    object v = dgvStations.Rows[i].Cells[0].Value;
+                    xw.WriteAttributeString("Name", v != null ? dgvStations.Rows[i].Cells[0].Value.ToString() : "");
+                    v = dgvStations.Rows[i].Cells[1].Value;
+                    xw.WriteAttributeString("URL", v != null ? dgvStations.Rows[i].Cells[1].Value.ToString() : "");
+                    xw.WriteEndElement(); // für Radio
+                }
+
                 xw.WriteEndElement(); // für NetRadio
                 xw.WriteEndDocument();
             }
@@ -1885,12 +1987,22 @@ namespace NetRadio
             }
             else if (!Visible)
             {
-                if (NativeMethods.HitTest(miniPlayer.Bounds, miniPlayer.Handle, miniPlayer.PointToScreen(Point.Empty))) { ShowMe(); }
-                else { miniPlayer.Activate(); }
+                if (NativeMethods.HitTest(miniPlayer.Bounds, miniPlayer.Handle, miniPlayer.PointToScreen(Point.Empty))) { ShowMe(); tcMain.SelectedIndex = 0; }
+                else
+                {
+                    if (!miniPlayer.Visible && !Visible) { ShowMe(); tcMain.SelectedIndex = 0; }
+                    else
+                    {
+                        ShowMiniPlayer();
+                    }
+                }
             }
         }
 
-        private void ExitToolStripMenuItem_Click(object sender, EventArgs e) { Close(); }
+        private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
+        }
 
         internal void BtnSearch_Click(object sender, EventArgs e)
         {
@@ -2301,15 +2413,32 @@ namespace NetRadio
             { //  && System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable()
                 Bass.BASS_StreamFree(_stream);
                 RestorePlayerDefaults(tagID); // (tagID)
-                MessageBox.Show("No internet connection!", appName, MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, (MessageBoxOptions)0x40000);  // MB_TOPMOST
+
+                TaskDialogButton btnSettings = new("Settings…");
+                TaskDialogPage page = new()
+                {
+                    Caption = appName,
+                    SizeToContent = true,
+                    Heading = "No Internet Connection!",
+                    Text = "Check the network connection status.",
+                    Icon = TaskDialogIcon.ShieldWarningYellowBar,
+                    Buttons = { btnSettings, TaskDialogButton.Close }
+                };
+                if (TaskDialog.ShowDialog(miniPlayer.Visible ? miniPlayer : this, page) == btnSettings)
+                {
+                    try
+                    {
+                        ProcessStartInfo psi = new("ms-settings:network-status") { UseShellExecute = true };
+                        Process.Start(psi);
+                    }
+                    catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { MessageBox.Show(ex.Message, appName, MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+                }
                 return;
             }
             pbVolIcon.Image = Properties.Resources.progress;
             miniPlayer.MpVolProgBar.Value = volProgressBar.Value = 0;
             lblVolume.Text = "0";
             //Application.DoEvents();
-
-
 
             if (_url != string.Empty)
             {
@@ -2600,7 +2729,7 @@ namespace NetRadio
             {
                 foreach (RadioButton rb in tcMain.TabPages[0].Controls.OfType<RadioButton>().Where(rb => rb.Checked)) { rb.Checked = false; } // cave: aändert currentButtonNum
                 lblD1.Text = "-";
-                MiniPlayer.MpLblD1_Text(lblD1.Text);
+                //MiniPlayer.MpLblD1_Text(lblD1.Text);
                 miniPlayer.MpBtnPlay.Enabled = btnPlayStop.Enabled = btnReset.Enabled = btnRecord.Enabled = false;
             }
             lblD2.Text = "-";
@@ -3278,6 +3407,41 @@ namespace NetRadio
             Panel p = sender as Panel;
             LinearGradientBrush myBrush = new(p.PointToClient(p.Parent.PointToScreen(p.Location)), new Point(p.Width, p.Height), Color.AliceBlue, Color.LightSteelBlue);
             e.Graphics.FillRectangle(myBrush, ClientRectangle);
+        }
+
+        private void CbClose2Tray_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cbClose2Tray.Focused)
+            {
+                if (cbClose2Tray.Checked)
+                {
+                    close2Tray = true;
+                    //MessageBox.Show("You still have the following options to exit the program:\n\n1. Right-click on the icon in the notification area and select Exit.\n\n2. Press the Shift key before clicking on the Close button.", appName);
+                    if (showTrayInfo)
+                    {
+                        TaskDialogPage page = new()
+                        {
+                            Heading = "You still have the following options to exit:",
+                            Text = "1. Right-click on the NetRadio icon in the system tray and Exit.\n\n2. Press the Shift key while clicking on the Close button [🗙].",
+                            Caption = appName,
+                            Icon = TaskDialogIcon.None,
+                            AllowCancel = true,
+                            Verification = new TaskDialogVerificationCheckBox() { Text = "Do not show again" },
+                            Buttons = { TaskDialogButton.OK },
+                            Footnote = new TaskDialogFootnote()
+                            {
+                                Text = "If the NetRadio icon is unvisible: Click on the ˄ arrow in the taskbar to show all icons and drag the icon to the system tray.",
+                            },
+                        };
+                        if (TaskDialog.ShowDialog(this, page) == TaskDialogButton.OK)
+                        {
+                            if (page.Verification.Checked) { showTrayInfo = false; }
+                        }
+                    }
+                }
+                else { close2Tray = false; }
+                somethingToSave = true;
+            }
         }
 
         //private void tcMain_DrawItem(object sender, DrawItemEventArgs e)
