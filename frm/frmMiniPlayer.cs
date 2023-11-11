@@ -5,7 +5,6 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace NetRadio
 {
@@ -31,7 +30,7 @@ namespace NetRadio
         private int levelLeft, levelRight;
         private static MiniPlayer _this; // Objektverweis für statische Methode
         private readonly Region _client;
-        private static string labelD1Text = string.Empty;
+        //private static string labelD1Text = string.Empty;
         private bool insideRestoreBtn = false;
         private bool shiftRestoreBtn = false;
         private bool rightMouseBtnDown = false;
@@ -78,7 +77,7 @@ namespace NetRadio
             }
         }
 
-        public static void MpLblD1_Text(string text) { labelD1Text = text; }
+        //public static void MpLblD1_Text(string text) { _this.labelD1.Text = text; }
         public bool MpVisible() { return Visible; }
         public static void MpLblD2_Text(string text) { _this.labelD2.Text = text; }
 
@@ -409,7 +408,15 @@ namespace NetRadio
         {
             if ((e.Button == MouseButtons.Right) && rightMouseBtnDown)
             {
-                if (insideRestoreBtn && GetChildAtPoint(e.Location) != null) { Application.Exit(); }
+                if (insideRestoreBtn && GetChildAtPoint(e.Location) != null)
+                {
+                    if (FrmMain.MainClose2Tray)
+                    {
+                        rightMouseBtnDown = false;
+                        Hide();
+                    }
+                    else { Application.Exit(); }
+                }
                 else
                 {
                     rightMouseBtnDown = false;
