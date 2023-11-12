@@ -2,7 +2,7 @@
   "profiles": {
     "NetRadio": {
       "commandName": "Project",
-      "commandLineArgs": "-f -11 -p"
+      "commandLineArgs": "/1 -full"
     }
   }
 }

@@ -217,47 +217,6 @@ minimizes itself to the notification area of the taskbar.
 If no icon is visible, this can be toggled on in the taskbar
 settings (Windows settings &gt; Personalization &gt; Taskbar).</value>
   </data>
-  <data name="picBoxPayPal.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        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
-</value>
-  </data>
   <metadata name="imageList.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>1696, 17</value>
   </metadata>
@@ -266,7 +225,7 @@ settings (Windows settings &gt; Personalization &gt; Taskbar).</value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAEZTeXN0ZW0uV2luZG93cy5Gb3JtcywgQ3VsdHVyZT1uZXV0cmFs
         LCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5BQEAAAAmU3lzdGVtLldpbmRvd3MuRm9ybXMu
         SW1hZ2VMaXN0U3RyZWFtZXIBAAAABERhdGEHAgIAAAAJAwAAAA8DAAAAhBAAAAJNU0Z0AUkBTAIBAQgB
-        AAEwAQEBMAEBARIBAAESAQAE/wEJAQAI/wFCAU0BNgEEBgABNgEEAgABKAMAAUgDAAE2AwABAQEAAQgF
+        AAGQAQEBkAEBARIBAAESAQAE/wEJAQAI/wFCAU0BNgEEBgABNgEEAgABKAMAAUgDAAE2AwABAQEAAQgF
         AAEwAQ8YAAGAAgABgAMAAoABAAGAAwABgAEAAYABAAKAAgADwAEAAcAB3AHAAQAB8AHKAaYBAAEzBQAB
         MwEAATMBAAEzAQACMwIAAxYBAAMcAQADIgEAAykBAANVAQADTQEAA0IBAAM5AQABgAF8Af8BAAJQAf8B
         AAGTAQAB1gEAAf8B7AHMAQABxgHWAe8BAAHWAucBAAGQAakBrQIAAf8BMwMAAWYDAAGZAwABzAIAATMD
@@ -337,6 +296,47 @@ settings (Windows settings &gt; Personalization &gt; Taskbar).</value>
         kwEnAwABwwHwAf8BgAH+AXkBxgEQAQEDAAHhAcEB/wHAAX4BOQGGASABAQMAAfABBwH/AeABPgEfAY8C
         AwMAAfwBDwH/AfABPwEGAR8BAAEDAwAB/gEfAf8B+AE/AYABPwGwATcDAAH/AT8B/wH8AX8BwAF/AfAB
         fwMAB/8B+AF/AwAJ/wMACw==
+</value>
+  </data>
+  <data name="picBoxPayPal.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAAGQAAAAvCAYAAAAVfW/7AAAABGdBTUEAALGPC/xhBQAAABl0RVh0U29m
+        dHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAglSURBVHhe7ZxbiFVVHMb1pdd66a0gehCERETFsKwo
+        iS4PCoJIlEZFhRUpUQhRDQwYgWghmlmpFUZ2lTExrKxAKU0Nr0mMZuJ4QZ0pbQZHmrPav/+s77j2Zebs
+        c84+ErQ/+Fhrr+ve37f+a+3ZnhpRL9xb413J/PSyFY/qJDsWOHfsS+cudDo3cLHkUDy73bmDy1tjDANW
+        9rw6aEJ/d8k6WTm+vjhTzGEioq+rZDNkMTdriplB6DFYyebZs7dxU+hYObJqcJCSxbIRUypf3TMYHSUL
+        Z/ehdfUZYtERHeKV098XxsXLFrkR4x+P8ZopT7qXX2t33Z0dmX2uFHdvXes2dyzLrGsV64oS13Grvd5W
+        Tm4ujK8sGjRk9LT5bvrcF40YQhn5rD5XgiwU7mPL5rWZ9a0iGnu5h4dFB9vVlgdc5cTGwojoiM+D21tb
+        RCJDprBKw/bU0daECsqzSF/aWaQl6mqNo/mTfTVm8r6KIH+fmMZ5okSGGNm2onfoIshD24NH+2dYzpZF
+        +arVi1NlIqKxklWPUJQTbQ8/3xZrZwIOM47qScM6yBzcXzgmZDEl77sZ2mJvyBA64ebRD5tiKGCyTlvZ
+        vLZ2Vzn2cVUM2rKvY5RW8ZEdb1uf8DxCLNrdMfsFu2Y82lAWjiNzbHv09Ypa2thZFomuMu6DNtRxbQvC
+        33MztKNA2jZiiJFIYcBIsEZSCchDJuskFEIiOHkMsBVJu6CNiRL1k2kSF6rMIs2XhXNRnuzDIqBMJsYW
+        Dn0jyljrF4xXd8qfED4yxNyG2KEOv5hwOc9gGPP7+3VTYpmg0Y2FdVqBiBEzLmijKDLhgj6IpTbhOFyT
+        IqKiS8Rc9VFUaRzNTx/Go7/GJVW/uogRPiqqWop1G5JBG1jmQAQejtFNxQQM6rRq7WGj65jwQTuEoZz2
+        3fvfsTxUfbKMaxmBAZiTdQ8qs60wutb8lJOnLyRvkef7DUfb4iNd7CNspFOWhlXmNoTIKJA8JNR1z9pJ
+        buG8+6vl3y2eYuWr2+6266kzZlXb/rryZitD4J4PxljbZJtNC6deLvtsbKoN88kgxkuOq3E0/xOPTa+W
+        Mbb6FM7chnwyujBKnKGICGobCocoUNdqJyNNNN8vWSaxVaZIgOojExmf/vRhfm1jmp88/alT38KYxxBQ
+        NSVabc2mPDgrNUmJEGsfkTLqJSBiWAT5dvSj3srWjbLyocroj8DhPWgeGM6je0nOjymp+ywizWsGMEN4
+        sJKtYz2GADMl6yAq2TzrNQPQSW9UJQtmI4YAixJe30oWx0bNECxSeK/mH+xLNsdmzRCqpvivtCXro/3B
+        WJQZAgNWjeFfvrL+abJkjPZlF92ityovY/GQMSXz0ctWokSJEiVKVLH9eK97af2Bhrhiy2F39Exveb4U
+        iXGv7zJhMaYWN+0/Hcs/+tFBR38/VG2MnfycaxX9FAbXQvgpUpiz5YyDc7f2WAqnbexyE9Yddde9e8iE
+        uqF9mxuz4Bvj2Kc2VOmHMCAqwBTyIfkXT74SX2qbb6wsXVLND/zwtRnTtCHPTH7QbZs02XXccpeRa9Xx
+        uZrP3XzmhvocHvYX/RQGe6IWwU+RQlGGsPWcON9vbUc+vTnGq6+60fjzTde6P2+7PkbMIUoaNgThT00c
+        l0kMQvwzb0zMJOaEY0E/hcFr1xL4KVKQGWLSEJjXEM6B0BCZGRrSP3NmcYYMZ4Z4cvb4TDPEne23/y8M
+        QWCuSUNDMCBlyB9/N2ZIlgEhMUPMMkMkioY0hJ/p8xVUn6Yj8GD3LfzWPbL0RzfvvR2W/6u33/IjZ60x
+        UgdYbdTDEH6KFDBh0a5zMYbGcAbMWbPXyBxQ4/shDHkNGfj807QhjUQI0UG4ibUMObviTte94VlLQzO4
+        PrR6Rs0I4Vcd/IiBHyIv2XDAROehWZnkOTxJWbUYQx1QPcQ0wU+RAvs+vHBpwFJWK0KqnAOXlLKdneds
+        TFLohzBkbVnKxwzZtydadOcvc+BiY4ZwcHfu+sUdOXzKHpCBcZu3BPJ9x3YP5inzk1rb7n32Izfq+dJJ
+        2vvTypqGYIL9GO235SY6AvPApKxOmUQdDwRIZQZUOfBTpMCYEEMghgCZIUNkgozJY4iYMiSBhg05f6HP
+        D+Fi+X9OH68aBbhGeCKh6+Q5K7O0r8vqiBy9dfkpDNbQgwdGVH4HRYoJEpxtg5VKWSg+5eTDiBL8FCmw
+        LUG2qOTWRRQmydiiH8KQNISU9txXzJBo0eqVV6+9DRnClhWKboZEUYDQ5KkjD9kXrZ7/ls6D6KIM5okQ
+        ILElOA8ooTEMkKcsPE9EDBP8FCkgBAc3pgjaojCdlGugLZAy6IcwZBlCdHEGxQwp8gzhtVbU3x8wWcYZ
+        wtsU1N8iyXweQxQBnAtA4vMAofBQ2xp9aKc3IcFPkQLCQYSTEbZ1RXPoGmq7ynuGkLKASENDiIpCDIGI
+        nnWYh9ShHh7kSY6a+lAuQ7hRHpQ0vObBSUXKeXjVAV0LfooUMBLREERvU/e+udtSzNWbVRb9EAbNLUNC
+        yhD0C81o2hBFSZYRYi0zwlfeWoYUCT9FChgyFBVlQ9EPYcAQogdhhzKECMk0pNG/QyCmsC1lmUE5hzVb
+        Uh4zoJ/C4LVrCfwUKUj4vCaE9EMYiCqAKWx1IYkczlheaJLkfyTQcISExJiQyXp9z4J8WEvWi34Kgz1R
+        i+CnqIKthTRL6Ly0gTwwBGH1qowJWfksEl3090PVRpaQRdFPYfDatQR+iip4rSXNEjovbSAPzixWub7w
+        5iVGkNLfD1Xiv4sRI/4FcCcMqCKCz4UAAAAASUVORK5CYII=
 </value>
   </data>
   <metadata name="statusStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">

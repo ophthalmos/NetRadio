@@ -1,5 +1,5 @@
 #define MyAppName "NetRadio"
-#define MyAppVersion "2.5.1.3"
+#define MyAppVersion "2.5.2.0"
 #pragma include __INCLUDE__ + ";" + "C:\Program Files (x86)\Inno Download Plugin"
 #include <idp.iss>
 
@@ -19,7 +19,7 @@ AppUpdatesURL=https://www.ophthalmostar.de/
 ;DefaultDirName={reg:HKCU\Software\NetRadio,InstallPath|{autopf}\{#MyAppName}}
 DefaultDirName={autopf}\{#MyAppName}
 DisableWelcomePage=yes
-;DisableDirPage=no
+DisableDirPage=no
 DisableReadyPage=yes
 CloseApplications=yes
 WizardStyle=modern
@@ -35,8 +35,12 @@ Compression=lzma2/max
 SolidCompression=yes
 DirExistsWarning=no
 MinVersion=0,6.0
-AppMutex={#MyAppName}_MultiStartPrevent
+;AppMutex={#MyAppName}_MultiStartPrevent => s. [Code]
 ;SignTool=sha256
+;Uninstallable=not IsTaskSelected('portablemode')
+
+;[Tasks]
+;Name: portablemode; Description: "Portable Mode"
 
 [Files]
 Source: "bin\Release\net6.0-windows\NetRadio.exe"; DestDir: "{app}"; Permissions: users-modify; Flags: ignoreversion
@@ -74,7 +78,7 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 
 [Run]
 Filename: "{app}\{#MyAppName}.exe"; Description: "Launch {#MyAppName}"; Flags: postinstall nowait skipifsilent runasoriginaluser
-Filename: "{app}\{#MyAppName}.pdf"; Description: "View Frequently Asked Questions (PDF)"; Flags: postinstall shellexec runasoriginaluser
+Filename: "{app}\{#MyAppName}.pdf"; Description: "View Frequently Asked Questions (PDF)"; Flags: postinstall shellexec runasoriginaluser unchecked
 
 [Messages]
 BeveledLabel=
@@ -99,6 +103,22 @@ IsDonateHint=Support NetRadio - Thank you!
 var
   requiresRestart: boolean;
   NetRuntimeInstaller: string;
+
+const
+  SetupMutexName = 'NetRadioSetupMutex';
+
+function InitializeSetup(): Boolean; // only one instance of Inno Setup without prompting
+begin
+  Result := True;
+  if CheckForMutexes(SetupMutexName) then
+  begin
+    Result := False; // Mutex exists, setup is running already, silently aborting
+  end
+    else
+  begin
+    CreateMutex(SetupMutexName); 
+  end;
+end;
 
 procedure CurUninstallStepChanged (CurUninstallStep: TUninstallStep);
 var
@@ -326,4 +346,3 @@ begin
       idpDownloadAfter(wpReady);
     end;
   end; 
-//end;

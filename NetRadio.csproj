@@ -14,10 +14,10 @@
     <StartupObject>NetRadio.Program</StartupObject>
     <Title>NetRadio</Title>
     <Description>NetRadio</Description>
-    <AssemblyVersion>2.5.1.3</AssemblyVersion>
-    <FileVersion>2.5.1.3</FileVersion>
+    <AssemblyVersion>2.5.2.0</AssemblyVersion>
+    <FileVersion>2.5.2.0</FileVersion>
     <Copyright>(c) 2023 by W. Happe, GPL v3</Copyright>
-    <Version>2.5.1</Version>
+    <Version>2.5.2</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

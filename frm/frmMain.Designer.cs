@@ -132,6 +132,10 @@ namespace NetRadio
             cbLogHistory = new CheckBox();
             tpSettings = new TabPage();
             panel1 = new Panel();
+            rbStartModeTray = new RadioButton();
+            rbStartModeMini = new RadioButton();
+            rbStartModeMain = new RadioButton();
+            labelStartMode = new Label();
             gbAutoRecord = new GroupBox();
             cbActions = new CheckBox();
             btnActions = new Button();
@@ -148,7 +152,6 @@ namespace NetRadio
             lblAutostartStation = new Label();
             cmbxStation = new ComboBox();
             gbHotkeys = new GroupBox();
-            lblHKInfo = new Label();
             lblHotkey = new Label();
             cmbxHotkey = new ComboBox();
             cbHotkey = new CheckBox();
@@ -167,6 +170,8 @@ namespace NetRadio
             label4 = new Label();
             label3 = new Label();
             tpInfo = new TabPage();
+            btnUpdateSettings = new Button();
+            imageList = new ImageList(components);
             linkLabeGNU = new LinkLabel();
             label10 = new Label();
             label9 = new Label();
@@ -228,7 +233,6 @@ namespace NetRadio
             Bar19 = new VerticalProgressBar();
             Bar20 = new VerticalProgressBar();
             tpMiniplayer = new TabPage();
-            imageList = new ImageList(components);
             statusStrip = new StatusStrip();
             toolStripStatusLabel = new ToolStripStatusLabel();
             toolTip = new ToolTip(components);
@@ -1550,6 +1554,10 @@ namespace NetRadio
             // panel1
             // 
             panel1.BackColor = System.Drawing.SystemColors.ControlLightLight;
+            panel1.Controls.Add(rbStartModeTray);
+            panel1.Controls.Add(rbStartModeMini);
+            panel1.Controls.Add(rbStartModeMain);
+            panel1.Controls.Add(labelStartMode);
             panel1.Controls.Add(gbAutoRecord);
             panel1.Controls.Add(gbOutput);
             panel1.Controls.Add(gbMiscel);
@@ -1562,6 +1570,50 @@ namespace NetRadio
             panel1.Name = "panel1";
             panel1.Size = new System.Drawing.Size(395, 337);
             panel1.TabIndex = 3;
+            // 
+            // rbStartModeTray
+            // 
+            rbStartModeTray.AutoSize = true;
+            rbStartModeTray.Location = new System.Drawing.Point(298, 69);
+            rbStartModeTray.Name = "rbStartModeTray";
+            rbStartModeTray.Size = new System.Drawing.Size(91, 23);
+            rbStartModeTray.TabIndex = 10;
+            rbStartModeTray.Text = "Tray mode";
+            rbStartModeTray.UseVisualStyleBackColor = true;
+            rbStartModeTray.CheckedChanged += RbStartMode_CheckedChanged;
+            // 
+            // rbStartModeMini
+            // 
+            rbStartModeMini.AutoSize = true;
+            rbStartModeMini.Location = new System.Drawing.Point(204, 69);
+            rbStartModeMini.Name = "rbStartModeMini";
+            rbStartModeMini.Size = new System.Drawing.Size(91, 23);
+            rbStartModeMini.TabIndex = 9;
+            rbStartModeMini.Text = "Miniplayer";
+            rbStartModeMini.UseVisualStyleBackColor = true;
+            rbStartModeMini.CheckedChanged += RbStartMode_CheckedChanged;
+            // 
+            // rbStartModeMain
+            // 
+            rbStartModeMain.AutoSize = true;
+            rbStartModeMain.Checked = true;
+            rbStartModeMain.Location = new System.Drawing.Point(92, 69);
+            rbStartModeMain.Name = "rbStartModeMain";
+            rbStartModeMain.Size = new System.Drawing.Size(109, 23);
+            rbStartModeMain.TabIndex = 8;
+            rbStartModeMain.TabStop = true;
+            rbStartModeMain.Text = "Main window";
+            rbStartModeMain.UseVisualStyleBackColor = true;
+            rbStartModeMain.CheckedChanged += RbStartMode_CheckedChanged;
+            // 
+            // labelStartMode
+            // 
+            labelStartMode.AutoSize = true;
+            labelStartMode.Location = new System.Drawing.Point(9, 71);
+            labelStartMode.Name = "labelStartMode";
+            labelStartMode.Size = new System.Drawing.Size(80, 19);
+            labelStartMode.TabIndex = 7;
+            labelStartMode.Text = "Start mode:";
             // 
             // gbAutoRecord
             // 
@@ -1767,30 +1819,18 @@ namespace NetRadio
             // gbHotkeys
             // 
             gbHotkeys.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            gbHotkeys.Controls.Add(lblHKInfo);
             gbHotkeys.Controls.Add(lblHotkey);
             gbHotkeys.Controls.Add(cmbxHotkey);
             gbHotkeys.Controls.Add(cbHotkey);
             gbHotkeys.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            gbHotkeys.Location = new System.Drawing.Point(9, 66);
+            gbHotkeys.Location = new System.Drawing.Point(9, 103);
             gbHotkeys.Margin = new Padding(4, 3, 4, 3);
             gbHotkeys.Name = "gbHotkeys";
             gbHotkeys.Padding = new Padding(4, 3, 4, 3);
-            gbHotkeys.Size = new System.Drawing.Size(379, 87);
+            gbHotkeys.Size = new System.Drawing.Size(379, 50);
             gbHotkeys.TabIndex = 1;
             gbHotkeys.TabStop = false;
             gbHotkeys.Text = "Global hotkey";
-            // 
-            // lblHKInfo
-            // 
-            lblHKInfo.AutoSize = true;
-            lblHKInfo.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            lblHKInfo.Location = new System.Drawing.Point(6, 43);
-            lblHKInfo.Margin = new Padding(4, 0, 4, 0);
-            lblHKInfo.Name = "lblHKInfo";
-            lblHKInfo.Size = new System.Drawing.Size(360, 38);
-            lblHKInfo.TabIndex = 8;
-            lblHKInfo.Text = "It minimizes (optional to the tray, see below) and restores\r\nthe window. Double key press terminates the application.";
             // 
             // lblHotkey
             // 
@@ -1831,6 +1871,7 @@ namespace NetRadio
             cbHotkey.Size = new System.Drawing.Size(158, 23);
             cbHotkey.TabIndex = 0;
             cbHotkey.Text = "Use system wide key:";
+            toolTip.SetToolTip(cbHotkey, "Brings this window to front. Switches between miniplayer\r\nand main gui. Double key press terminates application.");
             cbHotkey.UseVisualStyleBackColor = true;
             cbHotkey.CheckedChanged += CbHotkey_CheckedChanged;
             // 
@@ -2021,6 +2062,7 @@ namespace NetRadio
             // 
             // tpInfo
             // 
+            tpInfo.Controls.Add(btnUpdateSettings);
             tpInfo.Controls.Add(linkLabeGNU);
             tpInfo.Controls.Add(label10);
             tpInfo.Controls.Add(label9);
@@ -2047,6 +2089,32 @@ namespace NetRadio
             tpInfo.TabIndex = 2;
             tpInfo.ToolTipText = "Information (F11)";
             tpInfo.UseVisualStyleBackColor = true;
+            // 
+            // btnUpdateSettings
+            // 
+            btnUpdateSettings.ImageIndex = 3;
+            btnUpdateSettings.ImageList = imageList;
+            btnUpdateSettings.Location = new System.Drawing.Point(356, 307);
+            btnUpdateSettings.Name = "btnUpdateSettings";
+            btnUpdateSettings.Size = new System.Drawing.Size(32, 27);
+            btnUpdateSettings.TabIndex = 21;
+            toolTip.SetToolTip(btnUpdateSettings, "Update Notification");
+            btnUpdateSettings.UseVisualStyleBackColor = true;
+            btnUpdateSettings.Click += BtnUpdateSettings_Click;
+            // 
+            // imageList
+            // 
+            imageList.ColorDepth = ColorDepth.Depth8Bit;
+            imageList.ImageStream = (ImageListStreamer)resources.GetObject("imageList.ImageStream");
+            imageList.TransparentColor = System.Drawing.Color.Transparent;
+            imageList.Images.SetKeyName(0, "18_home.png");
+            imageList.Images.SetKeyName(1, "18_edit.png");
+            imageList.Images.SetKeyName(2, "18_history.png");
+            imageList.Images.SetKeyName(3, "18_settings.png");
+            imageList.Images.SetKeyName(4, "18_help.png");
+            imageList.Images.SetKeyName(5, "18_info.png");
+            imageList.Images.SetKeyName(6, "18_graphic.png");
+            imageList.Images.SetKeyName(7, "18_launch.png");
             // 
             // linkLabeGNU
             // 
@@ -2109,20 +2177,20 @@ namespace NetRadio
             // 
             // progressBar
             // 
-            progressBar.Location = new System.Drawing.Point(196, 307);
+            progressBar.Location = new System.Drawing.Point(180, 307);
             progressBar.Margin = new Padding(4, 3, 4, 3);
             progressBar.Name = "progressBar";
-            progressBar.Size = new System.Drawing.Size(193, 27);
+            progressBar.Size = new System.Drawing.Size(170, 27);
             progressBar.TabIndex = 15;
             progressBar.Visible = false;
             // 
             // lblUpdate
             // 
             lblUpdate.BackColor = System.Drawing.Color.White;
-            lblUpdate.Location = new System.Drawing.Point(194, 312);
+            lblUpdate.Location = new System.Drawing.Point(180, 311);
             lblUpdate.Margin = new Padding(4, 0, 4, 0);
             lblUpdate.Name = "lblUpdate";
-            lblUpdate.Size = new System.Drawing.Size(198, 22);
+            lblUpdate.Size = new System.Drawing.Size(171, 22);
             lblUpdate.TabIndex = 14;
             lblUpdate.Text = "Installed version:";
             // 
@@ -2146,7 +2214,7 @@ namespace NetRadio
             btnUpdate.Location = new System.Drawing.Point(6, 307);
             btnUpdate.Margin = new Padding(4, 3, 4, 3);
             btnUpdate.Name = "btnUpdate";
-            btnUpdate.Size = new System.Drawing.Size(186, 27);
+            btnUpdate.Size = new System.Drawing.Size(170, 27);
             btnUpdate.TabIndex = 13;
             btnUpdate.Text = "Check for updates";
             btnUpdate.UseMnemonic = false;
@@ -2721,20 +2789,6 @@ namespace NetRadio
             tpMiniplayer.ToolTipText = "MiniPlayer (Esc)";
             tpMiniplayer.UseVisualStyleBackColor = true;
             // 
-            // imageList
-            // 
-            imageList.ColorDepth = ColorDepth.Depth8Bit;
-            imageList.ImageStream = (ImageListStreamer)resources.GetObject("imageList.ImageStream");
-            imageList.TransparentColor = System.Drawing.Color.Transparent;
-            imageList.Images.SetKeyName(0, "18_home.png");
-            imageList.Images.SetKeyName(1, "18_edit.png");
-            imageList.Images.SetKeyName(2, "18_history.png");
-            imageList.Images.SetKeyName(3, "18_settings.png");
-            imageList.Images.SetKeyName(4, "18_help.png");
-            imageList.Images.SetKeyName(5, "18_info.png");
-            imageList.Images.SetKeyName(6, "18_graphic.png");
-            imageList.Images.SetKeyName(7, "18_launch.png");
-            // 
             // statusStrip
             // 
             statusStrip.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
@@ -2898,6 +2952,7 @@ namespace NetRadio
             historyPanel.PerformLayout();
             tpSettings.ResumeLayout(false);
             panel1.ResumeLayout(false);
+            panel1.PerformLayout();
             gbAutoRecord.ResumeLayout(false);
             gbAutoRecord.PerformLayout();
             gbOutput.ResumeLayout(false);
@@ -2974,7 +3029,6 @@ namespace NetRadio
         private Button btnUp;
         private Label lblHotkey;
         private ComboBox cmbxHotkey;
-        private Label lblHKInfo;
         private GroupBox gbMiscel;
         private Button btnSearch;
         private DataGridViewTextBoxColumn col1;
@@ -3146,6 +3200,11 @@ namespace NetRadio
         private ImageList imageList;
         private TabPage tpMiniplayer;
         private CheckBox cbClose2Tray;
+        private Button btnUpdateSettings;
+        private Label labelStartMode;
+        private RadioButton rbStartModeTray;
+        private RadioButton rbStartModeMini;
+        private RadioButton rbStartModeMain;
     }
 }
 
