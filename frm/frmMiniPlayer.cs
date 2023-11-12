@@ -83,6 +83,7 @@ namespace NetRadio
 
         private void Panel_Paint(object sender, PaintEventArgs e)
         {
+            Panel p = sender as Panel;
             Color color1, color2;
             if (ActiveForm == this)
             {
@@ -94,7 +95,8 @@ namespace NetRadio
                 color1 = Color.GhostWhite;
                 color2 = Color.WhiteSmoke;
             }
-            LinearGradientBrush myBrush = new(new Point(0, 0), new Point(Width, Height), color1, color2);
+            LinearGradientBrush myBrush = new(p.PointToClient(p.Parent.PointToScreen(p.Location)), new Point(p.Width, p.Height), color1, color2);
+            //LinearGradientBrush myBrush = new(new Point(0, 0), new Point(Width, Height), color1, color2);
             e.Graphics.FillRectangle(myBrush, ClientRectangle);
         }
 
@@ -367,11 +369,11 @@ namespace NetRadio
 
         private void MiniPlayer_Activated(object sender, EventArgs e)
         {
-            panel.Invalidate();
+            panelTitle.Invalidate();
             btnRestore.Invalidate();
         }
 
-        private void MiniPlayer_Deactivate(object sender, EventArgs e) { panel.Invalidate(); btnRestore.Invalidate(); }
+        private void MiniPlayer_Deactivate(object sender, EventArgs e) { panelTitle.Invalidate(); btnRestore.Invalidate(); }
 
         private void CmBxStations_SelectedIndexChanged(object sender, EventArgs e)
         {

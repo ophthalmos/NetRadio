@@ -30,7 +30,7 @@
         {
             components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MiniPlayer));
-            panel = new System.Windows.Forms.Panel();
+            panelTitle = new System.Windows.Forms.Panel();
             btnRestore = new System.Windows.Forms.Button();
             imageList = new System.Windows.Forms.ImageList(components);
             labelD2 = new System.Windows.Forms.Label();
@@ -49,25 +49,25 @@
             timerVolTT = new System.Windows.Forms.Timer(components);
             panelDown = new System.Windows.Forms.Panel();
             panelControls = new System.Windows.Forms.Panel();
-            panel.SuspendLayout();
+            panelTitle.SuspendLayout();
             contextMenuDisplay.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBoxLevel).BeginInit();
             panelControls.SuspendLayout();
             SuspendLayout();
             // 
-            // panel
+            // panelTitle
             // 
-            panel.BackColor = System.Drawing.Color.AliceBlue;
-            panel.Controls.Add(btnRestore);
-            panel.Controls.Add(labelD2);
-            panel.Dock = System.Windows.Forms.DockStyle.Top;
-            panel.Location = new System.Drawing.Point(0, 0);
-            panel.Name = "panel";
-            panel.Size = new System.Drawing.Size(256, 23);
-            panel.TabIndex = 0;
-            panel.Paint += Panel_Paint;
-            panel.MouseDoubleClick += Panel_MouseDoubleClick;
-            panel.MouseDown += MiniPlayer_MouseDown;
+            panelTitle.BackColor = System.Drawing.Color.AliceBlue;
+            panelTitle.Controls.Add(btnRestore);
+            panelTitle.Controls.Add(labelD2);
+            panelTitle.Dock = System.Windows.Forms.DockStyle.Top;
+            panelTitle.Location = new System.Drawing.Point(0, 0);
+            panelTitle.Name = "panelTitle";
+            panelTitle.Size = new System.Drawing.Size(256, 23);
+            panelTitle.TabIndex = 0;
+            panelTitle.Paint += Panel_Paint;
+            panelTitle.MouseDoubleClick += Panel_MouseDoubleClick;
+            panelTitle.MouseDown += MiniPlayer_MouseDown;
             // 
             // btnRestore
             // 
@@ -292,7 +292,7 @@
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             ClientSize = new System.Drawing.Size(256, 77);
             Controls.Add(panelControls);
-            Controls.Add(panel);
+            Controls.Add(panelTitle);
             FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             MaximizeBox = false;
             MinimizeBox = false;
@@ -309,7 +309,7 @@
             Shown += MiniPlayer_Shown;
             MouseDoubleClick += MiniPlayer_MouseDoubleClick;
             MouseDown += MiniPlayer_MouseDown;
-            panel.ResumeLayout(false);
+            panelTitle.ResumeLayout(false);
             contextMenuDisplay.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)pictureBoxLevel).EndInit();
             panelControls.ResumeLayout(false);
@@ -318,7 +318,7 @@
 
         #endregion
 
-        private System.Windows.Forms.Panel panel;
+        private System.Windows.Forms.Panel panelTitle;
         private System.Windows.Forms.Button btnPlayPause;
         private System.Windows.Forms.Label labelD2;
         private System.Windows.Forms.PictureBox pictureBoxLevel;

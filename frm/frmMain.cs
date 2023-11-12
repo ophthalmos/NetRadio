@@ -6,6 +6,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -59,8 +60,8 @@ namespace NetRadio
         private static bool logHistory = true;
         private static bool showTrayInfo = true;
         private static bool autoStopRecording;
-        private static bool startMini; // Miniplayer Command line
-        private static bool startTray; // TrayModus Command line
+        private static bool startMiniCmd; // Miniplayer Command line
+        private static bool startTrayCmd; // TrayModus Command line
         private static bool updateAvailable;
         private bool somethingToSave;
         private bool radioBtnChanged; // ersetzt auf Station-Tab nothingToSave
@@ -121,6 +122,11 @@ namespace NetRadio
         private static readonly Timer timerAction8 = new();
         private static readonly Timer timerAction9 = new();
         private SplashForm frmSplash = null;
+        private int updateIndex = 0; // täglich
+        private int startMode = 0; // Main window
+        private DateTime lastUpdateTime;
+        private readonly string dateFormat = "u"; // UniversalSortableDateTimePattern yyyy'-'MM'-'dd HH':'mm':'ss'Z'
+        private Version updateVersion = null;
 
         public FrmMain()
         {
@@ -282,6 +288,24 @@ namespace NetRadio
                             miniPlayer.MpVolProgBar.Value = volProgressBar.Value = volume;
                             lblVolume.Text = volProgressBar.Value.ToString();
                         }
+                        else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "StartMode")
+                        {
+                            xtr.MoveToAttribute("Value");
+                            startMode = int.TryParse(xtr.Value, out int intMode) ? intMode : 0;
+                            if (startMode == 0) { rbStartModeMain.Checked = true; }
+                            else if (startMode == 1) { rbStartModeMini.Checked = true; }
+                            else if (startMode == 2) { rbStartModeTray.Checked = true; }
+                        }
+                        else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "UpdateIndex")
+                        {
+                            xtr.MoveToAttribute("Value");
+                            updateIndex = int.TryParse(xtr.Value, out int intUpdate) ? intUpdate : 0;
+                        }
+                        else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "UpdateSearch")
+                        {
+                            xtr.MoveToAttribute("DateTime");
+                            lastUpdateTime = DateTime.TryParseExact(xtr.Value, dateFormat, null, DateTimeStyles.None, out DateTime date) ? date : DateTime.UtcNow;
+                        }
                         else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "FormLocation")
                         {
                             xtr.MoveToAttribute("PosX");
@@ -343,24 +367,36 @@ namespace NetRadio
             {
                 for (int i = 0; i < args.Length; i++) // Kommandozeilenargumente werden vor Autostart-Einstellungen benutzt
                 {
-                    if (Regex.IsMatch(args[i], @"[/-][1-9][0-5]?") && int.TryParse(args[i], out int intStation))
+                    if (Regex.IsMatch(args[i], @"^[/-][1-9][0-5]?$") && int.TryParse(args[i][1..], out int intStation))
                     {
-                        string btnName = "rbtn" + Math.Abs(intStation).ToString("D2");
+                        string btnName = "rbtn" + intStation.ToString("D2"); // Math.Abs nicht nötig wg. [1..]
                         Control[] controls = tcMain.TabPages[0].Controls.Find(btnName, true);
                         if (controls.Length == 1 && controls[0] is RadioButton) { autoStartRadioButton = controls[0] as RadioButton; } // foundBtn.Checked = true;
                     }
-                    else if (Regex.IsMatch(args[i], @"[/-](m|min)"))
+                    else if (Regex.IsMatch(args[i], @"^[/-](m|mini)$", RegexOptions.IgnoreCase))
                     {
-                        startMini = true; // siehe frmMain_Shown-Event
+                        startMiniCmd = true; // siehe frmMain_Shown-Event
                         Opacity = 0; // sonst wird GUI kurz angezeigt - unschön
                     }
-                    else if (Regex.IsMatch(args[i], @"[/-](t|tray)"))
+                    else if (Regex.IsMatch(args[i], @"^[/-](t|tray)$", RegexOptions.IgnoreCase))
                     {
-                        startTray = true; // siehe frmMain_Shown-Event
+                        startTrayCmd = true; // siehe frmMain_Shown-Event
                         Opacity = 0; // sonst wird GUI kurz angezeigt - unschön
                     }
                 }
             }
+
+            if (startMode == 1 && !startTrayCmd && !startMiniCmd) // Miniplayer
+            {
+                startMiniCmd = true; // siehe frmMain_Shown-Event
+                Opacity = 0; // sonst wird GUI kurz angezeigt - unschön
+            }
+            else if (startMode == 2 && !startMiniCmd && !startTrayCmd) // tray mode
+            {
+                startTrayCmd = true; // siehe frmMain_Shown-Event
+                Opacity = 0; // sonst wird GUI kurz angezeigt - unschön
+            }
+
             if (autoStartRadioButton == null && !string.IsNullOrEmpty(autostartStation)) // kein Kommandozeilenargumente - dann Autostart-Einstellungen benutzen
             { //MessageBox.Show(autostartStation);
                 string btnName = "rbtn" + autostartStation.PadLeft(2, '0');
@@ -368,8 +404,8 @@ namespace NetRadio
                 if (controls.Length == 1 && controls[0] is RadioButton) { autoStartRadioButton = controls[0] as RadioButton; } // löst StartPlaying aus (s. FrmMain_Shown-Event)
             }
             StatusStrip_SingleLabel(true, findNewStations);
-
             cbAutostart.Checked = Utilities.IsAutoStartEnabled(appName, "\"" + appPath + "\"" + " -min");
+
             Rectangle screen = Screen.PrimaryScreen.WorkingArea;
             if (int.TryParse(formPosX, out int xPos) && int.TryParse(formPosY, out int yPos))
             {// MainForm komplett innerhalb der WorkingArea angezeigt werden
@@ -885,9 +921,9 @@ namespace NetRadio
                         string[] args = arguments.Split('|');
                         for (int i = 0; i < args.Length; i++)
                         {
-                            if (Regex.IsMatch(args[i], @"[/-][1-9][0-5]?") && int.TryParse(args[i], out int intStation))
+                            if (Regex.IsMatch(args[i], @"^[/-][1-9][0-5]?$") && int.TryParse(args[i][1..], out int intStation))
                             {
-                                string btnName = "rbtn" + Math.Abs(intStation).ToString("D2");
+                                string btnName = "rbtn" + intStation.ToString("D2"); // Math.Abs nicht nötig wg. [1..]
                                 Control[] controls = tcMain.TabPages[0].Controls.Find(btnName, true);
                                 if (controls.Length == 1 && controls[0] is RadioButton rb && rb.Enabled)
                                 {
@@ -896,32 +932,33 @@ namespace NetRadio
                                     if (index >= 0 && miniPlayer.MpCmBxStations.SelectedIndex != index) { miniPlayer.MpCmBxStations.SelectedIndex = index; }
                                 }
                             }
-                            else if (Regex.IsMatch(args[i], @"[/-](m|min)"))
+                            else if (Regex.IsMatch(args[i], @"^[/-](m|mini)$", RegexOptions.IgnoreCase))
                             {
                                 ShowMiniPlayer();
                                 Hide(); //ShowInTaskbar = false; verträgt sich nicht mit GlobalHotkey => zerstört Handle
                                 tcMain.SelectedIndex = 0;
                             }
-                            else if (Regex.IsMatch(args[i], @"[/-](t|tray)"))
+                            else if (Regex.IsMatch(args[i], @"^[/-](t|tray)$", RegexOptions.IgnoreCase))
                             {
                                 Hide();
                                 miniPlayer.Hide();
                             }
-                            else if (Regex.IsMatch(args[i], @"[/-](f|full)"))
+                            else if (Regex.IsMatch(args[i], @"^[/-](f|full)$", RegexOptions.IgnoreCase))
                             {
                                 ShowMe();
                                 miniPlayer.Hide();
                             }
-                            else if (Regex.IsMatch(args[i], @"[/-](p|play)"))
+                            else if (Regex.IsMatch(args[i], @"^[/-](p|play)$", RegexOptions.IgnoreCase))
                             {
-                                if (_stream != 0 && Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PAUSED) { BASSChannelPlay(); }
+                                if (Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PLAYING) { return; }
+                                else if (_stream != 0 && Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PAUSED) { BASSChannelPlay(); }
                                 else if (btnReset.Enabled) { BtnReset_Click(null, null); }
                             }
-                            else if (Regex.IsMatch(args[i], @"[/-](s|stop)"))
+                            else if (Regex.IsMatch(args[i], @"^[/-](s|stop)$", RegexOptions.IgnoreCase))
                             {
                                 if (Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PLAYING) { BASSChannelPause(); }
                             }
-                            else if (Regex.IsMatch(args[i], @"[/-](e|exit)")) { Application.Exit(); }
+                            else if (Regex.IsMatch(args[i], @"^[/-](e|exit)$, RegexOptions.IgnoreCase")) { Application.Exit(); }
                         }
                     }
                 }
@@ -1631,19 +1668,32 @@ namespace NetRadio
             miniPlayer.Hide();
             miniPlayer.Opacity = 1;
             if (!string.IsNullOrEmpty(hkLetter) && new Regex("^[A-Z]+$").IsMatch(hkLetter)) { RegisterHK(hkLetter); } // Hotkey kann erst registriert werden, wenn das Fenster erstellt wurde
-            if (startMini || startTray)
+            if (startMiniCmd || startTrayCmd)
             {
                 Hide();
                 Opacity = 1; // nach Hide //notifyIcon.ShowBalloonTip(1, Text, "Autostart", ToolTipIcon.Info);
                 if (autoStartRadioButton != null && int.TryParse(autoStartRadioButton.Tag.ToString(), out int i) && i > 0) { UpdateCaption_lblD1(dgvStations.Rows[i - 1].Cells[0].Value.ToString()); }
             }
-            if (startMini) { ShowMiniPlayer(); }
+            if (startMiniCmd) { ShowMiniPlayer(); }
             if (alwaysOnTop) { TopMost = true; }
             Application.DoEvents();
             if (autoStartRadioButton != null)
             {
                 autoStartRadioButton.Checked = true;
                 autoStartRadioButton.Focus();
+            }
+
+            if (updateIndex == 0 && (DateTime.UtcNow - lastUpdateTime).TotalDays > 1 ||
+                updateIndex == 1 && (DateTime.UtcNow - lastUpdateTime).TotalDays > 7 ||
+                updateIndex == 2 && (DateTime.UtcNow - lastUpdateTime).TotalDays > 30)
+            {
+                BtnUpdate_Click(null, null);
+                if (updateAvailable)
+                {
+                    ShowMe();
+                    tcMain.SelectedTab = tpInfo;
+                }
+                else { lblUpdate.Text = "Current version: " + _curVersion.ToString(); }
             }
         }
 
@@ -1921,6 +1971,18 @@ namespace NetRadio
                 xw.WriteStartElement("Volume");
                 xw.WriteAttributeString("Value", strVolume);
                 xw.WriteEndElement(); // für Volume
+
+                xw.WriteStartElement("StartMode");
+                xw.WriteAttributeString("Value", startMode.ToString());
+                xw.WriteEndElement(); // für UpdateIndex
+
+                xw.WriteStartElement("UpdateIndex");
+                xw.WriteAttributeString("Value", updateIndex.ToString());
+                xw.WriteEndElement(); // für UpdateIndex
+
+                xw.WriteStartElement("UpdateSearch");
+                xw.WriteAttributeString("DateTime", lastUpdateTime.ToString(dateFormat, CultureInfo.InvariantCulture));
+                xw.WriteEndElement(); // für UpdateSearch
 
                 xw.WriteStartElement("FormLocation"); // RestoreBounds.Location funktioniert nicht richtig
                 xw.WriteAttributeString("PosX", Location.X.ToString());
@@ -2763,6 +2825,7 @@ namespace NetRadio
 
         private void TimerCloseFinally_Tick(object sender, EventArgs e)
         {
+            timerCloseFinally.Stop();
             try { Process.Start(localSetupFile, "/deleteSetup=true"); } // /SILENT
             catch (Exception ex) // when (ex is ArgumentNullException or InvalidOperationException or Win32Exception)
             {
@@ -2810,7 +2873,7 @@ namespace NetRadio
             else if (NativeMethods.InternetGetConnectedState(out int flags, 0)) // 18: binary 0001 0010, which would map to LAN(0x2) | RasInstalled(0x10)
             {
                 string xmlURL = "https://www.ophthalmostar.de/netradio.xml";
-                Version newVersion = null;
+                updateVersion = null;
                 try
                 {
                     httpClient ??= new HttpClient();
@@ -2821,8 +2884,11 @@ namespace NetRadio
                         XDocument doc = XDocument.Parse(response.Content.ReadAsStringAsync().Result);
                         if (doc != null)
                         {
-                            newVersion = new Version(doc.Element("netradio").Element("version").Value); // doc.XPathSelectElement("/pdfmover/version").Value
+                            updateVersion = new Version(doc.Element("netradio").Element("version").Value); // doc.XPathSelectElement("/pdfmover/version").Value
+                            //updateVersion = new Version("3.0.0.0");
                             downloadUpdateURL = doc.Element("netradio").Element("url64").Value;
+                            lastUpdateTime = DateTime.UtcNow;
+                            somethingToSave = true;
                         }
                         else { MessageBox.Show("No update information", appName, MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
                     }
@@ -2832,12 +2898,12 @@ namespace NetRadio
                     MessageBox.Show(ex.ToString(), appName); // MsgBoxOK("Die Downloadseite wurde nicht erreicht.", "Error");
                     return;
                 }
-                if (newVersion == null) { MessageBox.Show("Sorry, no update information available.", appName, MessageBoxButtons.OK, MessageBoxIcon.Information); }
+                if (updateVersion == null) { MessageBox.Show("Sorry, no update information available.", appName, MessageBoxButtons.OK, MessageBoxIcon.Information); }
                 else
                 {
-                    if (newVersion.CompareTo(_curVersion) > 0) // größer 0 → NEWVersion vorhanden; 0 → beide Versionen identisch
+                    if (updateVersion.CompareTo(_curVersion) > 0) // größer 0 → NEWVersion vorhanden; 0 → beide Versionen identisch
                     {
-                        lblUpdate.Text = "Update available: v" + newVersion.ToString();
+                        lblUpdate.Text = "Update available: v" + updateVersion.ToString();
                         btnUpdate.Text = "Download & Install"; // UseMnemonic = false
                         updateAvailable = true;
                         btnUpdate.BackColor = SystemColors.MenuHighlight;
@@ -3440,6 +3506,43 @@ namespace NetRadio
                     }
                 }
                 else { close2Tray = false; }
+                somethingToSave = true;
+            }
+        }
+
+        private void BtnUpdateSettings_Click(object sender, EventArgs e)
+        {
+            int prevUpdateIndex = updateIndex;
+            TaskDialogPage pageUpdate = new()
+            {
+                Caption = appName,
+                Heading = "Automatic Updates",
+                Text = "You will be notified that an update is available to download.\n\nDetection frequency:",
+                //Icon = new TaskDialogIcon(Icon),
+                AllowCancel = true,
+                SizeToContent = true,
+                Buttons = { TaskDialogButton.OK, TaskDialogButton.Cancel },
+            };
+            TaskDialogRadioButton rbn0 = pageUpdate.RadioButtons.Add("Every day");
+            TaskDialogRadioButton rbn1 = pageUpdate.RadioButtons.Add("Every week");
+            TaskDialogRadioButton rbn2 = pageUpdate.RadioButtons.Add("Every month");
+            TaskDialogRadioButton rbn3 = pageUpdate.RadioButtons.Add("Never");
+            if (updateIndex == 1) { rbn1.Checked = true; }
+            else if (updateIndex == 2) { rbn2.Checked = true; }
+            else if (updateIndex == 3) { rbn3.Checked = true; }
+            else { rbn0.Checked = true; }
+            if (TaskDialog.ShowDialog(this, pageUpdate) == TaskDialogButton.OK)
+            {
+                updateIndex = rbn3.Checked ? 3 : rbn2.Checked ? 2 : rbn1.Checked ? 1 : 0;
+                if (updateIndex != prevUpdateIndex) { somethingToSave = true; }
+            }
+        }
+
+        private void RbStartMode_CheckedChanged(object sender, EventArgs e)
+        {
+            if (rbStartModeMain.Focused || rbStartModeMini.Focused || rbStartModeTray.Focused)
+            {
+                startMode = rbStartModeTray.Checked ? 2 : rbStartModeMini.Checked ? 1 : 0;
                 somethingToSave = true;
             }
         }
