@@ -1,5 +1,5 @@
 #define MyAppName "NetRadio"
-#define MyAppVersion "2.5.2.0"
+#define MyAppVersion "2.5.2.1"
 #pragma include __INCLUDE__ + ";" + "C:\Program Files (x86)\Inno Download Plugin"
 #include <idp.iss>
 
@@ -78,7 +78,8 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 
 [Run]
 Filename: "{app}\{#MyAppName}.exe"; Description: "Launch {#MyAppName}"; Flags: postinstall nowait skipifsilent runasoriginaluser
-Filename: "{app}\{#MyAppName}.pdf"; Description: "View Frequently Asked Questions (PDF)"; Flags: postinstall shellexec runasoriginaluser unchecked
+Filename: "{app}\{#MyAppName}.pdf"; Description: "View Frequently Asked Questions (PDF)"; Flags: postinstall shellexec runasoriginaluser 
+; unchecked
 
 [Messages]
 BeveledLabel=
