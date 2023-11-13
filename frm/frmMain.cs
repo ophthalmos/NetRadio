@@ -958,11 +958,11 @@ namespace NetRadio
                             {
                                 if (Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PLAYING) { BASSChannelPause(); }
                             }
-                            else if (Regex.IsMatch(args[i], @"^[/-](e|exit)$, RegexOptions.IgnoreCase")) { Application.Exit(); }
+                            else if (Regex.IsMatch(args[i], @"^[/-](e|exit)$", RegexOptions.IgnoreCase)) { Application.Exit(); } 
                         }
                     }
                 }
-                else { MessageBox.Show(string.Format("Unrecognized data type = {0}.", (int)copyData.dwData), appName, MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                //else { MessageBox.Show(string.Format("Unrecognized data type = {0}.", (int)copyData.dwData), appName, MessageBoxButtons.OK, MessageBoxIcon.Error); }
             }
             else if (m.Msg == NativeMethods.WM_SHOWNETRADIO) { ShowMe(); } // another instance is started
             else if (m.Msg == NativeMethods.WM_HOTKEY)
@@ -1006,6 +1006,7 @@ namespace NetRadio
             bool top = miniPlayer.TopMost; // get our current "TopMost" value (ours will always be false though)
             miniPlayer.TopMost = true; // make our form jump to the top of everything
             miniPlayer.TopMost = top; // set it back to whatever it was
+            miniPlayer.BringToFront();
             miniPlayer.Activate();
         }
 
@@ -1674,8 +1675,8 @@ namespace NetRadio
                 Opacity = 1; // nach Hide //notifyIcon.ShowBalloonTip(1, Text, "Autostart", ToolTipIcon.Info);
                 if (autoStartRadioButton != null && int.TryParse(autoStartRadioButton.Tag.ToString(), out int i) && i > 0) { UpdateCaption_lblD1(dgvStations.Rows[i - 1].Cells[0].Value.ToString()); }
             }
+            if (alwaysOnTop) { miniPlayer.TopMost = TopMost = true; }
             if (startMiniCmd) { ShowMiniPlayer(); }
-            if (alwaysOnTop) { TopMost = true; }
             Application.DoEvents();
             if (autoStartRadioButton != null)
             {
