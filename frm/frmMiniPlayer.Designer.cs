@@ -86,7 +86,7 @@
             btnRestore.Size = new System.Drawing.Size(26, 26);
             btnRestore.TabIndex = 2;
             btnRestore.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            toolTip.SetToolTip(btnRestore, "Main Window (Esc)\r\nWith Shift-Key: Exit");
+            toolTip.SetToolTip(btnRestore, "Main Window (Esc)");
             btnRestore.UseVisualStyleBackColor = false;
             btnRestore.Click += BtnRestore_Click;
             btnRestore.Paint += BtnRestore_Paint;
@@ -187,6 +187,7 @@
             pictureBoxLevel.TabIndex = 2;
             pictureBoxLevel.TabStop = false;
             pictureBoxLevel.Paint += PictureBoxLevel_Paint;
+            pictureBoxLevel.DoubleClick += PictureBoxLevel_DoubleClick;
             pictureBoxLevel.MouseDown += MiniPlayer_MouseDown;
             // 
             // btnPlayPause

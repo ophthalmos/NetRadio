@@ -62,6 +62,7 @@ namespace NetRadio
         private static bool autoStopRecording;
         private static bool startMiniCmd; // Miniplayer Command line
         private static bool startTrayCmd; // TrayModus Command line
+        private bool mainShown;
         private static bool updateAvailable;
         private bool somethingToSave;
         private bool radioBtnChanged; // ersetzt auf Station-Tab nothingToSave
@@ -669,7 +670,7 @@ namespace NetRadio
                 if (showBalloonTip)
                 {
                     IntPtr foregroundWin = NativeMethods.GetForegroundWindow();
-                    if (foregroundWin != miniPlayer.Handle && foregroundWin != Handle) { notifyIcon.ShowBalloonTip(2, "Now playing: ", lblD2.Text, ToolTipIcon.None); }
+                    if (foregroundWin != miniPlayer.Handle && foregroundWin != Handle) { notifyIcon.ShowBalloonTip(2, "Now playing: ", lblD2.Text, ToolTipIcon.Info); }
                 }
             }
             else { lblD4.Text = dgvStations.Rows[_currentButtonNum - 1].Cells[1].Value.ToString(); }
@@ -765,6 +766,10 @@ namespace NetRadio
             //} // https://www.codeproject.com/Tips/1017834/How-to-Send-Data-from-One-Process-to-Another-in-Cs
 
 
+            IntPtr sysMenuHandle = NativeMethods.GetSystemMenu(Handle, false);
+            NativeMethods.AppendMenu(sysMenuHandle, NativeMethods.MF_BYPOSITION | NativeMethods.MF_SEPARATOR, 0, string.Empty);
+            NativeMethods.AppendMenu(sysMenuHandle, NativeMethods.MF_BYPOSITION, NativeMethods.IDM_CUSTOMITEM1, "Exit\tShift+Esc");
+
             //FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(Path.Combine(Path.GetDirectoryName(appPath), "bass_aac.dll"));
             lblCredits.Text = "Acknowledgments" + Environment.NewLine +
                 "NetRadio uses libraries for streaming and audio playback:" + Environment.NewLine +
@@ -834,7 +839,12 @@ namespace NetRadio
             ((ScrollBar)dgvStations.GetType().GetProperty("VerticalScrollBar", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(dgvStations, null)).MouseCaptureChanged += (s, e) => { dgvStations.EndEdit(); };
         }
 
-        private void MiniPlayer_FormHide(object sender, EventArgs e) { ShowMe(); }
+        private void MiniPlayer_FormHide(object sender, EventArgs e)
+        {
+            ShowMe();
+            if (NativeMethods.IsKeyDown(Keys.Escape)) { toolTip.Active = false; } // Workaround for persistent ToolTip display
+            else { toolTip.Active = true; } 
+        }
         private void MiniPlayer_PlayReset(object sender, EventArgs e) { BtnReset_Click(null, null); }
         private void MiniPlayer_PlayPause(object sender, EventArgs e) { BtnPlayStop_Click(null, null); }
         private void MiniPlayer_VolumeProgress(object sender, EventArgs e) { SetProgressBarValue(); }
@@ -958,7 +968,7 @@ namespace NetRadio
                             {
                                 if (Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PLAYING) { BASSChannelPause(); }
                             }
-                            else if (Regex.IsMatch(args[i], @"^[/-](e|exit)$", RegexOptions.IgnoreCase)) { Application.Exit(); } 
+                            else if (Regex.IsMatch(args[i], @"^[/-](e|exit)$", RegexOptions.IgnoreCase)) { Application.Exit(); }
                         }
                     }
                 }
@@ -970,7 +980,8 @@ namespace NetRadio
                 int keyPressTick = Environment.TickCount;
                 int elapsed = keyPressTick - lastHotkeyPress;
                 lastHotkeyPress = keyPressTick;
-                if (elapsed <= 400) { Close(); }
+                if (!mainShown) { return; } // andernfalls kann es bei 2maligem Drücken zu Anzeige des Hauptfensters und des Miniplayers kommen.
+                if (elapsed <= 400 || (ModifierKeys & Keys.Shift) == Keys.Shift) { Close(); }
                 else if (miniPlayer.Visible && !miniPlayer.Handle.Equals(NativeMethods.GetForegroundWindow())) { miniPlayer.Activate(); }
                 else if (Visible) // heißt nicht, das Form sichtbar bzw. das aktive Fenster sein muss
                 {
@@ -987,27 +998,33 @@ namespace NetRadio
             else if (m.Msg == NativeMethods.WM_QUERYENDSESSION) { Close(); }
             else if (m.Msg == NativeMethods.WM_NCLBUTTONDBLCLK) { Hide(); ShowMiniPlayer(); }
             else if (m.Msg == NativeMethods.WM_NCLBUTTONDOWN && tcMain.SelectedTab == tpStations) { dgvStations.EndEdit(); }
-            //else if (m.Msg == NativeMethods.WM_SETCURSOR) // does work if there are no controls covering the form where the cursor is; every control has its own WndProc
-            //{
-            //    int lowWord = (m.LParam.ToInt32() << 16) >> 16;
-            //    if (lowWord == NativeMethods.HTCLIENT) { Console.Beep(); } //  m.Result = (IntPtr)1; // return TRUE; equivalent in C++
-            //}
+            else if ((m.Msg == NativeMethods.WM_SYSCOMMAND) && ((int)m.WParam == NativeMethods.IDM_CUSTOMITEM1)) { Application.Exit(); }
             base.WndProc(ref m);
         }
 
         private void ShowMiniPlayer()
         {
-            int index = miniPlayer.MpCmBxStations.FindStringExact(lblD1.Text);
-            if (index >= 0 && miniPlayer.MpCmBxStations.SelectedIndex != index) { miniPlayer.MpCmBxStations.SelectedIndex = index; }
-            miniPlayer.MpCmBxStations.Select(0, 0);
-            miniPlayer.MpPBLevel.Focus(); // Focus von MpCmBxStations weg nehmen 
             Application.DoEvents(); // für Autostart wichtig, damit GUI im fertigen Zustand angezeigt wird
             miniPlayer.Show();
-            bool top = miniPlayer.TopMost; // get our current "TopMost" value (ours will always be false though)
             miniPlayer.TopMost = true; // make our form jump to the top of everything
-            miniPlayer.TopMost = top; // set it back to whatever it was
+            miniPlayer.TopMost = alwaysOnTop; // set it back to whatever it was
             miniPlayer.BringToFront();
             miniPlayer.Activate();
+
+
+            miniPlayer.MpCmBxStations.Text = lblD1.Text;
+            //    //miniPlayer.MpPBLevel.Focus(); // Focus von MpCmBxStations weg nehmen 
+            //    //miniPlayer.MpCmBxStations.Invoke((MethodInvoker)delegate {
+            //    miniPlayer.MpCmBxStations.Invoke(new Action(() =>
+            //    miniPlayer.MpCmBxStations.SelectedIndex = _currentButtonNum > 0
+            //            ? miniPlayer.MpCmBxStations.FindStringExact(Utilities.StationLong(dgvStations.Rows[_currentButtonNum - 1].Cells[0].Value.ToString()))
+            //            : miniPlayer.MpCmBxStations.FindStringExact(lblD1.Text) // -1 wenn nicht gefunden wird => leere Anzeige
+            //)); // }); //miniPlayer.MpCmBxStations.Select(0, 0);
+            //    if (miniPlayer.MpCmBxStations.Text.Length == 0)
+            //    {
+            //        MessageBox.Show("Empty");
+            //    }
+            //    //else { miniPlayer.MpCmBxStations.Focus(); miniPlayer.MpCmBxStations.Select(0, 0); }
         }
 
         private void ShowMe()
@@ -1016,11 +1033,11 @@ namespace NetRadio
             {
                 Show();
                 miniPlayer.Hide();
+                if (_currentButtonNum > 0 && tcMain.TabPages[0].Controls["rbtn" + _currentButtonNum.ToString("D2")] is RadioButton rb) { rb.Focus(); }
             }
             else if (WindowState == FormWindowState.Minimized) { WindowState = FormWindowState.Normal; } // wahrscheinlich unnötig, kann nicht minimiert werden
-            bool top = TopMost; // get our current "TopMost" value (ours will always be false though)
             TopMost = true; // make our form jump to the top of everything
-            TopMost = top; // set it back to whatever it was
+            TopMost = alwaysOnTop; // set it back to whatever it was
             BringToFront();
             Activate();
         }
@@ -1111,7 +1128,7 @@ namespace NetRadio
                                 if (dgvStations.Rows[i].Cells[1].Value != null && dgvStations.Rows[i].Cells[1].Value.ToString().ToLower() == info.filename.ToLower())
                                 {
                                     urlIsStillInFavorites = (tcMain.TabPages[0].Controls["rbtn" + (i + 1).ToString("D2")] as RadioButton).Checked = true; // tcMain.TabPages[0].Controls.Find("rbtn" + (i + 1).ToString("D2"), true)[0] as RadioButton; //  cast to the control type and take the first element 
-                                    UpdateCaption_lblD1(dgvStations.Rows[i].Cells[0].Value.ToString());
+                                    if (dgvStations.Rows[i].Cells[0].Value != null) { UpdateCaption_lblD1(dgvStations.Rows[i].Cells[0].Value.ToString()); }
                                     break;
                                 }
                             }
@@ -1133,7 +1150,7 @@ namespace NetRadio
                                 if (iTag > 0)
                                 {
                                     StartPlaying(dgvStations.Rows[iTag - 1].Cells[1].Value.ToString(), iTag);
-                                    UpdateCaption_lblD1(dgvStations.Rows[iTag - 1].Cells[0].Value.ToString());
+                                    if (dgvStations.Rows[iTag - 1].Cells[0].Value != null) { UpdateCaption_lblD1(dgvStations.Rows[iTag - 1].Cells[0].Value.ToString()); }
                                     int index = miniPlayer.MpCmBxStations.FindStringExact(lblD1.Text);
                                     if (index >= 0 && miniPlayer.MpCmBxStations.SelectedIndex != index) { miniPlayer.MpCmBxStations.SelectedIndex = index; }
                                 }
@@ -1360,7 +1377,7 @@ namespace NetRadio
 
         private void UpdateCaption_lblD1(string caption)
         {
-            lblD1.Text = Utilities.StationLong(caption); // Regex.Replace(caption, @"\s+", " "); // doppelte Leerzeichen entfernen
+            lblD1.Text = string.IsNullOrEmpty(caption) ? "" : Utilities.StationLong(caption); // Regex.Replace(caption, @"\s+", " "); // doppelte Leerzeichen entfernen
             //MiniPlayer.MpLblD1_Text(lblD1.Text);
         }
 
@@ -1372,9 +1389,12 @@ namespace NetRadio
                 RadioButton foundBtn = tcMain.TabPages[0].Controls.Find("rbtn" + i.ToString("D2"), true)[0] as RadioButton;
                 if (dgvStations.Rows[i - 1].Cells[1].Value != null && dgvStations.Rows[i - 1].Cells[1].Value.ToString().Length > 0) // column "URL"
                 {
-                    foundBtn.Text = Utilities.StationShort(dgvStations.Rows[i - 1].Cells[0].Value.ToString());
-                    toolTip.SetToolTip(foundBtn, Utilities.StationLong(dgvStations.Rows[i - 1].Cells[0].Value.ToString()));
-                    miniPlayer.MpCmBxStations.Items.Add(Utilities.StationLong(dgvStations.Rows[i - 1].Cells[0].Value.ToString()));
+                    if (dgvStations.Rows[i - 1].Cells[0].Value != null)
+                    {
+                        foundBtn.Text = Utilities.StationShort(dgvStations.Rows[i - 1].Cells[0].Value.ToString());
+                        toolTip.SetToolTip(foundBtn, Utilities.StationLong(dgvStations.Rows[i - 1].Cells[0].Value.ToString()));
+                        miniPlayer.MpCmBxStations.Items.Add(Utilities.StationLong(dgvStations.Rows[i - 1].Cells[0].Value.ToString()));
+                    }
                     foundBtn.Enabled = true;
                 }
                 else
@@ -1696,109 +1716,7 @@ namespace NetRadio
                 }
                 else { lblUpdate.Text = "Current version: " + _curVersion.ToString(); }
             }
-        }
-
-        private void FrmMain_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.F2 && tcMain.SelectedIndex == 0)
-            {
-                int rbi = 0;
-                foreach (RadioButton rb in tcMain.TabPages[0].Controls.OfType<RadioButton>())
-                {
-                    if (rb.Checked) { rbi = Convert.ToInt32(rb.Tag) - 1; break; }
-                }
-                tcMain.SelectedIndex = 1;
-                dgvStations.Rows[rbi].Selected = true;
-                dgvStations.CurrentCell = dgvStations.Rows[rbi].Cells[0]; // wg. F2, öffnet sonst 1. Zeile
-            }
-            else if (e.KeyCode == Keys.F2 && tcMain.SelectedIndex >= 2)
-            {
-                tcMain.SelectedIndex = 1; // Stations
-            }
-            else if (e.KeyCode == Keys.F5 && tcMain.SelectedTab != tpHistory)
-            {
-                tcMain.SelectedIndex = 2; // History
-            }
-            else if (e.KeyCode == Keys.F4 && tcMain.SelectedTab != tpPlayer)
-            {
-                tcMain.SelectedIndex = 0; // Player
-            }
-            else if (e.KeyCode == Keys.F5 && tcMain.SelectedTab == tpHistory && historyListView.Items.Count > 0)
-            {
-                lviComparer.SortColumn = 0;
-                lviComparer.Order = SortOrder.Descending;
-                historyListView.Refresh(); // Arrows auf anderen ColumnHeader-Buttons werden entfernt
-                historyListView.Sort(); // MessageBox.Show(historyListView.TopItem.Tag.ToString()); // 2023-04-14T12:59:06.3463796Z
-                lvSortOrderArray[0] = "Descending";
-            }
-            else if (e.KeyCode == Keys.F8 && tcMain.SelectedTab != tpSettings)
-            {
-                tcMain.SelectedIndex = 3; // Setting
-            }
-            else if (e.KeyCode == Keys.F8 && tcMain.SelectedTab == tpSettings)
-            {
-                ControlToolStripMenuItem_Click(null, null);
-            }
-            else if (e.KeyCode == Keys.F9 && tcMain.SelectedTab != tpHelp)
-            {
-                tcMain.SelectedIndex = 4; // Spectrum
-            }
-            else if (e.KeyCode == Keys.F9 && tcMain.SelectedTab == tpHelp)
-            {
-                tcMain.SelectedIndex = 0; // Player
-            }
-            else if (e.KeyCode == Keys.F11 && tcMain.SelectedTab != tpInfo)
-            {
-                tcMain.SelectedIndex = 5; // Information
-            }
-            else if (e.KeyCode == Keys.F11 && tcMain.SelectedTab == tpInfo)
-            {
-                tcMain.SelectedIndex = 0; // Player
-            }
-            else if (e.KeyCode == Keys.F12 && tcMain.SelectedTab != tpSectrum)
-            {
-                tcMain.SelectedIndex = 6; // Spectrum
-            }
-            else if (e.KeyCode == Keys.F12 && tcMain.SelectedTab == tpSectrum)
-            {
-                tcMain.SelectedIndex = 0; // Player
-            }
-            else if (e.KeyCode == Keys.G && e.Modifiers == Keys.Control && (tcMain.SelectedIndex == 0 || tcMain.SelectedIndex == 2))
-            {
-                GoogleToolStripMenuItem_Click(null, null);
-            }
-            else if (((e.KeyCode == Keys.F && e.Modifiers == Keys.Control) || e.KeyCode == Keys.F3) && tcMain.SelectedIndex <= 1)
-            {
-                e.Handled = true;
-                BtnSearch_Click(null, null);
-            }
-            else if (tcMain.SelectedIndex == 0)
-            {
-                if (e.KeyCode == Keys.Oemplus) { btnIncrease.PerformClick(); btnIncrease.Focus(); }
-                else if (e.KeyCode == Keys.OemMinus) { btnDecrease.PerformClick(); btnDecrease.Focus(); }
-                else if (e.KeyCode == Keys.Add) { btnIncrease.PerformClick(); btnIncrease.Focus(); }
-                else if (e.KeyCode == Keys.Subtract) { btnDecrease.PerformClick(); btnDecrease.Focus(); }
-                else if (e.KeyCode == Keys.Back) { btnReset.PerformClick(); btnReset.Focus(); }
-                else if (e.KeyCode == Keys.Insert) { btnRecord.PerformClick(); btnRecord.Focus(); }
-                else if (e.KeyCode == Keys.D1) { rbtn01.Checked = true; rbtn01.Focus(); }
-                else if (e.KeyCode == Keys.D2) { rbtn02.Checked = true; rbtn02.Focus(); }
-                else if (e.KeyCode == Keys.D3) { rbtn03.Checked = true; rbtn03.Focus(); }
-                else if (e.KeyCode == Keys.D4) { rbtn04.Checked = true; rbtn04.Focus(); }
-                else if (e.KeyCode == Keys.D5) { rbtn05.Checked = true; rbtn05.Focus(); }
-                else if (e.KeyCode == Keys.D6) { rbtn06.Checked = true; rbtn06.Focus(); }
-                else if (e.KeyCode == Keys.D7) { rbtn07.Checked = true; rbtn07.Focus(); }
-                else if (e.KeyCode == Keys.D8) { rbtn08.Checked = true; rbtn08.Focus(); }
-                else if (e.KeyCode == Keys.D9) { rbtn09.Checked = true; rbtn09.Focus(); }
-                else if (e.KeyCode == Keys.NumPad1) { rbtn01.Checked = true; rbtn01.Focus(); }
-                else if (e.KeyCode == Keys.NumPad2) { rbtn02.Checked = true; rbtn02.Focus(); }
-                else if (e.KeyCode == Keys.NumPad3) { rbtn03.Checked = true; rbtn03.Focus(); }
-                else if (e.KeyCode == Keys.NumPad4) { rbtn04.Checked = true; rbtn04.Focus(); }
-                else if (e.KeyCode == Keys.NumPad5) { rbtn05.Checked = true; rbtn05.Focus(); }
-                else if (e.KeyCode == Keys.NumPad6) { rbtn06.Checked = true; rbtn06.Focus(); }
-                else if (e.KeyCode == Keys.NumPad7) { rbtn07.Checked = true; rbtn07.Focus(); }
-                else if (e.KeyCode == Keys.NumPad8) { rbtn08.Checked = true; rbtn08.Focus(); }
-                else if (e.KeyCode == Keys.NumPad9) { rbtn09.Checked = true; rbtn09.Focus(); }
-            }
+            mainShown = true;
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -1820,8 +1738,10 @@ namespace NetRadio
                             else
                             {
                                 Hide(); //ShowInTaskbar = false; verträgt sich nicht mit GlobalHotkey => zerstört Handle
-                                ShowMiniPlayer();
                                 tcMain.SelectedIndex = 0;
+                                ShowMiniPlayer();
+                                if (NativeMethods.IsKeyDown(Keys.Escape)) { miniPlayer.MpToolTip.Active = false; } // Workaround for persistent ToolTip display
+                                else { miniPlayer.MpToolTip.Active = true; }
                             }
                         }
                         return true;
@@ -1841,6 +1761,165 @@ namespace NetRadio
                         if (Visible && NativeMethods.HitTest(Bounds, Handle, PointToScreen(Point.Empty))) { Hide(); } // "Tray-Modus"
                     }
                     return true;
+                case Keys.F4 | Keys.Control | Keys.Shift: { Close(); return true; }
+                case Keys.F2:
+                    {
+                        if (tcMain.SelectedIndex == 0)
+                        {
+                            int rbi = 0;
+                            foreach (RadioButton rb in tcMain.TabPages[0].Controls.OfType<RadioButton>())
+                            {
+                                if (rb.Checked) { rbi = Convert.ToInt32(rb.Tag) - 1; break; }
+                            }
+                            tcMain.SelectedIndex = 1;
+                            dgvStations.Rows[rbi].Selected = true;
+                            dgvStations.CurrentCell = dgvStations.Rows[rbi].Cells[0]; // wg. F2, öffnet sonst 1. Zeile
+                        }
+                        else if (tcMain.SelectedIndex >= 2)
+                        {
+                            tcMain.SelectedIndex = 1; // Stations
+                            return true;
+                        }
+                        return false;
+                    }
+                case Keys.F5:
+                    {
+                        if (tcMain.SelectedTab != tpHistory)
+                        {
+                            tcMain.SelectedIndex = 2; // History
+                        }
+                        else if (tcMain.SelectedTab == tpHistory && historyListView.Items.Count > 0)
+                        {
+                            lviComparer.SortColumn = 0;
+                            lviComparer.Order = SortOrder.Descending;
+                            historyListView.Refresh(); // Arrows auf anderen ColumnHeader-Buttons werden entfernt
+                            historyListView.Sort(); // MessageBox.Show(historyListView.TopItem.Tag.ToString()); // 2023-04-14T12:59:06.3463796Z
+                            lvSortOrderArray[0] = "Descending";
+                        }
+                        return true;
+                    }
+                case Keys.F4:
+                    {
+                        if (tcMain.SelectedTab != tpPlayer)
+                        {
+                            tcMain.SelectedIndex = 0; // Player
+                            return true;
+                        }
+                        return false;
+                    }
+                case Keys.F8:
+                    {
+                        if (tcMain.SelectedTab != tpSettings)
+                        {
+                            tcMain.SelectedIndex = 3; // Setting
+                        }
+                        else if (tcMain.SelectedTab == tpSettings)
+                        {
+                            ControlToolStripMenuItem_Click(null, null);
+                        }
+                        return true;
+                    }
+                case Keys.F9:
+                    {
+                        if (tcMain.SelectedTab != tpHelp)
+                        {
+                            tcMain.SelectedIndex = 4; // Spectrum
+                        }
+                        else if (tcMain.SelectedTab == tpHelp)
+                        {
+                            tcMain.SelectedIndex = 0; // Player
+                        }
+                        return true;
+                    }
+                case Keys.F11:
+                    {
+                        if (tcMain.SelectedTab != tpInfo)
+                        {
+                            tcMain.SelectedIndex = 5; // Information
+                        }
+                        else if (tcMain.SelectedTab == tpInfo)
+                        {
+                            tcMain.SelectedIndex = 0; // Player
+                        }
+                        return true;
+                    }
+                case Keys.F12:
+                    {
+                        if (tcMain.SelectedTab != tpSectrum)
+                        {
+                            tcMain.SelectedIndex = 6; // Spectrum
+                        }
+                        else if (tcMain.SelectedTab == tpSectrum)
+                        {
+                            tcMain.SelectedIndex = 0; // Player
+                        }
+                        return true;
+                    }
+                case Keys.G | Keys.Control:
+                    {
+                        if (tcMain.SelectedIndex == 0 || tcMain.SelectedIndex == 2)
+                        {
+                            GoogleToolStripMenuItem_Click(null, null);
+                        }
+                        return true;
+                    }
+                case Keys.F | Keys.Control:
+                case Keys.F3:
+                    {
+                        if (tcMain.SelectedIndex <= 1)
+                        {
+                            BtnSearch_Click(null, null);
+                        }
+                        return true;
+                    }
+                case Keys.Oemplus:
+                    {
+                        if (tcMain.SelectedIndex == 0) { btnIncrease.PerformClick(); btnIncrease.Focus(); return true; }
+                        return true;
+                    }
+                case Keys.OemMinus:
+                    {
+                        if (tcMain.SelectedIndex == 0) { btnDecrease.PerformClick(); btnDecrease.Focus(); return true; }
+                        return true;
+                    }
+                case Keys.Add:
+                    {
+                        if (tcMain.SelectedIndex == 0) { btnIncrease.PerformClick(); btnIncrease.Focus(); return true; }
+                        return true;
+                    }
+                case Keys.Subtract:
+                    {
+                        if (tcMain.SelectedIndex == 0) { btnDecrease.PerformClick(); btnDecrease.Focus(); return true; }
+                        return true;
+                    }
+                case Keys.Back:
+                    {
+                        if (tcMain.SelectedIndex == 0) { btnReset.PerformClick(); btnReset.Focus(); return true; }
+                        return false;
+                    }
+                case Keys.Insert:
+                    {
+                        if (tcMain.SelectedIndex == 0) { btnRecord.PerformClick(); btnRecord.Focus(); return true; }
+                        return false;
+                    }
+                case Keys.D1: { if (tcMain.SelectedIndex == 0) { rbtn01.Checked = true; rbtn01.Focus(); return true; } return false; }
+                case Keys.D2: { if (tcMain.SelectedIndex == 0) { rbtn02.Checked = true; rbtn02.Focus(); return true; } return false; }
+                case Keys.D3: { if (tcMain.SelectedIndex == 0) { rbtn03.Checked = true; rbtn03.Focus(); return true; } return false; }
+                case Keys.D4: { if (tcMain.SelectedIndex == 0) { rbtn04.Checked = true; rbtn04.Focus(); return true; } return false; }
+                case Keys.D5: { if (tcMain.SelectedIndex == 0) { rbtn05.Checked = true; rbtn05.Focus(); return true; } return false; }
+                case Keys.D6: { if (tcMain.SelectedIndex == 0) { rbtn06.Checked = true; rbtn06.Focus(); return true; } return false; }
+                case Keys.D7: { if (tcMain.SelectedIndex == 0) { rbtn07.Checked = true; rbtn07.Focus(); return true; } return false; }
+                case Keys.D8: { if (tcMain.SelectedIndex == 0) { rbtn08.Checked = true; rbtn08.Focus(); return true; } return false; }
+                case Keys.D9: { if (tcMain.SelectedIndex == 0) { rbtn09.Checked = true; rbtn09.Focus(); return true; } return false; }
+                case Keys.NumPad1: { if (tcMain.SelectedIndex == 0) { rbtn01.Checked = true; rbtn01.Focus(); return true; } return false; }
+                case Keys.NumPad2: { if (tcMain.SelectedIndex == 0) { rbtn02.Checked = true; rbtn02.Focus(); return true; } return false; }
+                case Keys.NumPad3: { if (tcMain.SelectedIndex == 0) { rbtn03.Checked = true; rbtn03.Focus(); return true; } return false; }
+                case Keys.NumPad4: { if (tcMain.SelectedIndex == 0) { rbtn04.Checked = true; rbtn04.Focus(); return true; } return false; }
+                case Keys.NumPad5: { if (tcMain.SelectedIndex == 0) { rbtn05.Checked = true; rbtn05.Focus(); return true; } return false; }
+                case Keys.NumPad6: { if (tcMain.SelectedIndex == 0) { rbtn06.Checked = true; rbtn06.Focus(); return true; } return false; }
+                case Keys.NumPad7: { if (tcMain.SelectedIndex == 0) { rbtn07.Checked = true; rbtn07.Focus(); return true; } return false; }
+                case Keys.NumPad8: { if (tcMain.SelectedIndex == 0) { rbtn08.Checked = true; rbtn08.Focus(); return true; } return false; }
+                case Keys.NumPad9: { if (tcMain.SelectedIndex == 0) { rbtn09.Checked = true; rbtn09.Focus(); return true; } return false; }
             }
             return base.ProcessCmdKey(ref msg, keyData);
         }
@@ -2886,7 +2965,7 @@ namespace NetRadio
                         if (doc != null)
                         {
                             updateVersion = new Version(doc.Element("netradio").Element("version").Value); // doc.XPathSelectElement("/pdfmover/version").Value
-                            //updateVersion = new Version("3.0.0.0");
+                                                                                                           //updateVersion = new Version("3.0.0.0");
                             downloadUpdateURL = doc.Element("netradio").Element("url64").Value;
                             lastUpdateTime = DateTime.UtcNow;
                             somethingToSave = true;
@@ -2981,7 +3060,8 @@ namespace NetRadio
                     g.SmoothingMode = SmoothingMode.HighQuality;
                     g.PixelOffsetMode = PixelOffsetMode.HighSpeed;
                     //g.Clear(pbLevel.BackColor);
-                    using Pen p = new(SystemColors.Highlight, 5.0f); // ActiveCaption
+                    using Pen p = new(new LinearGradientBrush(new Point(0, -10), new Point(0, height), Color.Coral, SystemColors.Highlight), 5.0f);
+                    //using Pen p = new(SystemColors.Highlight, 5.0f); // ActiveCaption
                     p.DashCap = DashCap.Round;
                     //p.DashPattern = new float[] { 1.0f, 1.0f };
                     g.DrawLine(p, 8, height, 8, height - levelRight);

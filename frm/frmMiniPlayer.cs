@@ -16,6 +16,7 @@ namespace NetRadio
         internal ComboBox MpCmBxStations { get { return cmBxStations; } set { cmBxStations = value; } }
         internal Button MpBtnPlay { get { return btnPlayPause; } set { btnPlayPause = value; } }
         internal PictureBox MpPBLevel { get { return pictureBoxLevel; } set { pictureBoxLevel = value; } }
+        internal ToolTip MpToolTip { get { return toolTip; } set { toolTip = value; } }
 
         public event EventHandler FormHide;
         public event EventHandler PlayPause;
@@ -67,7 +68,7 @@ namespace NetRadio
                     g.SmoothingMode = SmoothingMode.HighQuality;
                     g.PixelOffsetMode = PixelOffsetMode.HighSpeed;
                     g.Clear(_this.pictureBoxLevel.BackColor);
-                    using Pen p = new(SystemColors.Highlight, 2.0f); // 3.0f
+                    using Pen p = new(new LinearGradientBrush(new Point(0, 0), new Point(140, 0), SystemColors.Highlight, Color.Coral), 2.0f); // 3.0f
                     p.DashCap = DashCap.Flat;
                     p.DashPattern = new float[] { 1.0f, 1.0f };
                     g.DrawLine(p, 2, 2, _this.levelLeft, 2); // x, y, 
@@ -154,9 +155,12 @@ namespace NetRadio
             {
                 case Keys.Escape:
                 case Keys.Escape | Keys.Shift:
+                case Keys.F4 | Keys.Control:
+                case Keys.F4 | Keys.Control | Keys.Shift:
                     {
                         if ((ModifierKeys & Keys.Shift) == Keys.Shift) { Application.Exit(); }
-                        else { OnFormHide(null); }
+                        else { OnFormHide(null);
+                        }
                         return true;
                     }
                 case Keys.F2:
@@ -440,6 +444,8 @@ namespace NetRadio
                 btnAOT.BackColor = SystemColors.ControlDark;
             }
         }
+
+        private void PictureBoxLevel_DoubleClick(object sender, EventArgs e) { OnF12_ShowSpectrum(null); }
 
     }
 }
