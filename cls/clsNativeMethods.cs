@@ -32,6 +32,12 @@ namespace NetRadio
         public const int HT_CAPTION = 0x2;
         public const int WM_COPYDATA = 0x004A;
 
+        public const int WM_SYSCOMMAND = 0x112;
+        public const int MF_SEPARATOR = 0x800;
+        public const int MF_BYPOSITION = 0x400;
+        public const int MF_STRING = 0x0;
+        public const int IDM_CUSTOMITEM1 = 1000; //public const Int32 IDM_CUSTOMITEM2 = 1001;
+
         public static readonly int WM_SHOWNETRADIO = RegisterWindowMessage("WM_SHOWNETRADIO");
         private delegate bool CallBackPtr(int hwnd, int lParam);
         private static CallBackPtr callBackPtr;
@@ -88,6 +94,15 @@ namespace NetRadio
             }
             return handles;
         }
+
+        //[DllImport("User32.dll")]
+        //public static extern bool GetAsyncKeyState(Keys ArrowKeys);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetSystemMenu(IntPtr hWnd, bool bRevert);
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern bool AppendMenu(IntPtr hMenu, Int32 wFlags, Int32 wIDNewItem, string lpNewItem);
 
         [DllImport("user32.dll")]
         public static extern int GetWindowTextLength(IntPtr hWnd);

@@ -211,12 +211,6 @@
   <metadata name="contextMenuDisplay.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>173, 17</value>
   </metadata>
-  <data name="labelBrackets.Text" xml:space="preserve">
-    <value>If you uncheck 'Show miniplayer' in the settings, NetRadio
-minimizes itself to the notification area of the taskbar.
-If no icon is visible, this can be toggled on in the taskbar
-settings (Windows settings &gt; Personalization &gt; Taskbar).</value>
-  </data>
   <metadata name="imageList.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>1696, 17</value>
   </metadata>
@@ -225,7 +219,7 @@ settings (Windows settings &gt; Personalization &gt; Taskbar).</value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAEZTeXN0ZW0uV2luZG93cy5Gb3JtcywgQ3VsdHVyZT1uZXV0cmFs
         LCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5BQEAAAAmU3lzdGVtLldpbmRvd3MuRm9ybXMu
         SW1hZ2VMaXN0U3RyZWFtZXIBAAAABERhdGEHAgIAAAAJAwAAAA8DAAAAhBAAAAJNU0Z0AUkBTAIBAQgB
-        AAGQAQEBkAEBARIBAAESAQAE/wEJAQAI/wFCAU0BNgEEBgABNgEEAgABKAMAAUgDAAE2AwABAQEAAQgF
+        AAGwAQEBsAEBARIBAAESAQAE/wEJAQAI/wFCAU0BNgEEBgABNgEEAgABKAMAAUgDAAE2AwABAQEAAQgF
         AAEwAQ8YAAGAAgABgAMAAoABAAGAAwABgAEAAYABAAKAAgADwAEAAcAB3AHAAQAB8AHKAaYBAAEzBQAB
         MwEAATMBAAEzAQACMwIAAxYBAAMcAQADIgEAAykBAANVAQADTQEAA0IBAAM5AQABgAF8Af8BAAJQAf8B
         AAGTAQAB1gEAAf8B7AHMAQABxgHWAe8BAAHWAucBAAGQAakBrQIAAf8BMwMAAWYDAAGZAwABzAIAATMD

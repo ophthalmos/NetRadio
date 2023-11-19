@@ -1948,12 +1948,12 @@ namespace NetRadio
             // labelBrackets
             // 
             labelBrackets.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            labelBrackets.Location = new System.Drawing.Point(13, 267);
+            labelBrackets.Location = new System.Drawing.Point(13, 285);
             labelBrackets.Margin = new Padding(4, 0, 4, 0);
             labelBrackets.Name = "labelBrackets";
-            labelBrackets.Size = new System.Drawing.Size(372, 73);
+            labelBrackets.Size = new System.Drawing.Size(372, 52);
             labelBrackets.TabIndex = 7;
-            labelBrackets.Text = resources.GetString("labelBrackets.Text");
+            labelBrackets.Text = "Use the Esc key to switch between main and miniplayer.\r\nEsc + Shift terminates (even if \"Close to Tray\" is active).";
             // 
             // tableLayoutPanel1
             // 
@@ -1963,7 +1963,7 @@ namespace NetRadio
             tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 43F));
             tableLayoutPanel1.Controls.Add(label1, 1, 0);
             tableLayoutPanel1.Controls.Add(label2, 0, 0);
-            tableLayoutPanel1.Location = new System.Drawing.Point(9, 55);
+            tableLayoutPanel1.Location = new System.Drawing.Point(9, 60);
             tableLayoutPanel1.Margin = new Padding(4, 3, 4, 3);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
             tableLayoutPanel1.RowCount = 1;
@@ -2000,7 +2000,7 @@ namespace NetRadio
             label6.AutoSize = true;
             label6.BackColor = System.Drawing.SystemColors.ControlLightLight;
             label6.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            label6.Location = new System.Drawing.Point(13, 166);
+            label6.Location = new System.Drawing.Point(13, 176);
             label6.Margin = new Padding(4, 0, 4, 0);
             label6.Name = "label6";
             label6.Size = new System.Drawing.Size(119, 17);
@@ -2012,7 +2012,7 @@ namespace NetRadio
             label5.AutoSize = true;
             label5.BackColor = System.Drawing.SystemColors.ControlLightLight;
             label5.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            label5.Location = new System.Drawing.Point(13, 38);
+            label5.Location = new System.Drawing.Point(13, 43);
             label5.Margin = new Padding(4, 0, 4, 0);
             label5.Name = "label5";
             label5.Size = new System.Drawing.Size(107, 17);
@@ -2027,7 +2027,7 @@ namespace NetRadio
             tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 43F));
             tableLayoutPanel2.Controls.Add(label4, 0, 0);
             tableLayoutPanel2.Controls.Add(label3, 1, 0);
-            tableLayoutPanel2.Location = new System.Drawing.Point(9, 183);
+            tableLayoutPanel2.Location = new System.Drawing.Point(9, 193);
             tableLayoutPanel2.Margin = new Padding(4, 3, 4, 3);
             tableLayoutPanel2.Name = "tableLayoutPanel2";
             tableLayoutPanel2.RowCount = 2;
@@ -2918,7 +2918,6 @@ namespace NetRadio
             FormBorderStyle = FormBorderStyle.FixedSingle;
             HelpButton = true;
             Icon = (System.Drawing.Icon)resources.GetObject("$this.Icon");
-            KeyPreview = true;
             Margin = new Padding(4, 3, 4, 3);
             MaximizeBox = false;
             MinimizeBox = false;
@@ -2934,7 +2933,6 @@ namespace NetRadio
             Shown += FrmMain_Shown;
             Click += FrmMain_Click;
             HelpRequested += FrmMain_HelpRequested;
-            KeyDown += FrmMain_KeyDown;
             Move += FrmMain_Move;
             tcMain.ResumeLayout(false);
             tpPlayer.ResumeLayout(false);
