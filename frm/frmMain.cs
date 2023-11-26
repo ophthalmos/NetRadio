@@ -202,7 +202,7 @@ namespace NetRadio
                 bakPath = Path.ChangeExtension(appPath, ".bak");
             }
 
-            if (File.Exists(xmlPath) && (!File.Exists(bakPath) || File.GetLastWriteTime(bakPath).Date < DateTime.Now.Date.AddDays(-1)))
+            if (File.Exists(xmlPath) && (!File.Exists(bakPath) || File.GetLastWriteTime(bakPath).Date < File.GetLastWriteTime(xml Path).Date.AddDays(-1)))
             {
                 File.Copy(xmlPath, bakPath, true);
                 File.SetLastWriteTime(bakPath, DateTime.Now);
@@ -1012,7 +1012,7 @@ namespace NetRadio
             miniPlayer.Activate();
 
 
-            miniPlayer.MpCmBxStations.Text = lblD1.Text;
+            //miniPlayer.MpCmBxStations.Text = lblD1.Text;
             //    //miniPlayer.MpPBLevel.Focus(); // Focus von MpCmBxStations weg nehmen 
             //    //miniPlayer.MpCmBxStations.Invoke((MethodInvoker)delegate {
             //    miniPlayer.MpCmBxStations.Invoke(new Action(() =>
@@ -1150,9 +1150,9 @@ namespace NetRadio
                                 if (iTag > 0)
                                 {
                                     StartPlaying(dgvStations.Rows[iTag - 1].Cells[1].Value.ToString(), iTag);
-                                    if (dgvStations.Rows[iTag - 1].Cells[0].Value != null) { UpdateCaption_lblD1(dgvStations.Rows[iTag - 1].Cells[0].Value.ToString()); }
-                                    int index = miniPlayer.MpCmBxStations.FindStringExact(lblD1.Text);
-                                    if (index >= 0 && miniPlayer.MpCmBxStations.SelectedIndex != index) { miniPlayer.MpCmBxStations.SelectedIndex = index; }
+                                    //if (dgvStations.Rows[iTag - 1].Cells[0].Value != null) { UpdateCaption_lblD1(dgvStations.Rows[iTag - 1].Cells[0].Value.ToString()); }
+                                    //int index = miniPlayer.MpCmBxStations.FindStringExact(lblD1.Text);
+                                    //if (index >= 0 && miniPlayer.MpCmBxStations.SelectedIndex != index) { miniPlayer.MpCmBxStations.SelectedIndex = index; }
                                 }
                                 else
                                 {
@@ -1375,10 +1375,9 @@ namespace NetRadio
             catch (InvalidCastException ex) { MessageBox.Show(ex.Message, Text, MessageBoxButtons.OK, MessageBoxIcon.Error); }
         }
 
-        private void UpdateCaption_lblD1(string caption)
+        private void UpdateCaption_lblD1(string caption) // BtnReset_Click | autoStartRadioButton | TcMain_SelectedIndexChanged | 
         {
-            lblD1.Text = string.IsNullOrEmpty(caption) ? "" : Utilities.StationLong(caption); // Regex.Replace(caption, @"\s+", " "); // doppelte Leerzeichen entfernen
-            //MiniPlayer.MpLblD1_Text(lblD1.Text);
+            miniPlayer.MpCmBxStations.Text  = lblD1.Text = string.IsNullOrEmpty(caption) ? "" : Utilities.StationLong(caption); // Regex.Replace(caption, @"\s+", " "); // doppelte Leerzeichen entfernen
         }
 
         private void RewriteButtonText() // initial FrmMain_Load und dann TcMain_SelectedIndexChanged 
@@ -1403,8 +1402,8 @@ namespace NetRadio
                     foundBtn.Enabled = false;
                 }
             }
-            //int index = miniPlayer.MpCmBxStations.FindStringExact(lblD1.Text);
-            //if (index >= 0 && miniPlayer.MpCmBxStations.SelectedIndex != index) { miniPlayer.MpCmBxStations.SelectedIndex = index; }
+            int index = miniPlayer.MpCmBxStations.FindStringExact(lblD1.Text);
+            if (index >= 0 && miniPlayer.MpCmBxStations.SelectedIndex != index) { miniPlayer.MpCmBxStations.SelectedIndex = index; } // erforderlich nach Veränderungen an dgvStations.Rows[i - 1].Cells[0]
         }
 
         //private static string DistillButtonText(string s)
@@ -2871,6 +2870,7 @@ namespace NetRadio
             {
                 foreach (RadioButton rb in tcMain.TabPages[0].Controls.OfType<RadioButton>().Where(rb => rb.Checked)) { rb.Checked = false; } // cave: aändert currentButtonNum
                 lblD1.Text = "-";
+                miniPlayer.MpCmBxStations.Text = string.Empty;
                 //MiniPlayer.MpLblD1_Text(lblD1.Text);
                 miniPlayer.MpBtnPlay.Enabled = btnPlayStop.Enabled = btnReset.Enabled = btnRecord.Enabled = false;
             }

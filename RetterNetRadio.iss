@@ -55,6 +55,7 @@ Source: "Lizenzvereinbarung.txt"; DestDir: "{app}"; Permissions: users-modify;
 Source: "LicenseAgreement.txt"; DestDir: "{app}"; Permissions: users-modify;
 Source: "NetRadio.pdf"; DestDir: "{app}"; Permissions: users-modify;
 Source: "img\isdonate.bmp"; Flags: dontcopy
+Source: "NetRadio.xml"; DestDir: "{userappdata}\{#MyAppName}"; Permissions: users-modify;
 
 [Icons]
 Name: "{userdesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppName}.exe"
@@ -78,8 +79,7 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 
 [Run]
 Filename: "{app}\{#MyAppName}.exe"; Description: "Launch {#MyAppName}"; Flags: postinstall nowait skipifsilent runasoriginaluser
-Filename: "{app}\{#MyAppName}.pdf"; Description: "View Frequently Asked Questions (PDF)"; Flags: postinstall shellexec runasoriginaluser 
-; unchecked
+Filename: "{app}\{#MyAppName}.pdf"; Description: "View Frequently Asked Questions (PDF)"; Flags: postinstall shellexec runasoriginaluser unchecked
 
 [Messages]
 BeveledLabel=
