@@ -220,7 +220,7 @@
             cmBxStations.Size = new System.Drawing.Size(152, 23);
             cmBxStations.TabIndex = 2;
             toolTip.SetToolTip(cmBxStations, "List (F2)");
-            cmBxStations.SelectedIndexChanged += CmBxStations_SelectedIndexChanged;
+            cmBxStations.TextChanged += CmBxStations_TextChanged;
             // 
             // btnAOT
             // 
