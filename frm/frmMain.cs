@@ -202,7 +202,7 @@ namespace NetRadio
                 bakPath = Path.ChangeExtension(appPath, ".bak");
             }
 
-            if (File.Exists(xmlPath) && (!File.Exists(bakPath) || File.GetLastWriteTime(bakPath).Date < File.GetLastWriteTime(xml Path).Date.AddDays(-1)))
+            if (File.Exists(xmlPath) && (!File.Exists(bakPath) || File.GetLastWriteTime(bakPath).Date < File.GetLastWriteTime(xmlPath).Date.AddDays(-1)))
             {
                 File.Copy(xmlPath, bakPath, true);
                 File.SetLastWriteTime(bakPath, DateTime.Now);
