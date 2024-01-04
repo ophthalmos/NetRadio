@@ -15,6 +15,8 @@ namespace NetRadio
 {
     class Utilities // internal is standard
     {
+        private const string runLocation = @"Software\Microsoft\Windows\CurrentVersion\Run";
+
         public static readonly List<string> TaskNames = new() {
             "Start playing",
             "Stop playing",
@@ -24,8 +26,6 @@ namespace NetRadio
             "Hibernate PC",
             "Shut down PC"
         };
-
-        private const string runLocation = @"Software\Microsoft\Windows\CurrentVersion\Run";
 
         public static bool PingGoogleSuccess(int timeout)
         { // InternetGetConnectedState: This code only checks if the network cable is plugged in
