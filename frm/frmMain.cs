@@ -71,6 +71,7 @@ namespace NetRadio
         private static readonly string appPath = Application.ExecutablePath; // EXE-Pfad
         private readonly string xmlPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), appName, appName + ".xml");
         private readonly string bakPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), appName, appName + ".bak");
+        private readonly string logPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), appName, appName + ".log");
         private string hkLetter = string.Empty; // Flag für existierenden Hotkey. AUSNAHME: Programmstart
         private static int lastHotkeyPress;
         private int rowIndexFromMouseDown;
@@ -146,6 +147,8 @@ namespace NetRadio
             string miniPosX = string.Empty;
             string miniPosY = string.Empty;
             _myUserAgentPtr = Marshal.StringToHGlobalAnsi(_myUserAgent);
+            CreateLogFile();
+            LogEvent(appName + ": Version " + _curVersion.ToString());
             int cores = Environment.ProcessorCount;
             Bass.BASS_SetConfigPtr(BASSConfig.BASS_CONFIG_NET_AGENT, _myUserAgentPtr);
             Bass.BASS_SetConfig(BASSConfig.BASS_CONFIG_NET_BUFFER, 4000); // The buffer length in milliseconds (default 5000)
@@ -157,6 +160,7 @@ namespace NetRadio
             Bass.BASS_SetConfig(BASSConfig.BASS_CONFIG_NET_PLAYLIST, 1); // When enabled, BASS will process PLS, M3U, WPL and ASX playlists, going through each entry until it finds a URL that it can play. By default, playlist procesing is disabled.
             Bass.BASS_SetConfig(BASSConfig.BASS_CONFIG_DEV_DEFAULT, true); // enable "Default" device
             Bass.BASS_SetConfig(BASSConfig.BASS_CONFIG_HLS_DOWNLOAD_TAGS, true); // stream's DOWNLOADPROC callback function will receive any ID3v2 tags that the stream contains
+
             if (Bass.BASS_Init(-1, 48000, BASSInit.BASS_DEVICE_DEFAULT, Handle)) // BASS_DEVICE_DEFAULT	0 = 16 bit, stereo, no 3D, no Latency calc, no Speaker Assignments
             {   //  The sample format specified in the freq and flags parameters has no effect on the output - the device's native sample format is automatically used.
                 _flacPlugIn = Bass.BASS_PluginLoad("bassflac.dll");
@@ -178,6 +182,7 @@ namespace NetRadio
                     Environment.Exit(0); return;
                 }
                 myStreamCreateURL = new DOWNLOADPROC(MyDownloadProc); // Internet stream download callback function
+                LogEvent("BASS_Init: initialized");
             }
             else
             {
@@ -200,9 +205,12 @@ namespace NetRadio
             {
                 xmlPath = Path.ChangeExtension(appPath, ".xml");
                 bakPath = Path.ChangeExtension(appPath, ".bak");
+                logPath = Path.ChangeExtension(appPath, ".log");
+                LogEvent("IsInnoSetupValid: Portable version");
             }
+            else { LogEvent("IsInnoSetupValid: Setup version"); }
 
-            if (File.Exists(xmlPath) && (!File.Exists(bakPath) || File.GetLastWriteTime(bakPath).Date < DateTime.Now.Date.AddDays(-1)))
+            if (File.Exists(xmlPath) && (!File.Exists(bakPath) || File.GetLastWriteTime(bakPath).Date < File.GetLastWriteTime(xmlPath).Date.AddDays(-1)))
             {
                 File.Copy(xmlPath, bakPath, true);
                 File.SetLastWriteTime(bakPath, DateTime.Now);
@@ -352,12 +360,13 @@ namespace NetRadio
                 catch (XmlException ex) { MessageBox.Show(ex.Message, Text, MessageBoxButtons.OK, MessageBoxIcon.Error); }
             }
             else
-            {// MessageBox.Show("\"" + xmlPath + "\"  is not found.");
+            {
                 Directory.CreateDirectory(Path.GetDirectoryName(xmlPath)); // If the folder exists already, the line will be ignored.
                 XmlDocument xmlDoc = new();
                 xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?><NetRadio></NetRadio>");
                 xmlDoc.Save(xmlPath); // if the specified file exists, this method overwrites it.
                 firstEmptyStart = true;
+                LogEvent("New config file: " + xmlPath);
             }
             foreach (DataGridViewColumn column in dgvStations.Columns) { column.SortMode = DataGridViewColumnSortMode.NotSortable; }
 
@@ -399,7 +408,8 @@ namespace NetRadio
             }
 
             if (autoStartRadioButton == null && !string.IsNullOrEmpty(autostartStation)) // kein Kommandozeilenargumente - dann Autostart-Einstellungen benutzen
-            { //MessageBox.Show(autostartStation);
+            {
+                LogEvent("autostartStation: " + autostartStation);
                 string btnName = "rbtn" + autostartStation.PadLeft(2, '0');
                 Control[] controls = tcMain.TabPages[0].Controls.Find(btnName, true);
                 if (controls.Length == 1 && controls[0] is RadioButton) { autoStartRadioButton = controls[0] as RadioButton; } // löst StartPlaying aus (s. FrmMain_Shown-Event)
@@ -575,6 +585,7 @@ namespace NetRadio
         {
             BeginInvoke(() =>
             {
+                LogEvent("ConnectionSync: Internet connection disconnected/disabled");
                 timerLevel.Stop();
                 spectrumTimer.Stop();
                 pbLevel.Image = null;
@@ -603,6 +614,7 @@ namespace NetRadio
             BeginInvoke(() =>
             {
                 lblD3.Text = "Output device is disconnected or disabled.";
+                LogEvent("DeviceSync: Output device disconnected or disabled");
                 Application.DoEvents(); // damit vorstehender Text angezeigt wird
                 System.Threading.Thread.Sleep(1000); // andernfalls werden die gerade entfernten Devices als noch vorhanden angezeigt
                 int devices = 0;
@@ -621,6 +633,7 @@ namespace NetRadio
                     else
                     {
                         string strError = Utilities.GetErrorDescription(Bass.BASS_ErrorGetCode());
+                        LogEvent("DeviceSync: " + strError);
                         if (string.IsNullOrEmpty(strError)) { strError = lblD3.Text; }
                         Bass.BASS_ChannelStop(_stream);
                         Bass.BASS_Free();
@@ -662,7 +675,7 @@ namespace NetRadio
             }
             if (_tagInfo != null)
             {
-                lblD2.Text = _tagInfo.ToString(); //MessageBox.Show(_tagInfo.title);
+                lblD2.Text = _tagInfo.ToString();
                 MiniPlayer.MpLblD2_Text(lblD2.Text);
                 if (tcMain.SelectedTab == tpSectrum) { StatusStrip_SingleLabel(false, lblD2.Text); }
                 if (logHistory) { AddToHistory(_tagInfo.ToString()); }
@@ -672,6 +685,7 @@ namespace NetRadio
                     IntPtr foregroundWin = NativeMethods.GetForegroundWindow();
                     if (foregroundWin != miniPlayer.Handle && foregroundWin != Handle) { notifyIcon.ShowBalloonTip(2, "Now playing: ", lblD2.Text, ToolTipIcon.Info); }
                 }
+                //LogEvent("UpdateTagDisplay: " + _tagInfo.title);
             }
             else { lblD4.Text = dgvStations.Rows[_currentButtonNum - 1].Cells[1].Value.ToString(); }
         }
@@ -782,7 +796,11 @@ namespace NetRadio
             for (int n = 1; (info = Bass.BASS_GetDeviceInfo(n)) != null; n++) // Device 0 is always the "no sound" device, so you should start at device 1 if you only want to list real output devices.
             {
                 if (info.IsEnabled) { devicelist.Add(info.ToString()); }
-                if (info.IsDefault) { defaultDevice = n - 1; }
+                if (info.IsDefault && !info.ToString().Equals("Default")) //  .status.Equals(BASSDeviceInfo.BASS_DEVICE_ENABLED))
+                {
+                    defaultDevice = n - 1;
+                    LogEvent("FrmMain_Load: " + info.ToString() + " is the default device");
+                }
             }
             if (devicelist.Count > 0) // intOutputDevice wurde mit Wert 0 definiert
             {
@@ -790,6 +808,7 @@ namespace NetRadio
                 if (intOutputDevice == defaultDevice) { intOutputDevice = 0; } // Sieht wie in Bug aus, ist aber ein Feature, um wenn möglich "Default" zu erzwingen. BASS_GetDeviceInfo gibt niemals Default aus, sondern immer die höhere DeviceID
                 if (intOutputDevice <= 0) { intOutputDevice = 0; } // 0 = Default
                 strOutputDevice = devicelist[intOutputDevice].ToString();
+                LogEvent("FrmMain_Load: " + strOutputDevice + " (" + intOutputDevice + ") is the current device");
             }
             //newButton = new()
             //{
@@ -841,18 +860,18 @@ namespace NetRadio
 
         private void MiniPlayer_FormHide(object sender, EventArgs e)
         {
-            ShowMe();
+            ShowFullPlayer();
             if (NativeMethods.IsKeyDown(Keys.Escape)) { toolTip.Active = false; } // Workaround for persistent ToolTip display
-            else { toolTip.Active = true; } 
+            else { toolTip.Active = true; }
         }
         private void MiniPlayer_PlayReset(object sender, EventArgs e) { BtnReset_Click(null, null); }
         private void MiniPlayer_PlayPause(object sender, EventArgs e) { BtnPlayStop_Click(null, null); }
         private void MiniPlayer_VolumeProgress(object sender, EventArgs e) { SetProgressBarValue(); }
         private void MiniPlayer_IncreaseVolume(object sender, EventArgs e) { BtnIncrease_Click(null, null); }
         private void MiniPlayer_DecreaseVolume(object sender, EventArgs e) { BtnDecrease_Click(null, null); }
-        private void MiniPlayer_F4_ShowPlayer(object sender, EventArgs e) { ShowMe(); tcMain.SelectedIndex = 0; }
-        private void MiniPlayer_F5_ShowHistory(object sender, EventArgs e) { ShowMe(); tcMain.SelectedIndex = 2; }
-        private void MiniPlayer_F12_ShowSpectrum(object sender, EventArgs e) { ShowMe(); tcMain.SelectedIndex = 6; }
+        private void MiniPlayer_F4_ShowPlayer(object sender, EventArgs e) { ShowFullPlayer(); tcMain.SelectedIndex = 0; }
+        private void MiniPlayer_F5_ShowHistory(object sender, EventArgs e) { ShowFullPlayer(); tcMain.SelectedIndex = 2; }
+        private void MiniPlayer_F12_ShowSpectrum(object sender, EventArgs e) { ShowFullPlayer(); tcMain.SelectedIndex = 6; }
         private void MiniPlayer_StationChanged(object sender, EventArgs e)
         {
             for (int i = 0; i < stationSum; i++)
@@ -880,40 +899,67 @@ namespace NetRadio
         //private void NewButton_MouseEnter(object sender, EventArgs e) { newButton.ForeColor = Color.White; }
         //private void NewButton_MouseLeave(object sender, EventArgs e) { newButton.ForeColor = Color.Black; }
 
-        private async void PowerMode_Changed(Object sender, PowerModeChangedEventArgs e)
+        private async void PowerMode_Changed(object sender, PowerModeChangedEventArgs e)
         {
             switch (e.Mode)
             {
+                case PowerModes.StatusChange: // A power mode status notification event has been raised by the operating system.
+                    LogEvent("PowerMode_Changed: Notification from the system power supply");
+                    break;
                 case PowerModes.Suspend: // The operating system is about to be suspended
                     if (Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PLAYING)
                     {
                         _playWakeFromSleep = true;
+                        LogEvent("PowerMode_Changed: The OS is about to be suspended (BASS_ACTIVE_PLAYING)");
+                        //Application.DoEvents();
                         Bass.BASS_ChannelStop(_stream);
                         Bass.BASS_Free();
                         Invoke(new Action(() => RestorePlayerDefaults(_currentButtonNum)));
                     }
+                    else { LogEvent("PowerMode_Changed: The OS is about to be suspended (Netradio not playing)"); }
                     break;
-                case PowerModes.Resume when _playWakeFromSleep: // resume from a suspended state
-                    _playWakeFromSleep = false;
-                    try
+                case PowerModes.Resume: // when _playWakeFromSleep: // resume from a suspended state
+                    if (_playWakeFromSleep)
                     {
-                        int max = 20;
-                        for (int i = 0; i <= max; i++)
+                        LogEvent("PowerMode_Changed: Resuming from a suspended state (try playing)");
+                        try
                         {
-                            bool foo = false; // one second more
-                            if (Utilities.PingGoogleSuccess(Bass.BASS_GetConfig(BASSConfig.BASS_CONFIG_NET_TIMEOUT))) { foo = true; }
-                            await Task.Delay(1000).ConfigureAwait(false);
-                            if (foo) { break; }
-                            else if (i == max)
+                            int max = 20;
+                            for (int i = 0; i <= max; i++)
                             {
-                                Invoke(new Action(() => (tcMain.TabPages[0].Controls["rbtn" + (_currentButtonNum - 1).ToString("D2")] as RadioButton).Checked = false));
-                                return;
+                                if (!_playWakeFromSleep) { return; } // falls StartPlaying manuell ausgelöst wurde
+                                bool foo = false; // one second more
+                                if (Utilities.PingGoogleSuccess(Bass.BASS_GetConfig(BASSConfig.BASS_CONFIG_NET_TIMEOUT))) { foo = true; }
+                                await Task.Delay(1000).ConfigureAwait(false);
+                                if (foo) { break; }
+                                else if (i == max)
+                                {
+                                    Invoke(new Action(() => (tcMain.TabPages[0].Controls["rbtn" + (_currentButtonNum - 1).ToString("D2")] as RadioButton).Checked = false));
+                                    _playWakeFromSleep = false;
+                                    return;
+                                }
+                            }
+
+                            int devices = 0;
+                            BASS_DEVICEINFO dInfo;
+                            max = 5;
+                            for (int i = 0; i <= max; i++)
+                            {
+                                if (!_playWakeFromSleep) { return; } // falls StartPlaying manuell ausgelöst wurde
+                                for (int n = 1; (dInfo = Bass.BASS_GetDeviceInfo(n)) != null; n++) { if (dInfo.IsEnabled) { devices++; } }
+                                if (devices > 0) // intOutputDevice wurde mit Wert 0 definiert
+                                {
+                                    LogEvent("PowerMode_Changed: Start playing station no. " + _currentButtonNum);
+                                    Invoke(new Action(() => StartPlaying(dgvStations.Rows[_currentButtonNum - 1].Cells[1].Value.ToString(), _currentButtonNum))); // switch to the UI thread in an async method
+                                    _playWakeFromSleep = false;
+                                    return;
+                                }
+                                else { await Task.Delay(1000).ConfigureAwait(false); }
                             }
                         }
-                        Invoke(new Action(() => StartPlaying(dgvStations.Rows[_currentButtonNum - 1].Cells[1].Value.ToString(), _currentButtonNum))); // switch to the UI thread in an async method
-
+                        catch { }
                     }
-                    catch { }
+                    else { LogEvent("PowerMode_Changed: Resuming from a suspended state (nothing to do)"); }
                     break;
             }
         }
@@ -955,7 +1001,7 @@ namespace NetRadio
                             }
                             else if (Regex.IsMatch(args[i], @"^[/-](f|full)$", RegexOptions.IgnoreCase))
                             {
-                                ShowMe();
+                                ShowFullPlayer();
                                 miniPlayer.Hide();
                             }
                             else if (Regex.IsMatch(args[i], @"^[/-](p|play)$", RegexOptions.IgnoreCase))
@@ -974,7 +1020,7 @@ namespace NetRadio
                 }
                 //else { MessageBox.Show(string.Format("Unrecognized data type = {0}.", (int)copyData.dwData), appName, MessageBoxButtons.OK, MessageBoxIcon.Error); }
             }
-            else if (m.Msg == NativeMethods.WM_SHOWNETRADIO) { ShowMe(); } // another instance is started
+            else if (m.Msg == NativeMethods.WM_SHOWNETRADIO) { ShowFullPlayer(); } // another instance is started
             else if (m.Msg == NativeMethods.WM_HOTKEY)
             {
                 int keyPressTick = Environment.TickCount;
@@ -993,7 +1039,7 @@ namespace NetRadio
                         tcMain.SelectedIndex = 0;
                     }
                 }
-                else { ShowMe(); }  // not visible, d.h. im Tray
+                else { ShowFullPlayer(); }  // not visible, d.h. im Tray
             }
             else if (m.Msg == NativeMethods.WM_QUERYENDSESSION) { Close(); }
             else if (m.Msg == NativeMethods.WM_NCLBUTTONDBLCLK) { Hide(); ShowMiniPlayer(); }
@@ -1010,24 +1056,10 @@ namespace NetRadio
             miniPlayer.TopMost = alwaysOnTop; // set it back to whatever it was
             miniPlayer.BringToFront();
             miniPlayer.Activate();
-
-
-            miniPlayer.MpCmBxStations.Text = lblD1.Text;
-            //    //miniPlayer.MpPBLevel.Focus(); // Focus von MpCmBxStations weg nehmen 
-            //    //miniPlayer.MpCmBxStations.Invoke((MethodInvoker)delegate {
-            //    miniPlayer.MpCmBxStations.Invoke(new Action(() =>
-            //    miniPlayer.MpCmBxStations.SelectedIndex = _currentButtonNum > 0
-            //            ? miniPlayer.MpCmBxStations.FindStringExact(Utilities.StationLong(dgvStations.Rows[_currentButtonNum - 1].Cells[0].Value.ToString()))
-            //            : miniPlayer.MpCmBxStations.FindStringExact(lblD1.Text) // -1 wenn nicht gefunden wird => leere Anzeige
-            //)); // }); //miniPlayer.MpCmBxStations.Select(0, 0);
-            //    if (miniPlayer.MpCmBxStations.Text.Length == 0)
-            //    {
-            //        MessageBox.Show("Empty");
-            //    }
-            //    //else { miniPlayer.MpCmBxStations.Focus(); miniPlayer.MpCmBxStations.Select(0, 0); }
+            LogEvent("ShowMiniPlayer: activated");
         }
 
-        private void ShowMe()
+        private void ShowFullPlayer()
         {
             if (!Visible)
             {
@@ -1040,6 +1072,7 @@ namespace NetRadio
             TopMost = alwaysOnTop; // set it back to whatever it was
             BringToFront();
             Activate();
+            LogEvent("ShowFullPlayer: activated");
         }
 
         private void RadioButton_CheckedChanged(object sender, EventArgs e)
@@ -1150,9 +1183,9 @@ namespace NetRadio
                                 if (iTag > 0)
                                 {
                                     StartPlaying(dgvStations.Rows[iTag - 1].Cells[1].Value.ToString(), iTag);
-                                    if (dgvStations.Rows[iTag - 1].Cells[0].Value != null) { UpdateCaption_lblD1(dgvStations.Rows[iTag - 1].Cells[0].Value.ToString()); }
-                                    int index = miniPlayer.MpCmBxStations.FindStringExact(lblD1.Text);
-                                    if (index >= 0 && miniPlayer.MpCmBxStations.SelectedIndex != index) { miniPlayer.MpCmBxStations.SelectedIndex = index; }
+                                    //if (dgvStations.Rows[iTag - 1].Cells[0].Value != null) { UpdateCaption_lblD1(dgvStations.Rows[iTag - 1].Cells[0].Value.ToString()); }
+                                    //int index = miniPlayer.MpCmBxStations.FindStringExact(lblD1.Text);
+                                    //if (index >= 0 && miniPlayer.MpCmBxStations.SelectedIndex != index) { miniPlayer.MpCmBxStations.SelectedIndex = index; }
                                 }
                                 else
                                 {
@@ -1375,10 +1408,9 @@ namespace NetRadio
             catch (InvalidCastException ex) { MessageBox.Show(ex.Message, Text, MessageBoxButtons.OK, MessageBoxIcon.Error); }
         }
 
-        private void UpdateCaption_lblD1(string caption)
+        private void UpdateCaption_lblD1(string caption) // BtnReset_Click | autoStartRadioButton | TcMain_SelectedIndexChanged | 
         {
-            lblD1.Text = string.IsNullOrEmpty(caption) ? "" : Utilities.StationLong(caption); // Regex.Replace(caption, @"\s+", " "); // doppelte Leerzeichen entfernen
-            //MiniPlayer.MpLblD1_Text(lblD1.Text);
+            miniPlayer.MpCmBxStations.Text = lblD1.Text = string.IsNullOrEmpty(caption) ? "" : Utilities.StationLong(caption); // Regex.Replace(caption, @"\s+", " "); // doppelte Leerzeichen entfernen
         }
 
         private void RewriteButtonText() // initial FrmMain_Load und dann TcMain_SelectedIndexChanged 
@@ -1403,8 +1435,8 @@ namespace NetRadio
                     foundBtn.Enabled = false;
                 }
             }
-            //int index = miniPlayer.MpCmBxStations.FindStringExact(lblD1.Text);
-            //if (index >= 0 && miniPlayer.MpCmBxStations.SelectedIndex != index) { miniPlayer.MpCmBxStations.SelectedIndex = index; }
+            int index = miniPlayer.MpCmBxStations.FindStringExact(lblD1.Text);
+            if (index >= 0 && miniPlayer.MpCmBxStations.SelectedIndex != index) { miniPlayer.MpCmBxStations.SelectedIndex = index; } // erforderlich nach Veränderungen an dgvStations.Rows[i - 1].Cells[0]
         }
 
         //private static string DistillButtonText(string s)
@@ -1604,6 +1636,7 @@ namespace NetRadio
                 strOutputDevice = cmbxOutput.Items[cmbxOutput.SelectedIndex].ToString();
                 strOutputDevice = strOutputDevice.StartsWith("Default") ? "Default" : strOutputDevice; // (recommended) entfernen
                 if (prevOutputDevice != strOutputDevice) { somethingToSave = true; }
+                LogEvent("CmbxOutput_SelectedIndexChanged: " + strOutputDevice + " (" + intOutputDevice + ") is selected");
                 if (Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PLAYING)
                 {
                     BASS_CHANNELINFO info = Bass.BASS_ChannelGetInfo(_stream);
@@ -1616,6 +1649,7 @@ namespace NetRadio
                     }
                 }
                 prevOutputDevice = strOutputDevice; //somethingToSave = false; s. o.
+
             }
         }
 
@@ -1711,7 +1745,7 @@ namespace NetRadio
                 BtnUpdate_Click(null, null);
                 if (updateAvailable)
                 {
-                    ShowMe();
+                    ShowFullPlayer();
                     tcMain.SelectedTab = tpInfo;
                 }
                 else { lblUpdate.Text = "Current version: " + _curVersion.ToString(); }
@@ -1755,7 +1789,8 @@ namespace NetRadio
                         else { return false; }
                     }
                 case Keys.Q | Keys.Control: { Close(); return true; } // exitFlag = true;
-                case Keys.F1 | Keys.Control | Keys.Shift: { helpRequested = false; StartXMLFile(xmlPath); return true; }
+                case Keys.F1 | Keys.Control | Keys.Shift: { helpRequested = false; StartFile(xmlPath); return true; }
+                case Keys.F2 | Keys.Control | Keys.Shift: { StartFile(logPath); return true; }
                 case Keys.F4 | Keys.Control:
                     {
                         if (Visible && NativeMethods.HitTest(Bounds, Handle, PointToScreen(Point.Empty))) { Hide(); } // "Tray-Modus"
@@ -1924,7 +1959,7 @@ namespace NetRadio
             return base.ProcessCmdKey(ref msg, keyData);
         }
 
-        private static void StartXMLFile(string filePath)
+        private static void StartFile(string filePath)
         {
             try
             {
@@ -2125,14 +2160,14 @@ namespace NetRadio
                     Hide();
                     ShowMiniPlayer();
                 }
-                else { ShowMe(); }
+                else { ShowFullPlayer(); }
             }
             else if (!Visible)
             {
-                if (NativeMethods.HitTest(miniPlayer.Bounds, miniPlayer.Handle, miniPlayer.PointToScreen(Point.Empty))) { ShowMe(); tcMain.SelectedIndex = 0; }
+                if (NativeMethods.HitTest(miniPlayer.Bounds, miniPlayer.Handle, miniPlayer.PointToScreen(Point.Empty))) { ShowFullPlayer(); tcMain.SelectedIndex = 0; }
                 else
                 {
-                    if (!miniPlayer.Visible && !Visible) { ShowMe(); tcMain.SelectedIndex = 0; }
+                    if (!miniPlayer.Visible && !Visible) { ShowFullPlayer(); tcMain.SelectedIndex = 0; }
                     else
                     {
                         ShowMiniPlayer();
@@ -2551,6 +2586,7 @@ namespace NetRadio
 
         private void StartPlaying(string _url, int tagID)
         {
+            _playWakeFromSleep = false;
             if (!Utilities.PingGoogleSuccess(Bass.BASS_GetConfig(BASSConfig.BASS_CONFIG_NET_TIMEOUT))) // 18: binary 0001 0010, which would map to LAN(0x2) | RasInstalled(0x10). This code only checks if the network cable is plugged in
             { //  && System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable()
                 Bass.BASS_StreamFree(_stream);
@@ -2621,20 +2657,19 @@ namespace NetRadio
                 uiSched = TaskScheduler.FromCurrentSynchronizationContext();
                 Task.Factory.StartNew(() =>
                 {
-
-
-                    if (_stream != 0) { Bass.BASS_StreamFree(_stream); } // mehrere Sender gleichzeitig zu hören wäre grundsätzlich möglich
-                                                                         //MessageBox.Show(intOutputDevice.ToString() + " | " + Bass.BASS_GetDeviceCount(), appName, MessageBoxButtons.OK);
-                    Bass.BASS_Init(intOutputDevice <= 0 || intOutputDevice >= Bass.BASS_GetDeviceCount() ? -1 : intOutputDevice + 1, 44100, BASSInit.BASS_DEVICE_DEFAULT, Handle);
+                    if (_stream != 0)
+                    {
+                        Bass.BASS_StreamFree(_stream); // mehrere Sender gleichzeitig zu hören wäre grundsätzlich möglich
+                        LogEvent("StartPlaying (_stream != 0): Freeing streams resources, including SYNC");
+                    }
+                    LogEvent("StartPlaying (BASS_Init): Output device no. " + intOutputDevice.ToString()); // + " from total " + (Bass.BASS_GetDeviceCount() - 1) + " devices");
+                    if (!Bass.BASS_Init(intOutputDevice <= 0 || intOutputDevice >= Bass.BASS_GetDeviceCount() ? -1 : intOutputDevice + 1, 44100, BASSInit.BASS_DEVICE_DEFAULT, Handle))
+                    {
+                        if (Bass.BASS_ErrorGetCode().Equals(BASSError.BASS_ERROR_ALREADY)) { LogEvent("StartPlaying (BASS_Init): The device has already been initialized"); }
+                    }
+                    else { LogEvent("StartPlaying (BASS_Init): " + Bass.BASS_GetDeviceInfo(Bass.BASS_GetDevice()).ToString() + " (" + (Bass.BASS_GetDevice() - 1) + ") successfully (re)initialized"); }
                     //Parameter device: - 1 = default device, 0 = no sound, 1 = first real output device (Default)
-                    //bool m3u8 = false;
                     BASSFlag flag = BASSFlag.BASS_DEFAULT | BASSFlag.BASS_STREAM_STATUS | BASSFlag.BASS_STREAM_AUTOFREE; // BASSFlag.BASS_STREAM_DECODE = kein Mithören / | BASSFlag.BASS_UNICODE ändert nichts an Fehlcodierung - eigentlich überflüssig
-                                                                                                                         //if (_url.ToLower().Contains("aac")) { _stream = BassAac.BASS_AAC_StreamCreateURL(_url, 0, flag, myStreamCreateURL, IntPtr.Zero); }
-                                                                                                                         //if (_url.ToLower().Contains("opus")) { _stream = BassOpus.BASS_OPUS_StreamCreateURL(_url, 0, flag, myStreamCreateURL, IntPtr.Zero); }
-                                                                                                                         //else if (_url.ToLower().Contains("flac")) { _stream = BassFlac.BASS_FLAC_StreamCreateURL(_url, 0, flag, myStreamCreateURL, IntPtr.Zero); }
-                                                                                                                         //else if (_url.ToLower().EndsWith("m3u8")) { _stream = BassHls.BASS_HLS_StreamCreateURL(_url, flag, myStreamCreateURL, IntPtr.Zero); m3u8 = true; }
-                                                                                                                         //else { _stream = Bass.BASS_StreamCreateURL(_url, 0, flag, myStreamCreateURL, IntPtr.Zero); } // create the stream    
-
                     _stream = Bass.BASS_StreamCreateURL(_url, 0, flag, myStreamCreateURL, IntPtr.Zero);
                     if (_stream == 0)
                     {
@@ -2642,6 +2677,7 @@ namespace NetRadio
                         RestorePlayerDefaults(tagID); // (tagID)
                         Bass.BASS_Free();
                         MessageBox.Show(errorDescription, appName, MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, (MessageBoxOptions)0x40000);  // MB_TOPMOST);
+                        LogEvent("StartPlaying (BASS_StreamCreateURL): " + errorDescription);
                     }
                     else
                     {
@@ -2658,6 +2694,7 @@ namespace NetRadio
                                     == WAVEFormatTag.MPEG_HEAAC) { lblD3.Text = lblD3.Text.Replace("MF", "AAC"); }
                                 lblD2.Text = _tagInfo.ToString();
                                 MiniPlayer.MpLblD2_Text(lblD2.Text);
+                                LogEvent("Channelinfo: " + _tagInfo.channelinfo.ctype + ")");
                                 //if (_tagInfo.channelinfo.ctype == BASSChannelType.BASS_CTYPE_STREAM_FLAC_OGG) { MessageBox.Show("FLAC_OGG"); }
                             }
                             else { lblD3.Text = "00:00:00"; }
@@ -2723,8 +2760,6 @@ namespace NetRadio
                         }
                         else { RestorePlayerDefaults(tagID); } // _tag.Info null
                     }
-
-
                 }, token, TaskCreationOptions.DenyChildAttach, uiSched);
 
             }
@@ -2871,6 +2906,7 @@ namespace NetRadio
             {
                 foreach (RadioButton rb in tcMain.TabPages[0].Controls.OfType<RadioButton>().Where(rb => rb.Checked)) { rb.Checked = false; } // cave: aändert currentButtonNum
                 lblD1.Text = "-";
+                miniPlayer.MpCmBxStations.Text = string.Empty;
                 //MiniPlayer.MpLblD1_Text(lblD1.Text);
                 miniPlayer.MpBtnPlay.Enabled = btnPlayStop.Enabled = btnReset.Enabled = btnRecord.Enabled = false;
             }
@@ -3563,7 +3599,6 @@ namespace NetRadio
                 if (cbClose2Tray.Checked)
                 {
                     close2Tray = true;
-                    //MessageBox.Show("You still have the following options to exit the program:\n\n1. Right-click on the icon in the notification area and select Exit.\n\n2. Press the Shift key before clicking on the Close button.", appName);
                     if (showTrayInfo)
                     {
                         TaskDialogPage page = new()
@@ -3626,6 +3661,26 @@ namespace NetRadio
                 startMode = rbStartModeTray.Checked ? 2 : rbStartModeMini.Checked ? 1 : 0;
                 somethingToSave = true;
             }
+        }
+
+        public void CreateLogFile()
+        {
+            try
+            {
+                using StreamWriter writer = new(Path.Combine(logPath));
+                writer.Write(""); // Datei leeren
+            }
+            catch { }
+        }
+
+        public void LogEvent(string message)
+        {
+            try
+            {
+                using StreamWriter writer = new(logPath, true); // Datei erstellen oder öffnen
+                writer.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " | " + message); // Ereignisprotokollieren
+            }
+            catch { }
         }
 
         //private void tcMain_DrawItem(object sender, DrawItemEventArgs e)
