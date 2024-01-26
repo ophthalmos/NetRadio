@@ -159,7 +159,9 @@ namespace NetRadio
                 case Keys.F4 | Keys.Control | Keys.Shift:
                     {
                         if ((ModifierKeys & Keys.Shift) == Keys.Shift) { Application.Exit(); }
-                        else { OnFormHide(null);
+                        else
+                        {
+                            OnFormHide(null);
                         }
                         return true;
                     }
@@ -379,13 +381,13 @@ namespace NetRadio
 
         private void MiniPlayer_Deactivate(object sender, EventArgs e) { panelTitle.Invalidate(); btnRestore.Invalidate(); }
 
-        private void CmBxStations_SelectedIndexChanged(object sender, EventArgs e)
+        private void CmBxStations_TextChanged(object sender, EventArgs e)
         {
-            if (!cmBxStations.DroppedDown)
+            if (cmBxStations.Focused)
             {
                 OnStationChanged(null);
                 btnPlayPause.Focus();
-            }
+            }   
         }
 
         private void LabelD2_MouseDoubleClick(object sender, MouseEventArgs e) { OnFormHide(null); }
