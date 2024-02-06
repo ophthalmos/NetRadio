@@ -3679,6 +3679,7 @@ namespace NetRadio
             {
                 using StreamWriter writer = new(logPath, true); // Datei erstellen oder öffnen
                 writer.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " | " + message); // Ereignisprotokollieren
+                writer.Flush();
             }
             catch { }
         }
