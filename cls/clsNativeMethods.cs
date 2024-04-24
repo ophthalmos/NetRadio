@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography.X509Certificates;
 using System.Windows.Forms;
 
 namespace NetRadio
@@ -16,7 +17,12 @@ namespace NetRadio
         public const int HTCLIENT = 0x1;
         public const int HTCAPTION = 0x2;
         public const int WM_HOTKEY = 0x312;
-        public const int HOTKEY_ID = 0x0312; // 0; // 42;
+        public const int HOTKEY_ID = 0x002A; // 42;
+        //public const int HOTKEY_ID1 = 0x002B; // 43;
+        //public const int HOTKEY_ID2 = 0x002C; // 44;
+        //public const int HOTKEY_ID3 = 0x002D; // 45;
+        //public const int HOTKEY_ID4 = 0x002E; // 46;
+        public const int VK_SHIFT = 0x10;
         public const int WM_QUERYENDSESSION = 0x0011;
         public const int WM_SETCURSOR = 0x0020;
         public const int WM_CLOSE = 0x10;
@@ -37,6 +43,11 @@ namespace NetRadio
         public const int MF_BYPOSITION = 0x400;
         public const int MF_STRING = 0x0;
         public const int IDM_CUSTOMITEM1 = 1000; //public const Int32 IDM_CUSTOMITEM2 = 1001;
+
+        private static IntPtr _hookIDKeyboard = IntPtr.Zero;
+        private const int WH_KEYBOARD_LL = 13;
+        internal static event KeyEventHandler KeyDown;
+        //internal static event KeyEventHandler KeyUp;
 
         public static readonly int WM_SHOWNETRADIO = RegisterWindowMessage("WM_SHOWNETRADIO");
         private delegate bool CallBackPtr(int hwnd, int lParam);
@@ -115,8 +126,10 @@ namespace NetRadio
 
         public static bool IsKeyDown(Keys key) { return KeyStates.Down == (GetKeyState(key) & KeyStates.Down); } // IsKeyToggled(Keys key) { return KeyStates.Toggled == (GetKeyState(key) & KeyStates.Toggled); }
 
-        [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
-        public static extern short GetKeyState(int key);
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.StdCall)]
+        internal static extern short GetKeyState(int nVirtKey);
+
 
         //[DllImport("user32.dll", SetLastError = true)]
         //public static extern bool ChangeWindowMessageFilterEx(IntPtr hWnd, uint msg, ChangeWindowMessageFilterExAction action, ref CHANGEFILTERSTRUCT changeInfo);
@@ -212,11 +225,137 @@ namespace NetRadio
             public IntPtr lpData; // The data to be passed to the receiving application. This member can be IntPtr.Zero.
         }
 
-        //[StructLayout(LayoutKind.Sequential)]
-        //public struct CHANGEFILTERSTRUCT
-        //{
-        //    public uint size;
-        //    public MessageFilterInfo info;
+        [DllImport("user32.dll", CallingConvention = CallingConvention.StdCall, SetLastError = true, CharSet = CharSet.Unicode)]
+        private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, IntPtr hInstance, int threadId);
+
+        [DllImport("user32.dll", CallingConvention = CallingConvention.StdCall, SetLastError = true, CharSet = CharSet.Unicode)]
+        private static extern bool UnhookWindowsHookEx(IntPtr idHook);
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern int CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
+
+        private delegate int LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct KBDLLHOOKSTRUCT
+        {
+            internal uint vkCode;
+            internal uint scanCode;
+            internal uint flags;
+            internal uint time;
+            internal UIntPtr dwExtraInfo;
+        }
+
+        private static int LowLevelKeyboardHookProc(int nCode, IntPtr wParam, IntPtr lParam)
+        {
+            if (nCode >= 0 && wParam == WM_KEYDOWN) // || wParam == WM_SYSKEYUP)) WM_SYSKEYUP is necessary to trap Alt-key combinations
+            {
+                KBDLLHOOKSTRUCT kbStruct = (KBDLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(KBDLLHOOKSTRUCT));
+                Keys keys = (Keys)kbStruct.vkCode;
+                switch (keys)
+                {
+                    case Keys.MediaPlayPause:
+                    case Keys.MediaNextTrack:
+                    case Keys.MediaPreviousTrack:
+                    case Keys.MediaStop:
+                    case Keys.VolumeMute:
+                        //SendKeyUp(KeyCode.VK_MEDIA_NEXT_TRACK);  // hier nicht unbeding nötig
+                        //SendKeyUp(KeyCode.VK_MEDIA_PREV_TRACK);  // hier nicht unbeding nötig 
+                        //SendKeyUp(KeyCode.VK_MEDIA_PLAY_PAUSE);  // hier nicht unbeding nötig
+                        //SendKeyUp(KeyCode.VK_MEDIA_STOP);  // hier nicht unbeding nötig
+                        KeyDown(Application.OpenForms[0], new KeyEventArgs(keys));
+                        return 1; // nur diese Anwendung verarbeitet MediaKeys
+                } // kein return 1 - andere Anwendungen können Key ebenfalls erhalten
+            }
+            else if (nCode >= 0 && wParam == WM_KEYUP)
+            {
+                switch ((Keys)((KBDLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(KBDLLHOOKSTRUCT))).vkCode)
+                {
+                    case Keys.MediaPlayPause:
+                    case Keys.MediaNextTrack:
+                    case Keys.MediaPreviousTrack:
+                    case Keys.MediaStop:
+                    case Keys.VolumeMute:
+                        return 1; // nur diese Anwendung verarbeitet MediaKeys
+                }
+            }
+            return CallNextHookEx(_hookIDKeyboard, nCode, wParam, lParam);
+        }
+
+
+        // [DllImport("user32.dll", SetLastError = true)]
+        // private static extern uint SendInput(uint numberOfInputs, INPUT[] inputs, int sizeOfInputStructure);
+
+        // internal static void SendKeyUp(KeyCode keyCode) // wird auch in ClipMenu.cs verwendet
+        // {
+        //     INPUT input = new() { Type = 1 };
+        //     input.Data.Keyboard = new KEYBDINPUT { Vk = (ushort)keyCode, Scan = 0, Flags = 2, Time = 0, ExtraInfo = IntPtr.Zero };
+        //     INPUT[] inputs = [input];
+        //     if (SendInput(1, inputs, Marshal.SizeOf(typeof(INPUT))) == 0) { throw new Exception(); }
+        // }
+
+        // [StructLayout(LayoutKind.Sequential)]
+        // internal struct INPUT
+        // {
+        //     public uint Type;
+        //     public MOUSEKEYBDHARDWAREINPUT Data;
+        // }
+
+
+        // [StructLayout(LayoutKind.Explicit)]
+        // internal struct MOUSEKEYBDHARDWAREINPUT
+        // {
+        //     [FieldOffset(0)]
+        //     public HARDWAREINPUT Hardware;
+        //     [FieldOffset(0)]
+        //     public KEYBDINPUT Keyboard;
+        //     [FieldOffset(0)]
+        //     public MOUSEINPUT Mouse;
+        // }
+
+        // [StructLayout(LayoutKind.Sequential)]
+        // internal struct HARDWAREINPUT
+        // {
+        //     public uint Msg;
+        //     public ushort ParamL;
+        //     public ushort ParamH;
+        // }
+
+        // [StructLayout(LayoutKind.Sequential)]
+        // internal struct KEYBDINPUT
+        // {
+        //     public ushort Vk;
+        //     public ushort Scan;
+        //     public uint Flags;
+        //     public uint Time;
+        //     public IntPtr ExtraInfo;
+        // }
+
+        // [StructLayout(LayoutKind.Sequential)]
+        // internal struct MOUSEINPUT
+        // {
+        //     public int X;
+        //     public int Y;
+        //     public uint MouseData;
+        //     public uint Flags;
+        //     public uint Time;
+        //     public IntPtr ExtraInfo;
+        // }
+
+        // public enum KeyCode : ushort
+        // {
+        //     VK_MEDIA_NEXT_TRACK = 0xB0,
+        //     VK_MEDIA_PREV_TRACK = 0xB1,
+        //     VK_MEDIA_STOP = 0xB2,
+        //     VK_MEDIA_PLAY_PAUSE = 0xB3
         //}
+
+        internal static nint RegisterMediaKeys() { return _hookIDKeyboard = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardHookProc, IntPtr.Zero, 0); }
+        internal static void UnregisterMediaKeys() { UnhookWindowsHookEx(_hookIDKeyboard); }
+
+        [DllImport("shell32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool IsUserAnAdmin(); // LogEvent
+
     }
 }

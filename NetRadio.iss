@@ -1,5 +1,5 @@
 #define MyAppName "NetRadio"
-#define MyAppVersion "2.5.3.1"
+#define MyAppVersion "2.5.4.0"
 #pragma include __INCLUDE__ + ";" + "C:\Program Files (x86)\Inno Download Plugin"
 #include <idp.iss>
 
@@ -12,7 +12,7 @@ ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
 PrivilegesRequired=admin
 AppPublisher=Wilhelm Happe
-VersionInfoCopyright=(C) 2023, W. Happe
+VersionInfoCopyright=(C) 2024, W. Happe
 AppPublisherURL=https://www.ophthalmostar.de/
 AppSupportURL=https://www.ophthalmostar.de/
 AppUpdatesURL=https://www.ophthalmostar.de/
@@ -34,7 +34,7 @@ OutputBaseFilename={#MyAppName}Setup
 Compression=lzma2/max
 SolidCompression=yes
 DirExistsWarning=no
-MinVersion=0,6.0
+MinVersion=0,10.0
 ;AppMutex={#MyAppName}_MultiStartPrevent => s. [Code]
 ;SignTool=sha256
 ;Uninstallable=not IsTaskSelected('portablemode')
@@ -43,14 +43,14 @@ MinVersion=0,6.0
 ;Name: portablemode; Description: "Portable Mode"
 
 [Files]
-Source: "bin\Release\net6.0-windows\NetRadio.exe"; DestDir: "{app}"; Permissions: users-modify; Flags: ignoreversion
-Source: "bin\Release\net6.0-windows\{#MyAppName}.dll"; DestDir: "{app}"; Permissions: users-modify; Flags: ignoreversion
-Source: "bin\Release\net6.0-windows\{#MyAppName}.runtimeconfig.json"; DestDir: "{app}"; Permissions: users-modify; Flags: ignoreversion
-Source: "bin\Release\net6.0-windows\bass.dll"; DestDir: "{app}"; Permissions: users-modify; Flags: ignoreversion
-Source: "bin\Release\net6.0-windows\bassflac.dll"; DestDir: "{app}"; Permissions: users-modify; Flags: ignoreversion
-Source: "bin\Release\net6.0-windows\bassopus.dll"; DestDir: "{app}"; Permissions: users-modify; Flags: ignoreversion
-Source: "bin\Release\net6.0-windows\basshls.dll"; DestDir: "{app}"; Permissions: users-modify; Flags: ignoreversion
-Source: "bin\Release\net6.0-windows\Bass.Net.dll"; DestDir: "{app}"; Permissions: users-modify; Flags: ignoreversion
+Source: "bin\Release\net8.0-windows8.0\NetRadio.exe"; DestDir: "{app}"; Permissions: users-modify; Flags: ignoreversion
+Source: "bin\Release\net8.0-windows8.0\{#MyAppName}.dll"; DestDir: "{app}"; Permissions: users-modify; Flags: ignoreversion
+Source: "bin\Release\net8.0-windows8.0\{#MyAppName}.runtimeconfig.json"; DestDir: "{app}"; Permissions: users-modify; Flags: ignoreversion
+Source: "bin\Release\net8.0-windows8.0\bass.dll"; DestDir: "{app}"; Permissions: users-modify; Flags: ignoreversion
+Source: "bin\Release\net8.0-windows8.0\bassflac.dll"; DestDir: "{app}"; Permissions: users-modify; Flags: ignoreversion
+Source: "bin\Release\net8.0-windows8.0\bassopus.dll"; DestDir: "{app}"; Permissions: users-modify; Flags: ignoreversion
+Source: "bin\Release\net8.0-windows8.0\basshls.dll"; DestDir: "{app}"; Permissions: users-modify; Flags: ignoreversion
+Source: "bin\Release\net8.0-windows8.0\Bass.Net.dll"; DestDir: "{app}"; Permissions: users-modify; Flags: ignoreversion
 Source: "Lizenzvereinbarung.txt"; DestDir: "{app}"; Permissions: users-modify;
 Source: "LicenseAgreement.txt"; DestDir: "{app}"; Permissions: users-modify;
 Source: "NetRadio.pdf"; DestDir: "{app}"; Permissions: users-modify;
@@ -88,11 +88,11 @@ en.ConfirmUninstall=Are you sure you want to remove %1 and all of its components
 
 [CustomMessages]
 RemoveSettings=Do you want to remove all custom settings set for NetRadio?
-IDP_FormCaption=.NET 6 Desktop runtime is required.
+IDP_FormCaption=.NET 8 Desktop runtime is required.
 IDP_FormDescription=%nPlease wait while downloading from Microsoft.
-IDP_DownloadFailed=Download of .NET 6 failed. .NET 6 Desktop runtime is required to run NetRadio.
+IDP_DownloadFailed=Download of .NET 8 failed. .NET 8 Desktop runtime is required to run NetRadio.
 IDP_RetryCancel=Click 'Retry' to try downloading the files again, or click 'Cancel' to terminate setup.
-InstallingDotNetRuntime=Installing .NET 6 Desktop Runtime. This might take a few minutes...
+InstallingDotNetRuntime=Installing .NET 8 Desktop Runtime. This might take a few minutes...
 DotNetRuntimeFailedToLaunch=Failed to launch .NET Runtime Installer with error "%1". Please fix the error then run this installer again.
 DotNetRuntimeFailed1602=.NET Runtime installation was cancelled. This installation can continue, but be aware that this application may not run unless the .NET Runtime installation is completed successfully.
 DotNetRuntimeFailed1603=A fatal error occurred while installing the .NET Runtime. Please fix the error, then run the installer again.
@@ -222,8 +222,8 @@ var
   maximumExclusiveVersion: string;
 begin
   Result := True;
-  minimumVersion := '6.0.13';
-  maximumExclusiveVersion := '6.9.9';
+  minimumVersion := '8.0.0';
+  maximumExclusiveVersion := '8.9.9';
   registryKey := 'SOFTWARE\WOW6432Node\dotnet\Setup\InstalledVersions\x64\sharedfx\Microsoft.WindowsDesktop.App';
   if RegGetValueNames(HKLM, registryKey, runtimes) then
   begin
@@ -342,8 +342,8 @@ begin
       idpSetOption('DetailsButton', '0'); //Controls availability of 'Details' button
       idpSetOption('DetailedMode', '1'); //If set to 1, download details will be visible by default
       idpSetOption('AllowContinue', '1'); //Allow user to continue installation if download fails.
-      NetRuntimeInstaller := 'WindowsDesktop-Runtime-6.0.x-Win-x64.exe';
-      idpAddFile('https://aka.ms/dotnet/6.0/windowsdesktop-runtime-win-x64.exe', ExpandConstant('{tmp}\' + NetRuntimeInstaller));
+      NetRuntimeInstaller := 'WindowsDesktop-Runtime-8.0.x-Win-x64.exe';
+      idpAddFile('https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe', ExpandConstant('{tmp}\' + NetRuntimeInstaller));
       idpDownloadAfter(wpReady);
     end;
   end; 

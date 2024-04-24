@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
+using System.DirectoryServices;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Globalization;
@@ -16,7 +17,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
-//using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
@@ -149,7 +149,9 @@ namespace NetRadio
             _myUserAgentPtr = Marshal.StringToHGlobalAnsi(_myUserAgent);
             CreateLogFile();
             LogEvent(appName + ": Version " + _curVersion.ToString());
+            LogEvent("IsUserAnAdmin: " + NativeMethods.IsUserAnAdmin());
             int cores = Environment.ProcessorCount;
+            LogEvent("ProcessorCount: " + cores);
             Bass.BASS_SetConfigPtr(BASSConfig.BASS_CONFIG_NET_AGENT, _myUserAgentPtr);
             Bass.BASS_SetConfig(BASSConfig.BASS_CONFIG_NET_BUFFER, 4000); // The buffer length in milliseconds (default 5000)
             Bass.BASS_SetConfig(BASSConfig.BASS_CONFIG_NET_PREBUF, 80); // Percentage of the download buffer length(BASS_CONFIG_NET_BUFFER) should be filled before starting playback. The default is 75 %
@@ -449,6 +451,8 @@ namespace NetRadio
             historyListView.ListViewItemSorter = lviComparer;
             spectrumTimer.Tick += SpectrumTick;
             _netPreBuff = Bass.BASS_GetConfig(BASSConfig.BASS_CONFIG_NET_PREBUF) / 100f; // 0.75
+
+            volProgressBar.MouseWheel += VolProgressBar_MouseWheel;
         }
 
         private void MyDownloadProc(IntPtr buffer, int length, IntPtr user)
@@ -472,7 +476,7 @@ namespace NetRadio
                             case BASSChannelType.BASS_CTYPE_STREAM_OPUS:
                             case BASSChannelType.BASS_CTYPE_STREAM_OGG:
                                 _recording = false; // downloadFileName = Path.ChangeExtension(downloadFileName, ".opus");
-                                BeginInvoke((MethodInvoker)delegate () { RecordingStop(false); }); //uint uiFlags = /*MB_OK*/ 0x00000000 | /*MB_SETFOREGROUND*/  0x00010000 | /*MB_APPLMODAL*/ 0x00001000 | /*MB_ICONEXCLAMATION*/ 0x00000030;
+                                BeginInvoke((System.Windows.Forms.MethodInvoker)delegate () { RecordingStop(false); }); //uint uiFlags = /*MB_OK*/ 0x00000000 | /*MB_SETFOREGROUND*/  0x00010000 | /*MB_APPLMODAL*/ 0x00001000 | /*MB_ICONEXCLAMATION*/ 0x00000030;
                                 if (NativeMethods.MessageBoxTimeout(NativeMethods.GetForegroundWindow(), $"Recording is only available for MP3 and AAC streams.", $"NetRadio", 0x00000000 | 0x00010000 | 0x00000000 | 0x00000040, 0, 3000) > 0)
                                 { return; }
                                 else { break; }
@@ -494,7 +498,7 @@ namespace NetRadio
                     }
                     if (buffer == IntPtr.Zero)
                     {
-                        BeginInvoke((MethodInvoker)delegate () { RecordingStop(); }); // setzt _fs auf null; this code runs on the UI thread!
+                        BeginInvoke((System.Windows.Forms.MethodInvoker)delegate () { RecordingStop(); }); // setzt _fs auf null; this code runs on the UI thread!
                     }
                     else
                     {
@@ -505,14 +509,14 @@ namespace NetRadio
                         recIncrement++;
                         if (recIncrement % 2 == 0) // Anzeige nur jedes 2te mal aktualisieren
                         {
-                            BeginInvoke((MethodInvoker)delegate () { lblD4.Text = "Downloading " + Utilities.GetFileSize(_downlaodSize); });
+                            BeginInvoke((System.Windows.Forms.MethodInvoker)delegate () { lblD4.Text = "Downloading " + Utilities.GetFileSize(_downlaodSize); });
                         }
                     }
                 }
                 catch (IOException ex)
                 {
                     _recording = false;
-                    BeginInvoke((MethodInvoker)delegate ()// this code runs on the UI thread!
+                    BeginInvoke((System.Windows.Forms.MethodInvoker)delegate ()// this code runs on the UI thread!
                     {
                         RecordingStop(); // setzt _fs auf null; 
                         MessageBox.Show(ex.Message, appName, MessageBoxButtons.OK, MessageBoxIcon.Error); // "An error occurred. Recording has stopped."
@@ -836,6 +840,7 @@ namespace NetRadio
             miniPlayer.PlayPause += new EventHandler(MiniPlayer_PlayPause);
             miniPlayer.PlayerReset += new EventHandler(MiniPlayer_PlayReset);
             miniPlayer.VolumeProgress += new EventHandler(MiniPlayer_VolumeProgress);
+            miniPlayer.VolumeMouseWheel += new EventHandler<VolumeEventArgs>(MiniPlayer_VolumeMouseWheel);
             miniPlayer.IncreaseVolume += new EventHandler(MiniPlayer_IncreaseVolume);
             miniPlayer.DecreaseVolume += new EventHandler(MiniPlayer_DecreaseVolume);
             miniPlayer.StationChanged += new EventHandler(MiniPlayer_StationChanged);
@@ -856,7 +861,106 @@ namespace NetRadio
             //}
             if (cbActions.Checked) { PrepareActions(); }
             ((ScrollBar)dgvStations.GetType().GetProperty("VerticalScrollBar", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(dgvStations, null)).MouseCaptureChanged += (s, e) => { dgvStations.EndEdit(); };
+
+            if (NativeMethods.RegisterMediaKeys() > 0)
+            {
+                NativeMethods.KeyDown += new KeyEventHandler(GlobalKeyboardHook_KeyDown);
+                LogEvent("RegisterMediaKeys: success");
+            }
+            else
+            {
+                Console.Beep();
+                LogEvent("RegisterMediaKeys: failed");
+            }
         }
+
+        private void GlobalKeyboardHook_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.MediaPlayPause)
+            {
+                BtnPlayStop_Click(null, null);
+                LogEvent("GlobalKeyboardHook: MediaPlayPause received");
+            }
+            else if (e.KeyCode == Keys.MediaStop)
+            {
+                int iTag = 0;
+                foreach (RadioButton rb in tcMain.TabPages[0].Controls.OfType<RadioButton>())
+                {
+                    if (rb.Checked) { iTag = Convert.ToInt32(rb.Tag); }
+                }
+                Bass.BASS_ChannelStop(_stream);
+                Bass.BASS_Free();
+                RestorePlayerDefaults(iTag);
+                LogEvent("GlobalKeyboardHook: MediaStop received");
+            }
+            else if (e.KeyCode == Keys.MediaNextTrack)
+            {
+                int iTag = 0;  // 1 bis 25
+                int listIndex = 0; // Index in radioButtonTagsList (1 bis <=25)
+                List<int> radioButtonTagsList = [];
+                for (int i = 0; i < stationSum; i++)
+                {
+                    RadioButton rb = tcMain.TabPages[0].Controls["rbtn" + (i + 1).ToString("D2")] as RadioButton;
+                    int tag = Convert.ToInt32(rb.Tag);
+                    if (!string.IsNullOrEmpty(dgvStations.Rows[tag - 1].Cells[1].Value?.ToString()))
+                    {
+                        radioButtonTagsList.Add(tag);
+                        if (rb.Checked)
+                        {
+                            iTag = tag;
+                            listIndex = radioButtonTagsList.Count;
+                        }
+                    }
+                }
+                if (iTag > 0)
+                {
+                    iTag = listIndex < radioButtonTagsList.Count ? radioButtonTagsList[listIndex] : radioButtonTagsList[0];
+                    (tcMain.TabPages[0].Controls["rbtn" + iTag.ToString("D2")] as RadioButton).Checked = true; // löst StartPlaying aus
+                }
+                LogEvent("GlobalKeyboardHook: MediaNextTrack received");
+            }
+            else if (e.KeyCode == Keys.MediaPreviousTrack)
+            {
+                int iTag = 0;  // 1 bis 25
+                int listIndex = 0; // Index in radioButtonTagsList (1 bis <=25)
+                List<int> radioButtonTagsList = [];
+                for (int i = 0; i < stationSum; i++) //foreach (RadioButton…) // iteriert von 25 nach 1 statt umgekehrt
+                {
+                    RadioButton rb = tcMain.TabPages[0].Controls["rbtn" + (i + 1).ToString("D2")] as RadioButton;
+                    int tag = Convert.ToInt32(rb.Tag);
+                    if (!string.IsNullOrEmpty(dgvStations.Rows[tag - 1].Cells[1].Value?.ToString()))
+                    {
+                        radioButtonTagsList.Add(tag);
+                        if (rb.Checked)
+                        {
+                            iTag = tag;
+                            listIndex = radioButtonTagsList.Count;
+                        }
+                    }
+                }
+                if (iTag > 0)
+                {
+                    iTag = listIndex <= 1 ? radioButtonTagsList.Last() : radioButtonTagsList[listIndex - 2];
+                    (tcMain.TabPages[0].Controls["rbtn" + iTag.ToString("D2")] as RadioButton).Checked = true; // löst StartPlaying aus
+                }
+                LogEvent("GlobalKeyboardHook: MediaPreviousTrack received");
+            }
+            //else if (e.KeyCode == Keys.VolumeUp)
+            //{
+            //    BtnIncrease_Click(null, null);
+            //}
+            //else if (e.KeyCode == Keys.VolumeDown)
+            //{
+            //    BtnDecrease_Click(null, null);
+            //}
+            else if (e.KeyCode == Keys.VolumeMute)
+            {
+                if (Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PLAYING) { BASSChannelPause(); }
+                LogEvent("GlobalKeyboardHook: Volume mute received");
+            }
+            e.Handled = true;
+        }
+
 
         private void MiniPlayer_FormHide(object sender, EventArgs e)
         {
@@ -867,6 +971,7 @@ namespace NetRadio
         private void MiniPlayer_PlayReset(object sender, EventArgs e) { BtnReset_Click(null, null); }
         private void MiniPlayer_PlayPause(object sender, EventArgs e) { BtnPlayStop_Click(null, null); }
         private void MiniPlayer_VolumeProgress(object sender, EventArgs e) { SetProgressBarValue(); }
+        private void MiniPlayer_VolumeMouseWheel(object sender, VolumeEventArgs e) { SetMouseWheelValue(e); }
         private void MiniPlayer_IncreaseVolume(object sender, EventArgs e) { BtnIncrease_Click(null, null); }
         private void MiniPlayer_DecreaseVolume(object sender, EventArgs e) { BtnDecrease_Click(null, null); }
         private void MiniPlayer_F4_ShowPlayer(object sender, EventArgs e) { ShowFullPlayer(); tcMain.SelectedIndex = 0; }
@@ -1023,23 +1128,35 @@ namespace NetRadio
             else if (m.Msg == NativeMethods.WM_SHOWNETRADIO) { ShowFullPlayer(); } // another instance is started
             else if (m.Msg == NativeMethods.WM_HOTKEY)
             {
-                int keyPressTick = Environment.TickCount;
-                int elapsed = keyPressTick - lastHotkeyPress;
-                lastHotkeyPress = keyPressTick;
-                if (!mainShown) { return; } // andernfalls kann es bei 2maligem Drücken zu Anzeige des Hauptfensters und des Miniplayers kommen.
-                if (elapsed <= 400 || (ModifierKeys & Keys.Shift) == Keys.Shift) { Close(); }
-                else if (miniPlayer.Visible && !miniPlayer.Handle.Equals(NativeMethods.GetForegroundWindow())) { miniPlayer.Activate(); }
-                else if (Visible) // heißt nicht, das Form sichtbar bzw. das aktive Fenster sein muss
+                if (m.WParam == NativeMethods.HOTKEY_ID)
                 {
-                    if (ActiveForm == null) { Activate(); }
-                    else
+                    int keyPressTick = Environment.TickCount;
+                    int elapsed = keyPressTick - lastHotkeyPress;
+                    lastHotkeyPress = keyPressTick;
+                    if (!mainShown) { return; } // andernfalls kann es bei 2maligem Drücken zu Anzeige des Hauptfensters und des Miniplayers kommen.
+                    if (elapsed <= 400 || (ModifierKeys & Keys.Shift) == Keys.Shift) { Close(); }
+                    else if (miniPlayer.Visible && !miniPlayer.Handle.Equals(NativeMethods.GetForegroundWindow())) { miniPlayer.Activate(); }
+                    else if (Visible) // heißt nicht, das Form sichtbar bzw. das aktive Fenster sein muss
                     {
-                        ShowMiniPlayer();
-                        Hide(); //ShowInTaskbar = false; verträgt sich nicht mit GlobalHotkey => zerstört Handle
-                        tcMain.SelectedIndex = 0;
+                        if (ActiveForm == null) { Activate(); }
+                        else
+                        {
+                            if (close2Tray) { miniPlayer.Hide(); }
+                            else { ShowMiniPlayer(); }
+                            //ShowMiniPlayer();
+                            Hide(); //ShowInTaskbar = false; verträgt sich nicht mit GlobalHotkey => zerstört Handle
+                            tcMain.SelectedIndex = 0;
+                        }
                     }
+                    else { ShowFullPlayer(); }  // not visible, d.h. im Tray
+                    LogEvent("WndProc: Message WM_HOTKEY received");
                 }
-                else { ShowFullPlayer(); }  // not visible, d.h. im Tray
+                //else if (m.WParam == NativeMethods.HOTKEY_ID1)
+                //{
+                //    BtnPlayStop_Click(null, null);
+                //    LogEvent("WndProc: Message MediaPlayPause received (HOTKEY_ID2)");
+                //}
+                else { MessageBox.Show(m.WParam.ToString()); }
             }
             else if (m.Msg == NativeMethods.WM_QUERYENDSESSION) { Close(); }
             else if (m.Msg == NativeMethods.WM_NCLBUTTONDBLCLK) { Hide(); ShowMiniPlayer(); }
@@ -1108,6 +1225,18 @@ namespace NetRadio
         private void BtnIncrease_MouseUp(object sender, MouseEventArgs e) { timerVolume.Stop(); }
         private void BtnDecrease_MouseDown(object sender, MouseEventArgs e) { timerVolume.Enabled = true; timerVolume.Start(); }
         private void BtnDecrease_MouseUp(object sender, MouseEventArgs e) { timerVolume.Stop(); }
+        private void VolProgressBar_MouseWheel(object sender, MouseEventArgs e) { SetProgressBarVolume(e.Delta); }
+        private void SetMouseWheelValue(VolumeEventArgs e) { SetProgressBarVolume(e.Delta); } // MiniPlayer_VolumeMouseWheel
+
+        private void SetProgressBarVolume(int delta)
+        {
+            int diff = (NativeMethods.GetKeyState(NativeMethods.VK_SHIFT) & 0x8000) == 0 ? 1 : 10;
+            if (delta < 0) { miniPlayer.MpVolProgBar.Value = volProgressBar.Value = volProgressBar.Value >= 100 - diff ? 100 : volProgressBar.Value + diff; }
+            else if (delta > 0) { miniPlayer.MpVolProgBar.Value = volProgressBar.Value = volProgressBar.Value <= diff ? 0 : volProgressBar.Value - diff; ; }
+            Bass.BASS_ChannelSetAttribute(_stream, BASSAttribute.BASS_ATTRIB_VOL, volProgressBar.Value / 100f);
+            lblVolume.Text = volProgressBar.Value.ToString();
+            somethingToSave = true;
+        }
 
         private void SetProgressBarValue()
         {
@@ -1340,7 +1469,7 @@ namespace NetRadio
                 btnPlayStop.Invalidate();
                 miniPlayer.MpBtnPlay.Invalidate();
                 lblD2.Text = "-";
-                MiniPlayer.MpLblD2_Text(lblD2.Text);
+                MiniPlayer.MpLblD2_Text("NetRadio");
             }
             timerPause.Enabled = false;
         }
@@ -1424,7 +1553,7 @@ namespace NetRadio
                     if (dgvStations.Rows[i - 1].Cells[0].Value != null)
                     {
                         foundBtn.Text = Utilities.StationShort(dgvStations.Rows[i - 1].Cells[0].Value.ToString());
-                        toolTip.SetToolTip(foundBtn, Utilities.StationLong(dgvStations.Rows[i - 1].Cells[0].Value.ToString()));
+                        toolTip.SetToolTip(foundBtn, Utilities.StationLong(dgvStations.Rows[i - 1].Cells[0].Value.ToString()) + " (" + i + ")");
                         miniPlayer.MpCmBxStations.Items.Add(Utilities.StationLong(dgvStations.Rows[i - 1].Cells[0].Value.ToString()));
                     }
                     foundBtn.Enabled = true;
@@ -1723,6 +1852,14 @@ namespace NetRadio
             miniPlayer.Hide();
             miniPlayer.Opacity = 1;
             if (!string.IsNullOrEmpty(hkLetter) && new Regex("^[A-Z]+$").IsMatch(hkLetter)) { RegisterHK(hkLetter); } // Hotkey kann erst registriert werden, wenn das Fenster erstellt wurde
+
+            //if (NativeMethods.RegisterHotKey(Handle, NativeMethods.HOTKEY_ID1, 0, (uint)Keys.MediaPlayPause) == true)
+            //{
+            //    LogEvent("RegisterHotKey: MediaPlayPause registered (HOTKEY_ID1)");
+            //}
+
+
+
             if (startMiniCmd || startTrayCmd)
             {
                 Hide();
@@ -1773,7 +1910,9 @@ namespace NetRadio
                             {
                                 Hide(); //ShowInTaskbar = false; verträgt sich nicht mit GlobalHotkey => zerstört Handle
                                 tcMain.SelectedIndex = 0;
-                                ShowMiniPlayer();
+                                if (close2Tray) { miniPlayer.Hide(); }
+                                else { ShowMiniPlayer(); }
+                                //ShowMiniPlayer();
                                 if (NativeMethods.IsKeyDown(Keys.Escape)) { miniPlayer.MpToolTip.Active = false; } // Workaround for persistent ToolTip display
                                 else { miniPlayer.MpToolTip.Active = true; }
                             }
@@ -2019,6 +2158,7 @@ namespace NetRadio
                 Hide();
                 return;
             }
+            NativeMethods.UnregisterMediaKeys();
             SystemEvents.PowerModeChanged -= new PowerModeChangedEventHandler(PowerMode_Changed);
             timerLevel.Stop();
             spectrumTimer.Stop();
@@ -2026,6 +2166,11 @@ namespace NetRadio
             RecordingStop(); // enthält BASS_StreamFree! - channelVolume muss vorher gespeichert werden!
             notifyIcon.Visible = false; // keine komische Meldungen an Windows-Nachrichtenzentrale
             if (!string.IsNullOrEmpty(hkLetter)) { NativeMethods.UnregisterHotKey(Handle, NativeMethods.HOTKEY_ID); }
+            //NativeMethods.UnregisterHotKey(Handle, NativeMethods.HOTKEY_ID1);
+            //NativeMethods.UnregisterHotKey(Handle, NativeMethods.HOTKEY_ID2);
+            //NativeMethods.UnregisterHotKey(Handle, NativeMethods.HOTKEY_ID3);
+            //NativeMethods.UnregisterHotKey(Handle, NativeMethods.HOTKEY_ID4);
+
             Bass.BASS_PluginFree(_hlsPlugIn);
             Bass.BASS_PluginFree(_flacPlugIn);
             Bass.BASS_PluginFree(_opusPlugIn);
@@ -2697,7 +2842,11 @@ namespace NetRadio
                                 LogEvent("Channelinfo: " + _tagInfo.channelinfo.ctype + ")");
                                 //if (_tagInfo.channelinfo.ctype == BASSChannelType.BASS_CTYPE_STREAM_FLAC_OGG) { MessageBox.Show("FLAC_OGG"); }
                             }
-                            else { lblD3.Text = "00:00:00"; }
+                            else
+                            {
+                                lblD3.Text = "00:00:00";
+                                MiniPlayer.MpLblD2_Text("NetRadio"); //  + _curVersion.ToString()
+                            }
 
                             if (tcMain.SelectedTab == tpSectrum) { StatusStrip_SingleLabel(false, lblD2.Text); }
                             if (logHistory) { AddToHistory(lblD2.Text); } // _tagInfo.ToString() könnte null sein?!
@@ -2911,7 +3060,7 @@ namespace NetRadio
                 miniPlayer.MpBtnPlay.Enabled = btnPlayStop.Enabled = btnReset.Enabled = btnRecord.Enabled = false;
             }
             lblD2.Text = "-";
-            MiniPlayer.MpLblD2_Text(lblD2.Text);
+            MiniPlayer.MpLblD2_Text("NetRadio");
             if (tcMain.SelectedTab == tpSectrum) { StatusStrip_SingleLabel(false, lblD2.Text); }
             lblD3.Text = "-";
             lblD4.Text = "-";
@@ -3605,15 +3754,21 @@ namespace NetRadio
                         {
                             Heading = "You still have the following options to exit:",
                             Text = "1. Right-click on the NetRadio icon in the system tray and Exit.\n\n2. Press the Shift key while clicking on the Close button [🗙].",
-                            Caption = appName,
+                            Caption = appName + " - Tray mode",
                             Icon = TaskDialogIcon.None,
                             AllowCancel = true,
                             Verification = new TaskDialogVerificationCheckBox() { Text = "Do not show again" },
                             Buttons = { TaskDialogButton.OK },
                             Footnote = new TaskDialogFootnote()
                             {
-                                Text = "If the NetRadio icon is unvisible: Click on the ˄ arrow in the taskbar to show all icons and drag the icon to the system tray.",
+                                Text = "If the NetRadio icon is unvisible: Click on the ˄ arrow in the taskbar to show all icons and drag the icon to the system tray.\nIn this mode, pressing the Escape key in the main window minimizes the program to the taskbar.",
                             },
+                            //Expander = new TaskDialogExpander()
+                            //{
+                            //    Text = "Bitte beachten Sie, dass Sie in diesem Modus mit der Escape-Taste das Programmfenster ins Tray minimieren können.",
+                            //    Position = TaskDialogExpanderPosition.AfterText,
+                            //},
+
                         };
                         if (TaskDialog.ShowDialog(this, page) == TaskDialogButton.OK)
                         {
