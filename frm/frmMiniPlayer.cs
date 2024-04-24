@@ -22,6 +22,7 @@ namespace NetRadio
         public event EventHandler PlayPause;
         public event EventHandler PlayerReset;
         public event EventHandler VolumeProgress;
+        public event EventHandler<VolumeEventArgs> VolumeMouseWheel; // file clsUtilities
         public event EventHandler IncreaseVolume;
         public event EventHandler DecreaseVolume;
         public event EventHandler StationChanged;
@@ -43,12 +44,14 @@ namespace NetRadio
             _this = this;
             _client = Region.FromHrgn(NativeMethods.CreateRoundRectRgn(1, 1, Width - 1, Height - 1, 15, 15));
             Region = Region.FromHrgn(NativeMethods.CreateRoundRectRgn(0, 0, Width, Height, 15, 15)); // FormBorderStyle.None
+            volProgressBar.MouseWheel += VolProgressBar_MouseWheel;
         }
 
         protected virtual void OnFormHide(EventArgs e) { FormHide?.Invoke(this, e); }
         protected virtual void OnPlayPause(EventArgs e) { PlayPause?.Invoke(this, e); }
         protected virtual void OnPlayerReset(EventArgs e) { PlayerReset?.Invoke(this, e); }
         protected virtual void OnVolumeProgress(EventArgs e) { VolumeProgress?.Invoke(this, e); }
+        protected virtual void OnVolumeMouseWheel(VolumeEventArgs e) { VolumeMouseWheel?.Invoke(this, e); }
         protected virtual void OnIncreaseVolume(EventArgs e) { IncreaseVolume?.Invoke(this, e); }
         protected virtual void OnDecreaseVolume(EventArgs e) { DecreaseVolume?.Invoke(this, e); }
         protected virtual void OnStationChanged(EventArgs e) { StationChanged?.Invoke(this, e); }
@@ -70,7 +73,7 @@ namespace NetRadio
                     g.Clear(_this.pictureBoxLevel.BackColor);
                     using Pen p = new(new LinearGradientBrush(new Point(0, 0), new Point(140, 0), SystemColors.Highlight, Color.Coral), 2.0f); // 3.0f
                     p.DashCap = DashCap.Flat;
-                    p.DashPattern = new float[] { 1.0f, 1.0f };
+                    p.DashPattern = [1.0f, 1.0f];
                     g.DrawLine(p, 2, 2, _this.levelLeft, 2); // x, y, 
                     g.DrawLine(p, 2, 5, _this.levelRight, 5);
                 }
@@ -147,6 +150,11 @@ namespace NetRadio
         {
             if ((ModifierKeys & Keys.Shift) == Keys.Shift) { Application.Exit(); }
             else { OnFormHide(null); }
+        }
+
+        private void SelectStationByPosition(int position)
+        {
+            if (cmBxStations.Items.Count >= position) { cmBxStations.SelectedIndex = position - 1; }
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -254,6 +262,24 @@ namespace NetRadio
                         cmBxStations.DroppedDown = true;
                         return true;
                     }
+                case Keys.NumPad1:
+                case Keys.D1: { if (cmBxStations.Items.Count >= 1) { cmBxStations.SelectedIndex = 0; OnStationChanged(null); return true; } return false; }
+                case Keys.NumPad2:
+                case Keys.D2: { if (cmBxStations.Items.Count >= 2) { cmBxStations.SelectedIndex = 1; OnStationChanged(null); return true; } return false; }
+                case Keys.NumPad3:
+                case Keys.D3: { if (cmBxStations.Items.Count >= 3) { cmBxStations.SelectedIndex = 2; OnStationChanged(null); return true; } return false; }
+                case Keys.NumPad4:
+                case Keys.D4: { if (cmBxStations.Items.Count >= 4) { cmBxStations.SelectedIndex = 3; OnStationChanged(null); return true; } return false; }
+                case Keys.NumPad5:
+                case Keys.D5: { if (cmBxStations.Items.Count >= 5) { cmBxStations.SelectedIndex = 4; OnStationChanged(null); return true; } return false; }
+                case Keys.NumPad6:
+                case Keys.D6: { if (cmBxStations.Items.Count >= 6) { cmBxStations.SelectedIndex = 5; OnStationChanged(null); return true; } return false; }
+                case Keys.NumPad7:
+                case Keys.D7: { if (cmBxStations.Items.Count >= 7) { cmBxStations.SelectedIndex = 6; OnStationChanged(null); return true; } return false; }
+                case Keys.NumPad8:
+                case Keys.D8: { if (cmBxStations.Items.Count >= 8) { cmBxStations.SelectedIndex = 7; OnStationChanged(null); return true; } return false; }
+                case Keys.NumPad9:
+                case Keys.D9: { if (cmBxStations.Items.Count >= 9) { cmBxStations.SelectedIndex = 8; OnStationChanged(null); return true; } return false; }
             }
             return base.ProcessCmdKey(ref msg, keyData);
         }
@@ -279,6 +305,13 @@ namespace NetRadio
         {
             base.OnPaint(e);
             e.Graphics.FillRegion(SystemBrushes.Control, _client); // zeichnet From.Background(-1) => Rahmen ergibt sich aus dem im Designer eingestellten Form.Background
+        }
+
+        private void VolProgressBar_MouseWheel(object sender, MouseEventArgs e)
+        {
+            OnVolumeMouseWheel(new VolumeEventArgs() { Delta = e.Delta < 0 ? 1 : -1 });
+            //if (e.Delta < 0) { OnVolumeMouseWheel(new VolumeEventArgs() { Volume = (NativeMethods.GetKeyState(NativeMethods.VK_SHIFT) & 0x8000) == 0 ? 1 : 10 }); }
+            //else if (e.Delta > 0) { OnVolumeMouseWheel(new VolumeEventArgs() { Volume = (NativeMethods.GetKeyState(NativeMethods.VK_SHIFT) & 0x8000) == 0 ? -1 : -10 }); }
         }
 
         private void VolProgressBar_MouseDown(object sender, MouseEventArgs e) { OnVolumeProgress(null); }
@@ -387,7 +420,7 @@ namespace NetRadio
             {
                 OnStationChanged(null);
                 btnPlayPause.Focus();
-            }   
+            }
         }
 
         private void LabelD2_MouseDoubleClick(object sender, MouseEventArgs e) { OnFormHide(null); }

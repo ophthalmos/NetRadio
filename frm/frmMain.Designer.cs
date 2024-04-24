@@ -32,7 +32,7 @@ namespace NetRadio
         {
             components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmMain));
-            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
             tcMain = new TabControl();
             tpPlayer = new TabPage();
             rbtn25 = new RadioButton();
@@ -296,7 +296,7 @@ namespace NetRadio
             tcMain.Controls.Add(tpSectrum);
             tcMain.Controls.Add(tpMiniplayer);
             tcMain.Dock = DockStyle.Top;
-            tcMain.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            tcMain.Font = new System.Drawing.Font("Segoe UI", 10F);
             tcMain.HotTrack = true;
             tcMain.ImageList = imageList;
             tcMain.ItemSize = new System.Drawing.Size(50, 25);
@@ -357,7 +357,7 @@ namespace NetRadio
             // 
             rbtn25.Appearance = Appearance.Button;
             rbtn25.ContextMenuStrip = contextMenuPlayer;
-            rbtn25.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            rbtn25.Font = new System.Drawing.Font("Segoe UI", 10F);
             rbtn25.Location = new System.Drawing.Point(315, 308);
             rbtn25.Margin = new Padding(0, 3, 0, 3);
             rbtn25.Name = "rbtn25";
@@ -405,7 +405,7 @@ namespace NetRadio
             // 
             rbtn24.Appearance = Appearance.Button;
             rbtn24.ContextMenuStrip = contextMenuPlayer;
-            rbtn24.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            rbtn24.Font = new System.Drawing.Font("Segoe UI", 10F);
             rbtn24.Location = new System.Drawing.Point(237, 308);
             rbtn24.Margin = new Padding(0, 3, 0, 3);
             rbtn24.Name = "rbtn24";
@@ -423,7 +423,7 @@ namespace NetRadio
             // 
             rbtn23.Appearance = Appearance.Button;
             rbtn23.ContextMenuStrip = contextMenuPlayer;
-            rbtn23.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            rbtn23.Font = new System.Drawing.Font("Segoe UI", 10F);
             rbtn23.Location = new System.Drawing.Point(159, 308);
             rbtn23.Margin = new Padding(0, 3, 0, 3);
             rbtn23.Name = "rbtn23";
@@ -441,7 +441,7 @@ namespace NetRadio
             // 
             rbtn22.Appearance = Appearance.Button;
             rbtn22.ContextMenuStrip = contextMenuPlayer;
-            rbtn22.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            rbtn22.Font = new System.Drawing.Font("Segoe UI", 10F);
             rbtn22.Location = new System.Drawing.Point(81, 308);
             rbtn22.Margin = new Padding(0, 3, 0, 3);
             rbtn22.Name = "rbtn22";
@@ -459,7 +459,7 @@ namespace NetRadio
             // 
             rbtn21.Appearance = Appearance.Button;
             rbtn21.ContextMenuStrip = contextMenuPlayer;
-            rbtn21.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            rbtn21.Font = new System.Drawing.Font("Segoe UI", 10F);
             rbtn21.Location = new System.Drawing.Point(3, 308);
             rbtn21.Margin = new Padding(0, 3, 0, 3);
             rbtn21.Name = "rbtn21";
@@ -477,7 +477,7 @@ namespace NetRadio
             // 
             rbtn20.Appearance = Appearance.Button;
             rbtn20.ContextMenuStrip = contextMenuPlayer;
-            rbtn20.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            rbtn20.Font = new System.Drawing.Font("Segoe UI", 10F);
             rbtn20.Location = new System.Drawing.Point(315, 275);
             rbtn20.Margin = new Padding(0, 3, 0, 3);
             rbtn20.Name = "rbtn20";
@@ -495,7 +495,7 @@ namespace NetRadio
             // 
             rbtn19.Appearance = Appearance.Button;
             rbtn19.ContextMenuStrip = contextMenuPlayer;
-            rbtn19.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            rbtn19.Font = new System.Drawing.Font("Segoe UI", 10F);
             rbtn19.Location = new System.Drawing.Point(237, 275);
             rbtn19.Margin = new Padding(0, 3, 0, 3);
             rbtn19.Name = "rbtn19";
@@ -513,7 +513,7 @@ namespace NetRadio
             // 
             rbtn18.Appearance = Appearance.Button;
             rbtn18.ContextMenuStrip = contextMenuPlayer;
-            rbtn18.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            rbtn18.Font = new System.Drawing.Font("Segoe UI", 10F);
             rbtn18.Location = new System.Drawing.Point(159, 275);
             rbtn18.Margin = new Padding(0, 3, 0, 3);
             rbtn18.Name = "rbtn18";
@@ -531,7 +531,7 @@ namespace NetRadio
             // 
             rbtn17.Appearance = Appearance.Button;
             rbtn17.ContextMenuStrip = contextMenuPlayer;
-            rbtn17.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            rbtn17.Font = new System.Drawing.Font("Segoe UI", 10F);
             rbtn17.Location = new System.Drawing.Point(81, 275);
             rbtn17.Margin = new Padding(0, 3, 0, 3);
             rbtn17.Name = "rbtn17";
@@ -549,7 +549,7 @@ namespace NetRadio
             // 
             rbtn16.Appearance = Appearance.Button;
             rbtn16.ContextMenuStrip = contextMenuPlayer;
-            rbtn16.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            rbtn16.Font = new System.Drawing.Font("Segoe UI", 10F);
             rbtn16.Location = new System.Drawing.Point(3, 275);
             rbtn16.Margin = new Padding(0, 3, 0, 3);
             rbtn16.Name = "rbtn16";
@@ -567,7 +567,7 @@ namespace NetRadio
             // 
             rbtn15.Appearance = Appearance.Button;
             rbtn15.ContextMenuStrip = contextMenuPlayer;
-            rbtn15.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            rbtn15.Font = new System.Drawing.Font("Segoe UI", 10F);
             rbtn15.Location = new System.Drawing.Point(315, 241);
             rbtn15.Margin = new Padding(0, 3, 0, 3);
             rbtn15.Name = "rbtn15";
@@ -585,7 +585,7 @@ namespace NetRadio
             // 
             rbtn14.Appearance = Appearance.Button;
             rbtn14.ContextMenuStrip = contextMenuPlayer;
-            rbtn14.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            rbtn14.Font = new System.Drawing.Font("Segoe UI", 10F);
             rbtn14.Location = new System.Drawing.Point(237, 241);
             rbtn14.Margin = new Padding(0, 3, 0, 3);
             rbtn14.Name = "rbtn14";
@@ -603,7 +603,7 @@ namespace NetRadio
             // 
             rbtn13.Appearance = Appearance.Button;
             rbtn13.ContextMenuStrip = contextMenuPlayer;
-            rbtn13.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            rbtn13.Font = new System.Drawing.Font("Segoe UI", 10F);
             rbtn13.Location = new System.Drawing.Point(159, 241);
             rbtn13.Margin = new Padding(0, 3, 0, 3);
             rbtn13.Name = "rbtn13";
@@ -639,7 +639,7 @@ namespace NetRadio
             // 
             rbtn12.Appearance = Appearance.Button;
             rbtn12.ContextMenuStrip = contextMenuPlayer;
-            rbtn12.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            rbtn12.Font = new System.Drawing.Font("Segoe UI", 10F);
             rbtn12.Location = new System.Drawing.Point(81, 241);
             rbtn12.Margin = new Padding(0, 3, 0, 3);
             rbtn12.Name = "rbtn12";
@@ -657,7 +657,7 @@ namespace NetRadio
             // 
             rbtn11.Appearance = Appearance.Button;
             rbtn11.ContextMenuStrip = contextMenuPlayer;
-            rbtn11.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            rbtn11.Font = new System.Drawing.Font("Segoe UI", 10F);
             rbtn11.Location = new System.Drawing.Point(3, 241);
             rbtn11.Margin = new Padding(0, 3, 0, 3);
             rbtn11.Name = "rbtn11";
@@ -675,7 +675,7 @@ namespace NetRadio
             // 
             rbtn10.Appearance = Appearance.Button;
             rbtn10.ContextMenuStrip = contextMenuPlayer;
-            rbtn10.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            rbtn10.Font = new System.Drawing.Font("Segoe UI", 10F);
             rbtn10.Location = new System.Drawing.Point(315, 208);
             rbtn10.Margin = new Padding(0, 3, 0, 3);
             rbtn10.Name = "rbtn10";
@@ -693,7 +693,7 @@ namespace NetRadio
             // 
             rbtn09.Appearance = Appearance.Button;
             rbtn09.ContextMenuStrip = contextMenuPlayer;
-            rbtn09.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            rbtn09.Font = new System.Drawing.Font("Segoe UI", 10F);
             rbtn09.Location = new System.Drawing.Point(237, 208);
             rbtn09.Margin = new Padding(0, 3, 0, 3);
             rbtn09.Name = "rbtn09";
@@ -761,7 +761,7 @@ namespace NetRadio
             // 
             // lblVolume
             // 
-            lblVolume.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            lblVolume.Font = new System.Drawing.Font("Segoe UI", 9F);
             lblVolume.Location = new System.Drawing.Point(338, 102);
             lblVolume.Margin = new Padding(4, 0, 4, 0);
             lblVolume.Name = "lblVolume";
@@ -784,7 +784,7 @@ namespace NetRadio
             // 
             lblD4.AutoEllipsis = true;
             lblD4.BackColor = System.Drawing.Color.Transparent;
-            lblD4.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            lblD4.Font = new System.Drawing.Font("Segoe UI", 10F);
             lblD4.Location = new System.Drawing.Point(4, 77);
             lblD4.Margin = new Padding(4, 0, 4, 0);
             lblD4.Name = "lblD4";
@@ -798,7 +798,7 @@ namespace NetRadio
             // 
             lblD3.AutoEllipsis = true;
             lblD3.BackColor = System.Drawing.Color.Transparent;
-            lblD3.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            lblD3.Font = new System.Drawing.Font("Segoe UI", 10F);
             lblD3.Location = new System.Drawing.Point(4, 54);
             lblD3.Margin = new Padding(4, 0, 4, 0);
             lblD3.Name = "lblD3";
@@ -811,7 +811,7 @@ namespace NetRadio
             // 
             lblD2.AutoEllipsis = true;
             lblD2.BackColor = System.Drawing.Color.Transparent;
-            lblD2.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            lblD2.Font = new System.Drawing.Font("Segoe UI", 10F);
             lblD2.Location = new System.Drawing.Point(4, 31);
             lblD2.Margin = new Padding(4, 0, 4, 0);
             lblD2.Name = "lblD2";
@@ -825,7 +825,7 @@ namespace NetRadio
             // 
             lblD1.AutoEllipsis = true;
             lblD1.BackColor = System.Drawing.Color.Transparent;
-            lblD1.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            lblD1.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             lblD1.Location = new System.Drawing.Point(4, 8);
             lblD1.Margin = new Padding(4, 0, 4, 0);
             lblD1.Name = "lblD1";
@@ -863,7 +863,7 @@ namespace NetRadio
             btnDecrease.FlatStyle = FlatStyle.Flat;
             btnDecrease.ForeColor = System.Drawing.SystemColors.ControlLightLight;
             btnDecrease.Image = Properties.Resources.volume_down_white;
-            btnDecrease.Location = new System.Drawing.Point(237, 138);
+            btnDecrease.Location = new System.Drawing.Point(159, 138);
             btnDecrease.Margin = new Padding(4, 3, 4, 3);
             btnDecrease.Name = "btnDecrease";
             btnDecrease.Size = new System.Drawing.Size(78, 29);
@@ -884,7 +884,7 @@ namespace NetRadio
             btnIncrease.FlatStyle = FlatStyle.Flat;
             btnIncrease.ForeColor = System.Drawing.SystemColors.ControlLightLight;
             btnIncrease.Image = Properties.Resources.volume_up_white;
-            btnIncrease.Location = new System.Drawing.Point(159, 138);
+            btnIncrease.Location = new System.Drawing.Point(237, 138);
             btnIncrease.Margin = new Padding(0, 3, 0, 3);
             btnIncrease.Name = "btnIncrease";
             btnIncrease.Size = new System.Drawing.Size(78, 29);
@@ -918,7 +918,7 @@ namespace NetRadio
             // 
             rbtn08.Appearance = Appearance.Button;
             rbtn08.ContextMenuStrip = contextMenuPlayer;
-            rbtn08.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            rbtn08.Font = new System.Drawing.Font("Segoe UI", 10F);
             rbtn08.Location = new System.Drawing.Point(159, 208);
             rbtn08.Margin = new Padding(0, 3, 0, 3);
             rbtn08.Name = "rbtn08";
@@ -936,7 +936,7 @@ namespace NetRadio
             // 
             rbtn07.Appearance = Appearance.Button;
             rbtn07.ContextMenuStrip = contextMenuPlayer;
-            rbtn07.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            rbtn07.Font = new System.Drawing.Font("Segoe UI", 10F);
             rbtn07.Location = new System.Drawing.Point(81, 208);
             rbtn07.Margin = new Padding(0, 3, 0, 3);
             rbtn07.Name = "rbtn07";
@@ -954,7 +954,7 @@ namespace NetRadio
             // 
             rbtn06.Appearance = Appearance.Button;
             rbtn06.ContextMenuStrip = contextMenuPlayer;
-            rbtn06.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            rbtn06.Font = new System.Drawing.Font("Segoe UI", 10F);
             rbtn06.Location = new System.Drawing.Point(3, 208);
             rbtn06.Margin = new Padding(0, 3, 0, 3);
             rbtn06.Name = "rbtn06";
@@ -972,7 +972,7 @@ namespace NetRadio
             // 
             rbtn05.Appearance = Appearance.Button;
             rbtn05.ContextMenuStrip = contextMenuPlayer;
-            rbtn05.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            rbtn05.Font = new System.Drawing.Font("Segoe UI", 10F);
             rbtn05.Location = new System.Drawing.Point(315, 174);
             rbtn05.Margin = new Padding(0, 3, 0, 3);
             rbtn05.Name = "rbtn05";
@@ -990,7 +990,7 @@ namespace NetRadio
             // 
             rbtn04.Appearance = Appearance.Button;
             rbtn04.ContextMenuStrip = contextMenuPlayer;
-            rbtn04.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            rbtn04.Font = new System.Drawing.Font("Segoe UI", 10F);
             rbtn04.Location = new System.Drawing.Point(237, 174);
             rbtn04.Margin = new Padding(0, 3, 0, 3);
             rbtn04.Name = "rbtn04";
@@ -1008,7 +1008,7 @@ namespace NetRadio
             // 
             rbtn03.Appearance = Appearance.Button;
             rbtn03.ContextMenuStrip = contextMenuPlayer;
-            rbtn03.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            rbtn03.Font = new System.Drawing.Font("Segoe UI", 10F);
             rbtn03.Location = new System.Drawing.Point(159, 174);
             rbtn03.Margin = new Padding(0, 3, 0, 3);
             rbtn03.Name = "rbtn03";
@@ -1026,7 +1026,7 @@ namespace NetRadio
             // 
             rbtn02.Appearance = Appearance.Button;
             rbtn02.ContextMenuStrip = contextMenuPlayer;
-            rbtn02.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            rbtn02.Font = new System.Drawing.Font("Segoe UI", 10F);
             rbtn02.Location = new System.Drawing.Point(81, 174);
             rbtn02.Margin = new Padding(0, 3, 0, 3);
             rbtn02.Name = "rbtn02";
@@ -1044,7 +1044,7 @@ namespace NetRadio
             // 
             rbtn01.Appearance = Appearance.Button;
             rbtn01.ContextMenuStrip = contextMenuPlayer;
-            rbtn01.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            rbtn01.Font = new System.Drawing.Font("Segoe UI", 10F);
             rbtn01.ForeColor = System.Drawing.SystemColors.ControlText;
             rbtn01.Location = new System.Drawing.Point(3, 174);
             rbtn01.Margin = new Padding(0, 3, 0, 3);
@@ -1078,7 +1078,7 @@ namespace NetRadio
             // btnSearch
             // 
             btnSearch.BackgroundImageLayout = ImageLayout.Center;
-            btnSearch.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            btnSearch.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             btnSearch.Image = (System.Drawing.Image)resources.GetObject("btnSearch.Image");
             btnSearch.Location = new System.Drawing.Point(3, 309);
             btnSearch.Margin = new Padding(4, 3, 4, 3);
@@ -1093,7 +1093,7 @@ namespace NetRadio
             // 
             // btnDown
             // 
-            btnDown.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            btnDown.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             btnDown.Location = new System.Drawing.Point(263, 309);
             btnDown.Margin = new Padding(4, 3, 4, 3);
             btnDown.Name = "btnDown";
@@ -1107,7 +1107,7 @@ namespace NetRadio
             // btnUp
             // 
             btnUp.BackgroundImageLayout = ImageLayout.Center;
-            btnUp.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            btnUp.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             btnUp.Location = new System.Drawing.Point(133, 309);
             btnUp.Margin = new Padding(4, 3, 4, 3);
             btnUp.Name = "btnUp";
@@ -1127,14 +1127,14 @@ namespace NetRadio
             dgvStations.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvStations.BackgroundColor = System.Drawing.SystemColors.ControlLightLight;
             dgvStations.ClipboardCopyMode = DataGridViewClipboardCopyMode.Disable;
-            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.ControlDark;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.ControlDark;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = DataGridViewTriState.True;
-            dgvStations.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.ControlDark;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Segoe UI", 10F);
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.ControlDark;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.True;
+            dgvStations.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
             dgvStations.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             dgvStations.Columns.AddRange(new DataGridViewColumn[] { col1, col2 });
             dgvStations.ContextMenuStrip = contextMenuStations;
@@ -1619,7 +1619,7 @@ namespace NetRadio
             // 
             gbAutoRecord.Controls.Add(cbActions);
             gbAutoRecord.Controls.Add(btnActions);
-            gbAutoRecord.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            gbAutoRecord.Font = new System.Drawing.Font("Segoe UI", 9F);
             gbAutoRecord.Location = new System.Drawing.Point(266, 10);
             gbAutoRecord.Margin = new Padding(4, 3, 4, 3);
             gbAutoRecord.Name = "gbAutoRecord";
@@ -1632,7 +1632,7 @@ namespace NetRadio
             // cbActions
             // 
             cbActions.AutoSize = true;
-            cbActions.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            cbActions.Font = new System.Drawing.Font("Segoe UI", 10F);
             cbActions.Location = new System.Drawing.Point(8, 25);
             cbActions.Margin = new Padding(4, 3, 4, 3);
             cbActions.Name = "cbActions";
@@ -1643,7 +1643,7 @@ namespace NetRadio
             // 
             // btnActions
             // 
-            btnActions.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            btnActions.Font = new System.Drawing.Font("Segoe UI", 10F);
             btnActions.Location = new System.Drawing.Point(30, 18);
             btnActions.Name = "btnActions";
             btnActions.Size = new System.Drawing.Size(84, 26);
@@ -1656,7 +1656,7 @@ namespace NetRadio
             // gbOutput
             // 
             gbOutput.Controls.Add(cmbxOutput);
-            gbOutput.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            gbOutput.Font = new System.Drawing.Font("Segoe UI", 9F);
             gbOutput.Location = new System.Drawing.Point(9, 286);
             gbOutput.Margin = new Padding(4, 3, 4, 3);
             gbOutput.Name = "gbOutput";
@@ -1669,7 +1669,7 @@ namespace NetRadio
             // cmbxOutput
             // 
             cmbxOutput.DropDownStyle = ComboBoxStyle.DropDownList;
-            cmbxOutput.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            cmbxOutput.Font = new System.Drawing.Font("Segoe UI", 10F);
             cmbxOutput.FormattingEnabled = true;
             cmbxOutput.Location = new System.Drawing.Point(8, 18);
             cmbxOutput.Margin = new Padding(4, 3, 4, 3);
@@ -1687,7 +1687,7 @@ namespace NetRadio
             gbMiscel.Controls.Add(cbAutoStopRecording);
             gbMiscel.Controls.Add(cbShowBalloonTip);
             gbMiscel.Controls.Add(cbAlwaysOnTop);
-            gbMiscel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            gbMiscel.Font = new System.Drawing.Font("Segoe UI", 9F);
             gbMiscel.Location = new System.Drawing.Point(9, 159);
             gbMiscel.Margin = new Padding(4, 3, 4, 3);
             gbMiscel.Name = "gbMiscel";
@@ -1700,7 +1700,7 @@ namespace NetRadio
             // cbClose2Tray
             // 
             cbClose2Tray.AutoSize = true;
-            cbClose2Tray.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            cbClose2Tray.Font = new System.Drawing.Font("Segoe UI", 10F);
             cbClose2Tray.Location = new System.Drawing.Point(9, 45);
             cbClose2Tray.Margin = new Padding(4, 3, 4, 3);
             cbClose2Tray.Name = "cbClose2Tray";
@@ -1713,7 +1713,7 @@ namespace NetRadio
             // cbAutoStopRecording
             // 
             cbAutoStopRecording.AutoSize = true;
-            cbAutoStopRecording.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            cbAutoStopRecording.Font = new System.Drawing.Font("Segoe UI", 10F);
             cbAutoStopRecording.Location = new System.Drawing.Point(9, 93);
             cbAutoStopRecording.Margin = new Padding(4, 3, 4, 3);
             cbAutoStopRecording.Name = "cbAutoStopRecording";
@@ -1726,7 +1726,7 @@ namespace NetRadio
             // cbShowBalloonTip
             // 
             cbShowBalloonTip.AutoSize = true;
-            cbShowBalloonTip.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            cbShowBalloonTip.Font = new System.Drawing.Font("Segoe UI", 10F);
             cbShowBalloonTip.Location = new System.Drawing.Point(9, 69);
             cbShowBalloonTip.Margin = new Padding(4, 3, 4, 3);
             cbShowBalloonTip.Name = "cbShowBalloonTip";
@@ -1739,7 +1739,7 @@ namespace NetRadio
             // cbAlwaysOnTop
             // 
             cbAlwaysOnTop.AutoSize = true;
-            cbAlwaysOnTop.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            cbAlwaysOnTop.Font = new System.Drawing.Font("Segoe UI", 10F);
             cbAlwaysOnTop.Location = new System.Drawing.Point(9, 21);
             cbAlwaysOnTop.Margin = new Padding(4, 3, 4, 3);
             cbAlwaysOnTop.Name = "cbAlwaysOnTop";
@@ -1752,7 +1752,7 @@ namespace NetRadio
             // gbAutostart
             // 
             gbAutostart.Controls.Add(cbAutostart);
-            gbAutostart.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            gbAutostart.Font = new System.Drawing.Font("Segoe UI", 9F);
             gbAutostart.Location = new System.Drawing.Point(141, 10);
             gbAutostart.Margin = new Padding(4, 3, 4, 3);
             gbAutostart.Name = "gbAutostart";
@@ -1765,7 +1765,7 @@ namespace NetRadio
             // cbAutostart
             // 
             cbAutostart.AutoSize = true;
-            cbAutostart.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            cbAutostart.Font = new System.Drawing.Font("Segoe UI", 10F);
             cbAutostart.Location = new System.Drawing.Point(8, 21);
             cbAutostart.Margin = new Padding(4, 3, 4, 3);
             cbAutostart.Name = "cbAutostart";
@@ -1780,7 +1780,7 @@ namespace NetRadio
             gbPreselection.BackColor = System.Drawing.SystemColors.ControlLightLight;
             gbPreselection.Controls.Add(lblAutostartStation);
             gbPreselection.Controls.Add(cmbxStation);
-            gbPreselection.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            gbPreselection.Font = new System.Drawing.Font("Segoe UI", 9F);
             gbPreselection.Location = new System.Drawing.Point(9, 10);
             gbPreselection.Margin = new Padding(4, 3, 4, 3);
             gbPreselection.Name = "gbPreselection";
@@ -1793,7 +1793,7 @@ namespace NetRadio
             // lblAutostartStation
             // 
             lblAutostartStation.AutoSize = true;
-            lblAutostartStation.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            lblAutostartStation.Font = new System.Drawing.Font("Segoe UI", 10F);
             lblAutostartStation.Location = new System.Drawing.Point(6, 22);
             lblAutostartStation.Margin = new Padding(4, 0, 4, 0);
             lblAutostartStation.Name = "lblAutostartStation";
@@ -1805,7 +1805,7 @@ namespace NetRadio
             // 
             cmbxStation.BackColor = System.Drawing.SystemColors.ControlLightLight;
             cmbxStation.DropDownStyle = ComboBoxStyle.DropDownList;
-            cmbxStation.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            cmbxStation.Font = new System.Drawing.Font("Segoe UI", 10F);
             cmbxStation.FormattingEnabled = true;
             cmbxStation.Items.AddRange(new object[] { "", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25" });
             cmbxStation.Location = new System.Drawing.Point(69, 19);
@@ -1822,7 +1822,7 @@ namespace NetRadio
             gbHotkeys.Controls.Add(lblHotkey);
             gbHotkeys.Controls.Add(cmbxHotkey);
             gbHotkeys.Controls.Add(cbHotkey);
-            gbHotkeys.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            gbHotkeys.Font = new System.Drawing.Font("Segoe UI", 9F);
             gbHotkeys.Location = new System.Drawing.Point(9, 103);
             gbHotkeys.Margin = new Padding(4, 3, 4, 3);
             gbHotkeys.Name = "gbHotkeys";
@@ -1836,7 +1836,7 @@ namespace NetRadio
             // 
             lblHotkey.AutoSize = true;
             lblHotkey.Enabled = false;
-            lblHotkey.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            lblHotkey.Font = new System.Drawing.Font("Segoe UI", 10F);
             lblHotkey.Location = new System.Drawing.Point(176, 22);
             lblHotkey.Margin = new Padding(4, 0, 4, 0);
             lblHotkey.Name = "lblHotkey";
@@ -1849,7 +1849,7 @@ namespace NetRadio
             cmbxHotkey.BackColor = System.Drawing.SystemColors.ControlLightLight;
             cmbxHotkey.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbxHotkey.Enabled = false;
-            cmbxHotkey.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            cmbxHotkey.Font = new System.Drawing.Font("Segoe UI", 10F);
             cmbxHotkey.FormattingEnabled = true;
             cmbxHotkey.Items.AddRange(new object[] { "", "A", "B", "C", "D", "E", "G", "H", "I", "J", "K", "L", "M", "N", "O", "Q", "R", "S", "T", "V", "W", "X", "Y", "Z" });
             cmbxHotkey.Location = new System.Drawing.Point(264, 18);
@@ -1864,7 +1864,7 @@ namespace NetRadio
             // cbHotkey
             // 
             cbHotkey.AutoSize = true;
-            cbHotkey.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            cbHotkey.Font = new System.Drawing.Font("Segoe UI", 10F);
             cbHotkey.Location = new System.Drawing.Point(8, 20);
             cbHotkey.Margin = new Padding(4, 3, 4, 3);
             cbHotkey.Name = "cbHotkey";
@@ -1908,7 +1908,7 @@ namespace NetRadio
             // 
             lplTPLHelp2.AutoSize = true;
             lplTPLHelp2.Dock = DockStyle.Left;
-            lplTPLHelp2.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            lplTPLHelp2.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
             lplTPLHelp2.Location = new System.Drawing.Point(220, 0);
             lplTPLHelp2.Margin = new Padding(4, 0, 4, 0);
             lplTPLHelp2.Name = "lplTPLHelp2";
@@ -1921,7 +1921,7 @@ namespace NetRadio
             // 
             lplTPLHelp1.AutoSize = true;
             lplTPLHelp1.Dock = DockStyle.Left;
-            lplTPLHelp1.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            lplTPLHelp1.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
             lplTPLHelp1.Location = new System.Drawing.Point(4, 0);
             lplTPLHelp1.Margin = new Padding(4, 0, 4, 0);
             lplTPLHelp1.Name = "lplTPLHelp1";
@@ -1947,7 +1947,7 @@ namespace NetRadio
             // 
             // labelBrackets
             // 
-            labelBrackets.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            labelBrackets.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             labelBrackets.Location = new System.Drawing.Point(13, 285);
             labelBrackets.Margin = new Padding(4, 0, 4, 0);
             labelBrackets.Name = "labelBrackets";
@@ -1975,7 +1975,7 @@ namespace NetRadio
             // 
             label1.AutoSize = true;
             label1.BackColor = System.Drawing.Color.Transparent;
-            label1.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            label1.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             label1.Location = new System.Drawing.Point(220, 0);
             label1.Margin = new Padding(4, 0, 4, 0);
             label1.Name = "label1";
@@ -1987,7 +1987,7 @@ namespace NetRadio
             // 
             label2.AutoSize = true;
             label2.BackColor = System.Drawing.Color.Transparent;
-            label2.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            label2.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             label2.Location = new System.Drawing.Point(4, 0);
             label2.Margin = new Padding(4, 0, 4, 0);
             label2.Name = "label2";
@@ -1999,7 +1999,7 @@ namespace NetRadio
             // 
             label6.AutoSize = true;
             label6.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            label6.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            label6.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
             label6.Location = new System.Drawing.Point(13, 176);
             label6.Margin = new Padding(4, 0, 4, 0);
             label6.Name = "label6";
@@ -2011,7 +2011,7 @@ namespace NetRadio
             // 
             label5.AutoSize = true;
             label5.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            label5.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            label5.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
             label5.Location = new System.Drawing.Point(13, 43);
             label5.Margin = new Padding(4, 0, 4, 0);
             label5.Name = "label5";
@@ -2040,7 +2040,7 @@ namespace NetRadio
             // 
             label4.AutoSize = true;
             label4.BackColor = System.Drawing.Color.Transparent;
-            label4.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            label4.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             label4.Location = new System.Drawing.Point(4, 0);
             label4.Margin = new Padding(4, 0, 4, 0);
             label4.Name = "label4";
@@ -2052,7 +2052,7 @@ namespace NetRadio
             // 
             label3.AutoSize = true;
             label3.BackColor = System.Drawing.Color.Transparent;
-            label3.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            label3.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             label3.Location = new System.Drawing.Point(220, 0);
             label3.Margin = new Padding(4, 0, 4, 0);
             label3.Name = "label3";
@@ -2120,7 +2120,7 @@ namespace NetRadio
             // 
             linkLabeGNU.AutoSize = true;
             linkLabeGNU.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            linkLabeGNU.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            linkLabeGNU.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             linkLabeGNU.Location = new System.Drawing.Point(303, 7);
             linkLabeGNU.Name = "linkLabeGNU";
             linkLabeGNU.Size = new System.Drawing.Size(36, 17);
@@ -2133,7 +2133,7 @@ namespace NetRadio
             // 
             label10.AutoSize = true;
             label10.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            label10.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            label10.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             label10.Location = new System.Drawing.Point(8, 7);
             label10.Name = "label10";
             label10.Size = new System.Drawing.Size(300, 34);
@@ -2144,7 +2144,7 @@ namespace NetRadio
             // 
             label9.AutoSize = true;
             label9.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            label9.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            label9.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             label9.Location = new System.Drawing.Point(8, 173);
             label9.Name = "label9";
             label9.Size = new System.Drawing.Size(87, 17);
@@ -2155,7 +2155,7 @@ namespace NetRadio
             // 
             linkLabel1.AutoSize = true;
             linkLabel1.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            linkLabel1.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            linkLabel1.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             linkLabel1.Location = new System.Drawing.Point(144, 173);
             linkLabel1.Name = "linkLabel1";
             linkLabel1.Size = new System.Drawing.Size(207, 17);
@@ -2168,7 +2168,7 @@ namespace NetRadio
             // 
             lblAuthor.AutoSize = true;
             lblAuthor.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            lblAuthor.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            lblAuthor.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             lblAuthor.Location = new System.Drawing.Point(144, 194);
             lblAuthor.Name = "lblAuthor";
             lblAuthor.Size = new System.Drawing.Size(184, 17);
@@ -2210,7 +2210,7 @@ namespace NetRadio
             // 
             // btnUpdate
             // 
-            btnUpdate.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            btnUpdate.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             btnUpdate.Location = new System.Drawing.Point(6, 307);
             btnUpdate.Margin = new Padding(4, 3, 4, 3);
             btnUpdate.Name = "btnUpdate";
@@ -2235,7 +2235,7 @@ namespace NetRadio
             // 
             label7.AutoSize = true;
             label7.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            label7.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            label7.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             label7.Location = new System.Drawing.Point(8, 45);
             label7.Name = "label7";
             label7.Size = new System.Drawing.Size(331, 34);
@@ -2245,7 +2245,7 @@ namespace NetRadio
             // lblCredits
             // 
             lblCredits.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            lblCredits.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            lblCredits.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             lblCredits.Location = new System.Drawing.Point(8, 223);
             lblCredits.Name = "lblCredits";
             lblCredits.Size = new System.Drawing.Size(388, 72);
@@ -2265,7 +2265,7 @@ namespace NetRadio
             // 
             lblCopyright.AutoSize = true;
             lblCopyright.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            lblCopyright.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            lblCopyright.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             lblCopyright.Location = new System.Drawing.Point(8, 194);
             lblCopyright.Name = "lblCopyright";
             lblCopyright.Size = new System.Drawing.Size(112, 17);
@@ -2276,7 +2276,7 @@ namespace NetRadio
             // 
             lblWebService.AutoSize = true;
             lblWebService.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            lblWebService.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            lblWebService.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             lblWebService.Location = new System.Drawing.Point(8, 152);
             lblWebService.Name = "lblWebService";
             lblWebService.Size = new System.Drawing.Size(101, 17);
@@ -2287,7 +2287,7 @@ namespace NetRadio
             // 
             linkHomepage.AutoSize = true;
             linkHomepage.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            linkHomepage.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            linkHomepage.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             linkHomepage.Location = new System.Drawing.Point(144, 152);
             linkHomepage.Name = "linkHomepage";
             linkHomepage.Size = new System.Drawing.Size(197, 17);
@@ -2300,7 +2300,7 @@ namespace NetRadio
             // 
             linkPayPal.AutoSize = true;
             linkPayPal.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            linkPayPal.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            linkPayPal.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             linkPayPal.Location = new System.Drawing.Point(8, 89);
             linkPayPal.Name = "linkPayPal";
             linkPayPal.Size = new System.Drawing.Size(121, 17);
@@ -2313,7 +2313,7 @@ namespace NetRadio
             // 
             lblInformation.BackColor = System.Drawing.SystemColors.ControlLightLight;
             lblInformation.Dock = DockStyle.Fill;
-            lblInformation.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            lblInformation.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             lblInformation.Location = new System.Drawing.Point(0, 0);
             lblInformation.Name = "lblInformation";
             lblInformation.Size = new System.Drawing.Size(395, 337);
@@ -2352,7 +2352,7 @@ namespace NetRadio
             // 
             // Lbl19
             // 
-            Lbl19.Font = new System.Drawing.Font("Segoe UI", 6F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            Lbl19.Font = new System.Drawing.Font("Segoe UI", 6F);
             Lbl19.Location = new System.Drawing.Point(369, 323);
             Lbl19.Margin = new Padding(0);
             Lbl19.Name = "Lbl19";
@@ -2363,7 +2363,7 @@ namespace NetRadio
             // 
             // Lbl18
             // 
-            Lbl18.Font = new System.Drawing.Font("Segoe UI", 6F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            Lbl18.Font = new System.Drawing.Font("Segoe UI", 6F);
             Lbl18.Location = new System.Drawing.Point(350, 323);
             Lbl18.Margin = new Padding(0);
             Lbl18.Name = "Lbl18";
@@ -2374,7 +2374,7 @@ namespace NetRadio
             // 
             // Lbl17
             // 
-            Lbl17.Font = new System.Drawing.Font("Segoe UI", 6F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            Lbl17.Font = new System.Drawing.Font("Segoe UI", 6F);
             Lbl17.Location = new System.Drawing.Point(331, 323);
             Lbl17.Margin = new Padding(0);
             Lbl17.Name = "Lbl17";
@@ -2385,7 +2385,7 @@ namespace NetRadio
             // 
             // Lbl16
             // 
-            Lbl16.Font = new System.Drawing.Font("Segoe UI", 6F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            Lbl16.Font = new System.Drawing.Font("Segoe UI", 6F);
             Lbl16.Location = new System.Drawing.Point(312, 323);
             Lbl16.Margin = new Padding(0);
             Lbl16.Name = "Lbl16";
@@ -2396,7 +2396,7 @@ namespace NetRadio
             // 
             // Lbl15
             // 
-            Lbl15.Font = new System.Drawing.Font("Segoe UI", 6F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            Lbl15.Font = new System.Drawing.Font("Segoe UI", 6F);
             Lbl15.Location = new System.Drawing.Point(293, 323);
             Lbl15.Margin = new Padding(0);
             Lbl15.Name = "Lbl15";
@@ -2407,7 +2407,7 @@ namespace NetRadio
             // 
             // Lbl14
             // 
-            Lbl14.Font = new System.Drawing.Font("Segoe UI", 6F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            Lbl14.Font = new System.Drawing.Font("Segoe UI", 6F);
             Lbl14.Location = new System.Drawing.Point(274, 323);
             Lbl14.Margin = new Padding(0);
             Lbl14.Name = "Lbl14";
@@ -2418,7 +2418,7 @@ namespace NetRadio
             // 
             // Lbl13
             // 
-            Lbl13.Font = new System.Drawing.Font("Segoe UI", 6F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            Lbl13.Font = new System.Drawing.Font("Segoe UI", 6F);
             Lbl13.Location = new System.Drawing.Point(255, 323);
             Lbl13.Margin = new Padding(0);
             Lbl13.Name = "Lbl13";
@@ -2429,7 +2429,7 @@ namespace NetRadio
             // 
             // Lbl12
             // 
-            Lbl12.Font = new System.Drawing.Font("Segoe UI", 6F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            Lbl12.Font = new System.Drawing.Font("Segoe UI", 6F);
             Lbl12.Location = new System.Drawing.Point(236, 323);
             Lbl12.Margin = new Padding(0);
             Lbl12.Name = "Lbl12";
@@ -2440,7 +2440,7 @@ namespace NetRadio
             // 
             // Lbl11
             // 
-            Lbl11.Font = new System.Drawing.Font("Segoe UI", 6F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            Lbl11.Font = new System.Drawing.Font("Segoe UI", 6F);
             Lbl11.Location = new System.Drawing.Point(217, 323);
             Lbl11.Margin = new Padding(0);
             Lbl11.Name = "Lbl11";
@@ -2451,7 +2451,7 @@ namespace NetRadio
             // 
             // Lbl10
             // 
-            Lbl10.Font = new System.Drawing.Font("Segoe UI", 6F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            Lbl10.Font = new System.Drawing.Font("Segoe UI", 6F);
             Lbl10.Location = new System.Drawing.Point(198, 323);
             Lbl10.Margin = new Padding(0);
             Lbl10.Name = "Lbl10";
@@ -2462,7 +2462,7 @@ namespace NetRadio
             // 
             // Lbl09
             // 
-            Lbl09.Font = new System.Drawing.Font("Segoe UI", 6F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            Lbl09.Font = new System.Drawing.Font("Segoe UI", 6F);
             Lbl09.Location = new System.Drawing.Point(179, 323);
             Lbl09.Margin = new Padding(0);
             Lbl09.Name = "Lbl09";
@@ -2473,7 +2473,7 @@ namespace NetRadio
             // 
             // Lbl08
             // 
-            Lbl08.Font = new System.Drawing.Font("Segoe UI", 6F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            Lbl08.Font = new System.Drawing.Font("Segoe UI", 6F);
             Lbl08.Location = new System.Drawing.Point(160, 323);
             Lbl08.Margin = new Padding(0);
             Lbl08.Name = "Lbl08";
@@ -2484,7 +2484,7 @@ namespace NetRadio
             // 
             // Lbl07
             // 
-            Lbl07.Font = new System.Drawing.Font("Segoe UI", 6F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            Lbl07.Font = new System.Drawing.Font("Segoe UI", 6F);
             Lbl07.Location = new System.Drawing.Point(141, 323);
             Lbl07.Margin = new Padding(0);
             Lbl07.Name = "Lbl07";
@@ -2495,7 +2495,7 @@ namespace NetRadio
             // 
             // Lbl06
             // 
-            Lbl06.Font = new System.Drawing.Font("Segoe UI", 6F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            Lbl06.Font = new System.Drawing.Font("Segoe UI", 6F);
             Lbl06.Location = new System.Drawing.Point(122, 323);
             Lbl06.Margin = new Padding(0);
             Lbl06.Name = "Lbl06";
@@ -2506,7 +2506,7 @@ namespace NetRadio
             // 
             // Lbl05
             // 
-            Lbl05.Font = new System.Drawing.Font("Segoe UI", 6F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            Lbl05.Font = new System.Drawing.Font("Segoe UI", 6F);
             Lbl05.Location = new System.Drawing.Point(103, 323);
             Lbl05.Margin = new Padding(0);
             Lbl05.Name = "Lbl05";
@@ -2517,7 +2517,7 @@ namespace NetRadio
             // 
             // Lbl04
             // 
-            Lbl04.Font = new System.Drawing.Font("Segoe UI", 6F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            Lbl04.Font = new System.Drawing.Font("Segoe UI", 6F);
             Lbl04.Location = new System.Drawing.Point(84, 323);
             Lbl04.Margin = new Padding(0);
             Lbl04.Name = "Lbl04";
@@ -2528,7 +2528,7 @@ namespace NetRadio
             // 
             // Lbl03
             // 
-            Lbl03.Font = new System.Drawing.Font("Segoe UI", 6F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            Lbl03.Font = new System.Drawing.Font("Segoe UI", 6F);
             Lbl03.Location = new System.Drawing.Point(65, 323);
             Lbl03.Margin = new Padding(0);
             Lbl03.Name = "Lbl03";
@@ -2539,7 +2539,7 @@ namespace NetRadio
             // 
             // Lbl02
             // 
-            Lbl02.Font = new System.Drawing.Font("Segoe UI", 6F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            Lbl02.Font = new System.Drawing.Font("Segoe UI", 6F);
             Lbl02.Location = new System.Drawing.Point(46, 323);
             Lbl02.Margin = new Padding(0);
             Lbl02.Name = "Lbl02";
@@ -2550,7 +2550,7 @@ namespace NetRadio
             // 
             // Lbl01
             // 
-            Lbl01.Font = new System.Drawing.Font("Segoe UI", 6F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            Lbl01.Font = new System.Drawing.Font("Segoe UI", 6F);
             Lbl01.Location = new System.Drawing.Point(27, 323);
             Lbl01.Margin = new Padding(0);
             Lbl01.Name = "Lbl01";
@@ -2561,7 +2561,7 @@ namespace NetRadio
             // 
             // Lbl00
             // 
-            Lbl00.Font = new System.Drawing.Font("Segoe UI", 6F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            Lbl00.Font = new System.Drawing.Font("Segoe UI", 6F);
             Lbl00.Location = new System.Drawing.Point(8, 323);
             Lbl00.Margin = new Padding(0);
             Lbl00.Name = "Lbl00";
@@ -2791,7 +2791,7 @@ namespace NetRadio
             // 
             // statusStrip
             // 
-            statusStrip.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            statusStrip.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             statusStrip.Items.AddRange(new ToolStripItem[] { toolStripStatusLabel });
             statusStrip.Location = new System.Drawing.Point(0, 374);
             statusStrip.Name = "statusStrip";
@@ -2804,7 +2804,7 @@ namespace NetRadio
             // toolStripStatusLabel
             // 
             toolStripStatusLabel.AutoSize = false;
-            toolStripStatusLabel.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            toolStripStatusLabel.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             toolStripStatusLabel.Margin = new Padding(9, 1, 0, 2);
             toolStripStatusLabel.Name = "toolStripStatusLabel";
             toolStripStatusLabel.Size = new System.Drawing.Size(377, 19);
@@ -2857,7 +2857,7 @@ namespace NetRadio
             // 
             // showToolStripMenuItem
             // 
-            showToolStripMenuItem.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            showToolStripMenuItem.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Bold);
             showToolStripMenuItem.Image = (System.Drawing.Image)resources.GetObject("showToolStripMenuItem.Image");
             showToolStripMenuItem.Name = "showToolStripMenuItem";
             showToolStripMenuItem.Size = new System.Drawing.Size(127, 22);
@@ -2920,7 +2920,9 @@ namespace NetRadio
             Icon = (System.Drawing.Icon)resources.GetObject("$this.Icon");
             Margin = new Padding(4, 3, 4, 3);
             MaximizeBox = false;
+            MaximumSize = new System.Drawing.Size(419, 435);
             MinimizeBox = false;
+            MinimumSize = new System.Drawing.Size(419, 435);
             Name = "FrmMain";
             SizeGripStyle = SizeGripStyle.Hide;
             StartPosition = FormStartPosition.CenterScreen;
