@@ -17,15 +17,13 @@ namespace NetRadio
     {
         private const string runLocation = @"Software\Microsoft\Windows\CurrentVersion\Run";
 
-        public static readonly List<string> TaskNames = new() {
-            "Start playing",
-            "Stop playing",
-            "Start recording",
-            "Stop recording",
-            "Put PC to sleep",
-            "Hibernate PC",
-            "Shut down PC"
-        };
+        public static readonly List<string> TaskNames = ["Start playing", "Stop playing", "Start recording", "Stop recording", "Put PC to sleep", "Hibernate PC", "Shut down PC"];
+
+        internal static void ErrorMsgTaskDlg(IntPtr hwnd, string message, string caption, TaskDialogIcon taskDialogIcon = null)
+        {
+            taskDialogIcon ??= TaskDialogIcon.Error;
+            TaskDialog.ShowDialog(hwnd, new TaskDialogPage() { Caption = caption, SizeToContent = true, Text = message, Icon = taskDialogIcon, AllowCancel = true, Buttons = { TaskDialogButton.OK } });
+        }
 
         public static bool PingGoogleSuccess(int timeout)
         { // InternetGetConnectedState: This code only checks if the network cable is plugged in
@@ -256,5 +254,5 @@ namespace NetRadio
         }
 
     }
-    public class VolumeEventArgs : EventArgs { public int Delta { get; set; } }
+    //public class VolumeEventArgs : EventArgs { public int Delta { get; set; } }
 }

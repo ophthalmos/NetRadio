@@ -2,14 +2,16 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography.X509Certificates;
+using System.Security;
 using System.Windows.Forms;
 
 namespace NetRadio
 {
     internal static class NativeMethods
     {
+        public const int WM_SYSCOLORCHANGE = 0x0015;
         public const int WM_KEYDOWN = 0x100; //  WM_SYSKEYDOWN = 0x104;
         public const int WM_KEYUP = 0x101; //  WM_SYSKEYUP = 0x105;
         public const int KEY_PRESSED = 0x8000;
@@ -258,14 +260,9 @@ namespace NetRadio
                     case Keys.MediaNextTrack:
                     case Keys.MediaPreviousTrack:
                     case Keys.MediaStop:
-                    case Keys.VolumeMute:
-                        //SendKeyUp(KeyCode.VK_MEDIA_NEXT_TRACK);  // hier nicht unbeding nötig
-                        //SendKeyUp(KeyCode.VK_MEDIA_PREV_TRACK);  // hier nicht unbeding nötig 
-                        //SendKeyUp(KeyCode.VK_MEDIA_PLAY_PAUSE);  // hier nicht unbeding nötig
-                        //SendKeyUp(KeyCode.VK_MEDIA_STOP);  // hier nicht unbeding nötig
                         KeyDown(Application.OpenForms[0], new KeyEventArgs(keys));
                         return 1; // nur diese Anwendung verarbeitet MediaKeys
-                } // kein return 1 - andere Anwendungen können Key ebenfalls erhalten
+                }
             }
             else if (nCode >= 0 && wParam == WM_KEYUP)
             {
@@ -275,80 +272,11 @@ namespace NetRadio
                     case Keys.MediaNextTrack:
                     case Keys.MediaPreviousTrack:
                     case Keys.MediaStop:
-                    case Keys.VolumeMute:
-                        return 1; // nur diese Anwendung verarbeitet MediaKeys
+                        return 1;
                 }
             }
             return CallNextHookEx(_hookIDKeyboard, nCode, wParam, lParam);
         }
-
-
-        // [DllImport("user32.dll", SetLastError = true)]
-        // private static extern uint SendInput(uint numberOfInputs, INPUT[] inputs, int sizeOfInputStructure);
-
-        // internal static void SendKeyUp(KeyCode keyCode) // wird auch in ClipMenu.cs verwendet
-        // {
-        //     INPUT input = new() { Type = 1 };
-        //     input.Data.Keyboard = new KEYBDINPUT { Vk = (ushort)keyCode, Scan = 0, Flags = 2, Time = 0, ExtraInfo = IntPtr.Zero };
-        //     INPUT[] inputs = [input];
-        //     if (SendInput(1, inputs, Marshal.SizeOf(typeof(INPUT))) == 0) { throw new Exception(); }
-        // }
-
-        // [StructLayout(LayoutKind.Sequential)]
-        // internal struct INPUT
-        // {
-        //     public uint Type;
-        //     public MOUSEKEYBDHARDWAREINPUT Data;
-        // }
-
-
-        // [StructLayout(LayoutKind.Explicit)]
-        // internal struct MOUSEKEYBDHARDWAREINPUT
-        // {
-        //     [FieldOffset(0)]
-        //     public HARDWAREINPUT Hardware;
-        //     [FieldOffset(0)]
-        //     public KEYBDINPUT Keyboard;
-        //     [FieldOffset(0)]
-        //     public MOUSEINPUT Mouse;
-        // }
-
-        // [StructLayout(LayoutKind.Sequential)]
-        // internal struct HARDWAREINPUT
-        // {
-        //     public uint Msg;
-        //     public ushort ParamL;
-        //     public ushort ParamH;
-        // }
-
-        // [StructLayout(LayoutKind.Sequential)]
-        // internal struct KEYBDINPUT
-        // {
-        //     public ushort Vk;
-        //     public ushort Scan;
-        //     public uint Flags;
-        //     public uint Time;
-        //     public IntPtr ExtraInfo;
-        // }
-
-        // [StructLayout(LayoutKind.Sequential)]
-        // internal struct MOUSEINPUT
-        // {
-        //     public int X;
-        //     public int Y;
-        //     public uint MouseData;
-        //     public uint Flags;
-        //     public uint Time;
-        //     public IntPtr ExtraInfo;
-        // }
-
-        // public enum KeyCode : ushort
-        // {
-        //     VK_MEDIA_NEXT_TRACK = 0xB0,
-        //     VK_MEDIA_PREV_TRACK = 0xB1,
-        //     VK_MEDIA_STOP = 0xB2,
-        //     VK_MEDIA_PLAY_PAUSE = 0xB3
-        //}
 
         internal static nint RegisterMediaKeys() { return _hookIDKeyboard = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardHookProc, IntPtr.Zero, 0); }
         internal static void UnregisterMediaKeys() { UnhookWindowsHookEx(_hookIDKeyboard); }

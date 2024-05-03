@@ -22,7 +22,7 @@ namespace NetRadio
         public event EventHandler PlayPause;
         public event EventHandler PlayerReset;
         public event EventHandler VolumeProgress;
-        public event EventHandler<VolumeEventArgs> VolumeMouseWheel; // file clsUtilities
+        public event MouseEventHandler VolumeMouseWheel; // file clsUtilities
         public event EventHandler IncreaseVolume;
         public event EventHandler DecreaseVolume;
         public event EventHandler StationChanged;
@@ -51,7 +51,7 @@ namespace NetRadio
         protected virtual void OnPlayPause(EventArgs e) { PlayPause?.Invoke(this, e); }
         protected virtual void OnPlayerReset(EventArgs e) { PlayerReset?.Invoke(this, e); }
         protected virtual void OnVolumeProgress(EventArgs e) { VolumeProgress?.Invoke(this, e); }
-        protected virtual void OnVolumeMouseWheel(VolumeEventArgs e) { VolumeMouseWheel?.Invoke(this, e); }
+        protected virtual void OnVolumeMouseWheel(MouseEventArgs e) { VolumeMouseWheel?.Invoke(this, e); }
         protected virtual void OnIncreaseVolume(EventArgs e) { IncreaseVolume?.Invoke(this, e); }
         protected virtual void OnDecreaseVolume(EventArgs e) { DecreaseVolume?.Invoke(this, e); }
         protected virtual void OnStationChanged(EventArgs e) { StationChanged?.Invoke(this, e); }
@@ -309,9 +309,8 @@ namespace NetRadio
 
         private void VolProgressBar_MouseWheel(object sender, MouseEventArgs e)
         {
-            OnVolumeMouseWheel(new VolumeEventArgs() { Delta = e.Delta < 0 ? 1 : -1 });
-            //if (e.Delta < 0) { OnVolumeMouseWheel(new VolumeEventArgs() { Volume = (NativeMethods.GetKeyState(NativeMethods.VK_SHIFT) & 0x8000) == 0 ? 1 : 10 }); }
-            //else if (e.Delta > 0) { OnVolumeMouseWheel(new VolumeEventArgs() { Volume = (NativeMethods.GetKeyState(NativeMethods.VK_SHIFT) & 0x8000) == 0 ? -1 : -10 }); }
+            OnVolumeMouseWheel(e); //OnVolumeMouseWheel(new VolumeEventArgs() { Delta = e.Delta < 0 ? 1 : -1 });
+            toolTip.SetToolTip(volProgressBar, "Volume " + volProgressBar.Value.ToString() + "%");
         }
 
         private void VolProgressBar_MouseDown(object sender, MouseEventArgs e) { OnVolumeProgress(null); }

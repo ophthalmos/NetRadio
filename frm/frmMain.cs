@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
-using System.DirectoryServices;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Globalization;
@@ -840,7 +839,7 @@ namespace NetRadio
             miniPlayer.PlayPause += new EventHandler(MiniPlayer_PlayPause);
             miniPlayer.PlayerReset += new EventHandler(MiniPlayer_PlayReset);
             miniPlayer.VolumeProgress += new EventHandler(MiniPlayer_VolumeProgress);
-            miniPlayer.VolumeMouseWheel += new EventHandler<VolumeEventArgs>(MiniPlayer_VolumeMouseWheel);
+            miniPlayer.VolumeMouseWheel += new MouseEventHandler(MiniPlayer_VolumeMouseWheel);
             miniPlayer.IncreaseVolume += new EventHandler(MiniPlayer_IncreaseVolume);
             miniPlayer.DecreaseVolume += new EventHandler(MiniPlayer_DecreaseVolume);
             miniPlayer.StationChanged += new EventHandler(MiniPlayer_StationChanged);
@@ -945,19 +944,6 @@ namespace NetRadio
                 }
                 LogEvent("GlobalKeyboardHook: MediaPreviousTrack received");
             }
-            //else if (e.KeyCode == Keys.VolumeUp)
-            //{
-            //    BtnIncrease_Click(null, null);
-            //}
-            //else if (e.KeyCode == Keys.VolumeDown)
-            //{
-            //    BtnDecrease_Click(null, null);
-            //}
-            else if (e.KeyCode == Keys.VolumeMute)
-            {
-                if (Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PLAYING) { BASSChannelPause(); }
-                LogEvent("GlobalKeyboardHook: Volume mute received");
-            }
             e.Handled = true;
         }
 
@@ -971,7 +957,7 @@ namespace NetRadio
         private void MiniPlayer_PlayReset(object sender, EventArgs e) { BtnReset_Click(null, null); }
         private void MiniPlayer_PlayPause(object sender, EventArgs e) { BtnPlayStop_Click(null, null); }
         private void MiniPlayer_VolumeProgress(object sender, EventArgs e) { SetProgressBarValue(); }
-        private void MiniPlayer_VolumeMouseWheel(object sender, VolumeEventArgs e) { SetMouseWheelValue(e); }
+        private void MiniPlayer_VolumeMouseWheel(object sender, MouseEventArgs e) { SetMouseWheelValue(e); }
         private void MiniPlayer_IncreaseVolume(object sender, EventArgs e) { BtnIncrease_Click(null, null); }
         private void MiniPlayer_DecreaseVolume(object sender, EventArgs e) { BtnDecrease_Click(null, null); }
         private void MiniPlayer_F4_ShowPlayer(object sender, EventArgs e) { ShowFullPlayer(); tcMain.SelectedIndex = 0; }
@@ -1226,7 +1212,7 @@ namespace NetRadio
         private void BtnDecrease_MouseDown(object sender, MouseEventArgs e) { timerVolume.Enabled = true; timerVolume.Start(); }
         private void BtnDecrease_MouseUp(object sender, MouseEventArgs e) { timerVolume.Stop(); }
         private void VolProgressBar_MouseWheel(object sender, MouseEventArgs e) { SetProgressBarVolume(e.Delta); }
-        private void SetMouseWheelValue(VolumeEventArgs e) { SetProgressBarVolume(e.Delta); } // MiniPlayer_VolumeMouseWheel
+        private void SetMouseWheelValue(MouseEventArgs e) { SetProgressBarVolume(e.Delta); } // MiniPlayer_VolumeMouseWheel
 
         private void SetProgressBarVolume(int delta)
         {
