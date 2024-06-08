@@ -258,11 +258,6 @@
             btnReload.UseVisualStyleBackColor = false;
             btnReload.Click += BtnReload_Click;
             // 
-            // timerVolTT
-            // 
-            timerVolTT.Interval = 500;
-            timerVolTT.Tick += TimerVolTT_Tick;
-            // 
             // panelDown
             // 
             panelDown.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;

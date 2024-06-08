@@ -254,5 +254,6 @@ namespace NetRadio
         }
 
     }
-    //public class VolumeEventArgs : EventArgs { public int Delta { get; set; } }
+    //public class VolumeEventArgs(int value) : EventArgs { public int Delta { get; set; } = value; }
+
 }

@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
-using System.Security;
 using System.Windows.Forms;
 
 namespace NetRadio
@@ -14,16 +12,13 @@ namespace NetRadio
         public const int WM_SYSCOLORCHANGE = 0x0015;
         public const int WM_KEYDOWN = 0x100; //  WM_SYSKEYDOWN = 0x104;
         public const int WM_KEYUP = 0x101; //  WM_SYSKEYUP = 0x105;
+        public const int WM_MOUSEWHEEL = 0x020A;
         public const int KEY_PRESSED = 0x8000;
         public const int WM_NCHITTEST = 0x84;
         public const int HTCLIENT = 0x1;
         public const int HTCAPTION = 0x2;
         public const int WM_HOTKEY = 0x312;
         public const int HOTKEY_ID = 0x002A; // 42;
-        //public const int HOTKEY_ID1 = 0x002B; // 43;
-        //public const int HOTKEY_ID2 = 0x002C; // 44;
-        //public const int HOTKEY_ID3 = 0x002D; // 45;
-        //public const int HOTKEY_ID4 = 0x002E; // 46;
         public const int VK_SHIFT = 0x10;
         public const int WM_QUERYENDSESSION = 0x0011;
         public const int WM_SETCURSOR = 0x0020;

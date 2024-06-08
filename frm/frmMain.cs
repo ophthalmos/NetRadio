@@ -132,6 +132,7 @@ namespace NetRadio
         public FrmMain()
         {
             InitializeComponent();
+            //volProgressBar.MouseWheel += VolProgressBar_MouseWheel;
             timerAction1.Tick += new EventHandler(OnTimedEvent);
             timerAction2.Tick += new EventHandler(OnTimedEvent);
             timerAction3.Tick += new EventHandler(OnTimedEvent);
@@ -450,8 +451,6 @@ namespace NetRadio
             historyListView.ListViewItemSorter = lviComparer;
             spectrumTimer.Tick += SpectrumTick;
             _netPreBuff = Bass.BASS_GetConfig(BASSConfig.BASS_CONFIG_NET_PREBUF) / 100f; // 0.75
-
-            volProgressBar.MouseWheel += VolProgressBar_MouseWheel;
         }
 
         private void MyDownloadProc(IntPtr buffer, int length, IntPtr user)
@@ -839,6 +838,7 @@ namespace NetRadio
             miniPlayer.PlayPause += new EventHandler(MiniPlayer_PlayPause);
             miniPlayer.PlayerReset += new EventHandler(MiniPlayer_PlayReset);
             miniPlayer.VolumeProgress += new EventHandler(MiniPlayer_VolumeProgress);
+            //miniPlayer.VolumeMouseWheelX += new EventHandler<VolumeEventArgs>(MiniPlayer_VolumeMouseWheelX);
             miniPlayer.VolumeMouseWheel += new MouseEventHandler(MiniPlayer_VolumeMouseWheel);
             miniPlayer.IncreaseVolume += new EventHandler(MiniPlayer_IncreaseVolume);
             miniPlayer.DecreaseVolume += new EventHandler(MiniPlayer_DecreaseVolume);
@@ -958,6 +958,7 @@ namespace NetRadio
         private void MiniPlayer_PlayPause(object sender, EventArgs e) { BtnPlayStop_Click(null, null); }
         private void MiniPlayer_VolumeProgress(object sender, EventArgs e) { SetProgressBarValue(); }
         private void MiniPlayer_VolumeMouseWheel(object sender, MouseEventArgs e) { SetMouseWheelValue(e); }
+        //private void MiniPlayer_VolumeMouseWheelX(object sender, VolumeEventArgs e) { SetMouseWheelValueX(e); }
         private void MiniPlayer_IncreaseVolume(object sender, EventArgs e) { BtnIncrease_Click(null, null); }
         private void MiniPlayer_DecreaseVolume(object sender, EventArgs e) { BtnDecrease_Click(null, null); }
         private void MiniPlayer_F4_ShowPlayer(object sender, EventArgs e) { ShowFullPlayer(); tcMain.SelectedIndex = 0; }
@@ -1114,36 +1115,37 @@ namespace NetRadio
             else if (m.Msg == NativeMethods.WM_SHOWNETRADIO) { ShowFullPlayer(); } // another instance is started
             else if (m.Msg == NativeMethods.WM_HOTKEY)
             {
-                if (m.WParam == NativeMethods.HOTKEY_ID)
+                //if (m.WParam == NativeMethods.HOTKEY_ID)
+                //{
+                int keyPressTick = Environment.TickCount;
+                int elapsed = keyPressTick - lastHotkeyPress;
+                lastHotkeyPress = keyPressTick;
+                if (!mainShown) { return; } // andernfalls kann es bei 2maligem Drücken zu Anzeige des Hauptfensters und des Miniplayers kommen.
+                if (elapsed <= 400 || (ModifierKeys & Keys.Shift) == Keys.Shift) { Close(); }
+                else if (miniPlayer.Visible && !miniPlayer.Handle.Equals(NativeMethods.GetForegroundWindow())) { miniPlayer.Activate(); }
+                else if (miniPlayer.Visible) { miniPlayer.Activate(); }
+                else if (Visible) // heißt nicht, das Form sichtbar bzw. das aktive Fenster sein muss
                 {
-                    int keyPressTick = Environment.TickCount;
-                    int elapsed = keyPressTick - lastHotkeyPress;
-                    lastHotkeyPress = keyPressTick;
-                    if (!mainShown) { return; } // andernfalls kann es bei 2maligem Drücken zu Anzeige des Hauptfensters und des Miniplayers kommen.
-                    if (elapsed <= 400 || (ModifierKeys & Keys.Shift) == Keys.Shift) { Close(); }
-                    else if (miniPlayer.Visible && !miniPlayer.Handle.Equals(NativeMethods.GetForegroundWindow())) { miniPlayer.Activate(); }
-                    else if (Visible) // heißt nicht, das Form sichtbar bzw. das aktive Fenster sein muss
+                    if (ActiveForm == null) { Activate(); }
+                    else
                     {
-                        if (ActiveForm == null) { Activate(); }
-                        else
-                        {
-                            if (close2Tray) { miniPlayer.Hide(); }
-                            else { ShowMiniPlayer(); }
-                            //ShowMiniPlayer();
-                            Hide(); //ShowInTaskbar = false; verträgt sich nicht mit GlobalHotkey => zerstört Handle
-                            tcMain.SelectedIndex = 0;
-                        }
+                        if (close2Tray) { miniPlayer.Hide(); }
+                        else { ShowMiniPlayer(); }
+                        Hide(); //ShowInTaskbar = false; verträgt sich nicht mit GlobalHotkey => zerstört Handle
+                        tcMain.SelectedIndex = 0;
                     }
-                    else { ShowFullPlayer(); }  // not visible, d.h. im Tray
-                    LogEvent("WndProc: Message WM_HOTKEY received");
                 }
+                else { ShowFullPlayer(); }  // not visible, d.h. im Tray
+                LogEvent("WndProc: Message WM_HOTKEY received");
+                //}
                 //else if (m.WParam == NativeMethods.HOTKEY_ID1)
                 //{
                 //    BtnPlayStop_Click(null, null);
                 //    LogEvent("WndProc: Message MediaPlayPause received (HOTKEY_ID2)");
                 //}
-                else { MessageBox.Show(m.WParam.ToString()); }
+                //else { MessageBox.Show(m.WParam.ToString()); }
             }
+            else if (m.Msg == NativeMethods.WM_MOUSEWHEEL && tcMain.SelectedTab == tpPlayer) { SetProgressBarVolume(m.WParam.ToInt32()); }
             else if (m.Msg == NativeMethods.WM_QUERYENDSESSION) { Close(); }
             else if (m.Msg == NativeMethods.WM_NCLBUTTONDBLCLK) { Hide(); ShowMiniPlayer(); }
             else if (m.Msg == NativeMethods.WM_NCLBUTTONDOWN && tcMain.SelectedTab == tpStations) { dgvStations.EndEdit(); }
@@ -1211,8 +1213,9 @@ namespace NetRadio
         private void BtnIncrease_MouseUp(object sender, MouseEventArgs e) { timerVolume.Stop(); }
         private void BtnDecrease_MouseDown(object sender, MouseEventArgs e) { timerVolume.Enabled = true; timerVolume.Start(); }
         private void BtnDecrease_MouseUp(object sender, MouseEventArgs e) { timerVolume.Stop(); }
-        private void VolProgressBar_MouseWheel(object sender, MouseEventArgs e) { SetProgressBarVolume(e.Delta); }
+        //private void VolProgressBar_MouseWheel(object sender, MouseEventArgs e) { SetProgressBarVolume(e.Delta); }
         private void SetMouseWheelValue(MouseEventArgs e) { SetProgressBarVolume(e.Delta); } // MiniPlayer_VolumeMouseWheel
+        //private void SetMouseWheelValueX(VolumeEventArgs e) { SetProgressBarVolume(e.Delta); } // MiniPlayer_VolumeMouseWheelX
 
         private void SetProgressBarVolume(int delta)
         {
@@ -1703,7 +1706,7 @@ namespace NetRadio
         }
 
         private void RegisterHK(string hkString)
-        {
+        { // 
             if (NativeMethods.RegisterHotKey(Handle, NativeMethods.HOTKEY_ID, (uint)(NativeMethods.Modifiers.Control | NativeMethods.Modifiers.Win), (uint)(Keys)Convert.ToChar(hkString)) == true)
             {
                 StatusStrip_SingleLabel(false, "Hotkey registered (Ctrl+Win+" + hkString + ")");
@@ -1724,7 +1727,7 @@ namespace NetRadio
 
         private void CmbxOutput_CreateContent()
         {
-            List<string> devicelist = new();
+            List<string> devicelist = [];
             BASS_DEVICEINFO info; // = new BASS_DEVICEINFO();
             for (int n = 0; (info = Bass.BASS_GetDeviceInfo(n)) != null; n++) { if (info.IsEnabled) { devicelist.Add(info.ToString()); } }
             if (devicelist[0].Contains("No sound")) { devicelist.RemoveAt(0); } // 0: No sound
@@ -1764,7 +1767,6 @@ namespace NetRadio
                     }
                 }
                 prevOutputDevice = strOutputDevice; //somethingToSave = false; s. o.
-
             }
         }
 
@@ -1838,13 +1840,6 @@ namespace NetRadio
             miniPlayer.Hide();
             miniPlayer.Opacity = 1;
             if (!string.IsNullOrEmpty(hkLetter) && new Regex("^[A-Z]+$").IsMatch(hkLetter)) { RegisterHK(hkLetter); } // Hotkey kann erst registriert werden, wenn das Fenster erstellt wurde
-
-            //if (NativeMethods.RegisterHotKey(Handle, NativeMethods.HOTKEY_ID1, 0, (uint)Keys.MediaPlayPause) == true)
-            //{
-            //    LogEvent("RegisterHotKey: MediaPlayPause registered (HOTKEY_ID1)");
-            //}
-
-
 
             if (startMiniCmd || startTrayCmd)
             {
@@ -2152,10 +2147,6 @@ namespace NetRadio
             RecordingStop(); // enthält BASS_StreamFree! - channelVolume muss vorher gespeichert werden!
             notifyIcon.Visible = false; // keine komische Meldungen an Windows-Nachrichtenzentrale
             if (!string.IsNullOrEmpty(hkLetter)) { NativeMethods.UnregisterHotKey(Handle, NativeMethods.HOTKEY_ID); }
-            //NativeMethods.UnregisterHotKey(Handle, NativeMethods.HOTKEY_ID1);
-            //NativeMethods.UnregisterHotKey(Handle, NativeMethods.HOTKEY_ID2);
-            //NativeMethods.UnregisterHotKey(Handle, NativeMethods.HOTKEY_ID3);
-            //NativeMethods.UnregisterHotKey(Handle, NativeMethods.HOTKEY_ID4);
 
             Bass.BASS_PluginFree(_hlsPlugIn);
             Bass.BASS_PluginFree(_flacPlugIn);
@@ -2280,8 +2271,6 @@ namespace NetRadio
             if (e.Button == MouseButtons.Left) { ShowToolStripMenuItem_Click(null, null); }
         }
 
-        //private void ContextMenuTrayIcon_Opening(object sender, CancelEventArgs e) { showToolStripMenuItem.Text = Visible ? "Hide" : "Show"; }
-
         private void ShowToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (Visible)
@@ -2299,18 +2288,12 @@ namespace NetRadio
                 else
                 {
                     if (!miniPlayer.Visible && !Visible) { ShowFullPlayer(); tcMain.SelectedIndex = 0; }
-                    else
-                    {
-                        ShowMiniPlayer();
-                    }
+                    else { ShowMiniPlayer(); }
                 }
             }
         }
 
-        private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Application.Exit();
-        }
+        private void ExitToolStripMenuItem_Click(object sender, EventArgs e) { Application.Exit(); }
 
         internal void BtnSearch_Click(object sender, EventArgs e)
         {
@@ -3808,7 +3791,7 @@ namespace NetRadio
         {
             try
             {
-                using StreamWriter writer = new(Path.Combine(logPath));
+                using StreamWriter writer = new(logPath);
                 writer.Write(""); // Datei leeren
             }
             catch { }
@@ -3818,7 +3801,7 @@ namespace NetRadio
         {
             try
             {
-                using StreamWriter writer = new(logPath, true); // Datei erstellen oder öffnen
+                using StreamWriter writer = new(logPath, true, Encoding.UTF8); // Datei erstellen oder öffnen
                 writer.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " | " + message); // Ereignisprotokollieren
                 writer.Flush();
             }

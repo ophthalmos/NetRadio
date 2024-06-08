@@ -14,32 +14,41 @@
     <StartupObject>NetRadio.Program</StartupObject>
     <Title>NetRadio</Title>
     <Description>NetRadio</Description>
-    <AssemblyVersion>2.5.4.1</AssemblyVersion>
-    <FileVersion>2.5.4.1</FileVersion>
+    <AssemblyVersion>2.5.4.2</AssemblyVersion>
+    <FileVersion>2.5.4.2</FileVersion>
     <Copyright>(c) 2024 by W. Happe, GPL v3</Copyright>
     <Version>2.5.4</Version>
     <GenerateResourceWarnOnBinaryFormatterUse>false</GenerateResourceWarnOnBinaryFormatterUse>
     <SupportedOSPlatformVersion>8.0</SupportedOSPlatformVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <NoWarn>1701;1702;IDE0060</NoWarn>
     <DebugType>none</DebugType>
+    <IsTrimmable>False</IsTrimmable>
+    <IsAotCompatible>False</IsAotCompatible>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <NoWarn>1701;1702;IDE0060</NoWarn>
     <DebugType>none</DebugType>
+    <IsTrimmable>False</IsTrimmable>
+    <IsAotCompatible>False</IsAotCompatible>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <NoWarn>1701;1702;IDE0060</NoWarn>
     <DebugType>none</DebugType>
+    <IsTrimmable>False</IsTrimmable>
+    <IsAotCompatible>False</IsAotCompatible>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <NoWarn>1701;1702;IDE0060</NoWarn>
     <DebugType>none</DebugType>
+    <IsTrimmable>False</IsTrimmable>
+    <IsAotCompatible>False</IsAotCompatible>
   </PropertyGroup>
 
   <ItemGroup>
