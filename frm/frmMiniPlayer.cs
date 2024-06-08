@@ -316,10 +316,12 @@ namespace NetRadio
         {
             if (m.Msg == NativeMethods.WM_MOUSEWHEEL && ActiveControl != cmBxStations)
             {
-                OnVolumeMouseWheel(new MouseEventArgs(MouseButtons.None, 0, Cursor.Position.X, Cursor.Position.Y, m.WParam.ToInt32())); //OnVolumeMouseWheelX(new VolumeEventArgs(m.WParam.ToInt32()));
-                //toolTip.SetToolTip(volProgressBar, "Volume " + volProgressBar.Value.ToString() + "%");
-                toolTip.Show("Volume " + volProgressBar.Value.ToString() + "%", volProgressBar, 20, 7, 1000);
-
+                int delta = (int)m.WParam >> 16;
+                if (delta.GetType() == typeof(int) && delta != 0)
+                {
+                    OnVolumeMouseWheel(new MouseEventArgs(MouseButtons.None, 0, Cursor.Position.X, Cursor.Position.Y, delta)); //OnVolumeMouseWheelX(new VolumeEventArgs(m.WParam.ToInt32()));
+                    toolTip.Show("Volume " + volProgressBar.Value.ToString() + "%", volProgressBar, 20, 7, 1000);
+                }
             }
             base.WndProc(ref m);
         }
