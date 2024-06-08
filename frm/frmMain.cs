@@ -1145,7 +1145,11 @@ namespace NetRadio
                 //}
                 //else { MessageBox.Show(m.WParam.ToString()); }
             }
-            else if (m.Msg == NativeMethods.WM_MOUSEWHEEL && tcMain.SelectedTab == tpPlayer) { SetProgressBarVolume(m.WParam.ToInt32()); }
+            else if (m.Msg == NativeMethods.WM_MOUSEWHEEL && tcMain.SelectedTab == tpPlayer)
+            {
+                int delta = (int)m.WParam >> 16;
+                if (delta.GetType() == typeof(int) && delta != 0) { SetProgressBarVolume(delta); } //SetProgressBarVolume(m.WParam.ToInt32());
+            }
             else if (m.Msg == NativeMethods.WM_QUERYENDSESSION) { Close(); }
             else if (m.Msg == NativeMethods.WM_NCLBUTTONDBLCLK) { Hide(); ShowMiniPlayer(); }
             else if (m.Msg == NativeMethods.WM_NCLBUTTONDOWN && tcMain.SelectedTab == tpStations) { dgvStations.EndEdit(); }
