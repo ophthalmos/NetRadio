@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Security.Permissions;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
@@ -22,6 +23,7 @@ namespace NetRadio
         public event EventHandler PlayPause;
         public event EventHandler PlayerReset;
         public event EventHandler VolumeProgress;
+        //public event EventHandler<VolumeEventArgs> VolumeMouseWheelX; // file clsUtilities
         public event MouseEventHandler VolumeMouseWheel; // file clsUtilities
         public event EventHandler IncreaseVolume;
         public event EventHandler DecreaseVolume;
@@ -44,13 +46,14 @@ namespace NetRadio
             _this = this;
             _client = Region.FromHrgn(NativeMethods.CreateRoundRectRgn(1, 1, Width - 1, Height - 1, 15, 15));
             Region = Region.FromHrgn(NativeMethods.CreateRoundRectRgn(0, 0, Width, Height, 15, 15)); // FormBorderStyle.None
-            volProgressBar.MouseWheel += VolProgressBar_MouseWheel;
+            //volProgressBar.MouseWheel += VolProgressBar_MouseWheel;
         }
 
         protected virtual void OnFormHide(EventArgs e) { FormHide?.Invoke(this, e); }
         protected virtual void OnPlayPause(EventArgs e) { PlayPause?.Invoke(this, e); }
         protected virtual void OnPlayerReset(EventArgs e) { PlayerReset?.Invoke(this, e); }
         protected virtual void OnVolumeProgress(EventArgs e) { VolumeProgress?.Invoke(this, e); }
+        //protected virtual void OnVolumeMouseWheelX(VolumeEventArgs e) { VolumeMouseWheelX?.Invoke(this, e); }
         protected virtual void OnVolumeMouseWheel(MouseEventArgs e) { VolumeMouseWheel?.Invoke(this, e); }
         protected virtual void OnIncreaseVolume(EventArgs e) { IncreaseVolume?.Invoke(this, e); }
         protected virtual void OnDecreaseVolume(EventArgs e) { DecreaseVolume?.Invoke(this, e); }
@@ -152,10 +155,10 @@ namespace NetRadio
             else { OnFormHide(null); }
         }
 
-        private void SelectStationByPosition(int position)
-        {
-            if (cmBxStations.Items.Count >= position) { cmBxStations.SelectedIndex = position - 1; }
-        }
+        //private void SelectStationByPosition(int position)
+        //{
+        //    if (cmBxStations.Items.Count >= position) { cmBxStations.SelectedIndex = position - 1; }
+        //}
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
@@ -220,8 +223,9 @@ namespace NetRadio
                         if (ActiveControl != cmBxStations)
                         {
                             OnIncreaseVolume(null);
-                            toolTip.Show("Volume " + volProgressBar.Value.ToString() + "%", volProgressBar);
-                            timerVolTT.Start();
+                            toolTip.Show("Volume " + volProgressBar.Value.ToString() + "%", volProgressBar, 20, 7, 1000);
+                            //toolTip.Show("Volume " + volProgressBar.Value.ToString() + "%", volProgressBar);
+                            //timerVolTT.Start();
                             return true;
                         }
                         else { return false; }
@@ -232,8 +236,9 @@ namespace NetRadio
                         if (ActiveControl != cmBxStations)
                         {
                             OnDecreaseVolume(null);
-                            toolTip.Show("Volume " + volProgressBar.Value.ToString() + "%", volProgressBar);
-                            timerVolTT.Start();
+                            toolTip.Show("Volume " + volProgressBar.Value.ToString() + "%", volProgressBar, 20, 7, 1000);
+                            //toolTip.Show("Volume " + volProgressBar.Value.ToString() + "%", volProgressBar);
+                            //timerVolTT.Start();
                             return true;
                         }
                         else { return false; }
@@ -307,11 +312,23 @@ namespace NetRadio
             e.Graphics.FillRegion(SystemBrushes.Control, _client); // zeichnet From.Background(-1) => Rahmen ergibt sich aus dem im Designer eingestellten Form.Background
         }
 
-        private void VolProgressBar_MouseWheel(object sender, MouseEventArgs e)
+        protected override void WndProc(ref Message m)
         {
-            OnVolumeMouseWheel(e); //OnVolumeMouseWheel(new VolumeEventArgs() { Delta = e.Delta < 0 ? 1 : -1 });
-            toolTip.SetToolTip(volProgressBar, "Volume " + volProgressBar.Value.ToString() + "%");
+            if (m.Msg == NativeMethods.WM_MOUSEWHEEL && ActiveControl != cmBxStations)
+            {
+                OnVolumeMouseWheel(new MouseEventArgs(MouseButtons.None, 0, Cursor.Position.X, Cursor.Position.Y, m.WParam.ToInt32())); //OnVolumeMouseWheelX(new VolumeEventArgs(m.WParam.ToInt32()));
+                //toolTip.SetToolTip(volProgressBar, "Volume " + volProgressBar.Value.ToString() + "%");
+                toolTip.Show("Volume " + volProgressBar.Value.ToString() + "%", volProgressBar, 20, 7, 1000);
+
+            }
+            base.WndProc(ref m);
         }
+
+        //private void VolProgressBar_MouseWheel(object sender, MouseEventArgs e)
+        //{
+        //    OnVolumeMouseWheel(e); //OnVolumeMouseWheel(new VolumeEventArgs() { Delta = e.Delta < 0 ? 1 : -1 });
+        //    toolTip.SetToolTip(volProgressBar, "Volume " + volProgressBar.Value.ToString() + "%");
+        //}
 
         private void VolProgressBar_MouseDown(object sender, MouseEventArgs e) { OnVolumeProgress(null); }
 
@@ -367,14 +384,14 @@ namespace NetRadio
         //    NativeMethods.MoveWindow(handle, location.X + 20, location.Y - 20, e.Bounds.Width, e.Bounds.Height, false);
         //}
 
-        private void TimerVolTT_Tick(object sender, EventArgs e)
-        {
-            if (!NativeMethods.IsKeyDown(Keys.Oemplus) && !NativeMethods.IsKeyDown(Keys.Add) && !NativeMethods.IsKeyDown(Keys.Subtract) && !NativeMethods.IsKeyDown(Keys.OemMinus))
-            {
-                toolTip.Hide(volProgressBar);
-                timerVolTT.Stop();
-            }
-        }
+        //private void TimerVolTT_Tick(object sender, EventArgs e)
+        //{
+        //    if (!NativeMethods.IsKeyDown(Keys.Oemplus) && !NativeMethods.IsKeyDown(Keys.Add) && !NativeMethods.IsKeyDown(Keys.Subtract) && !NativeMethods.IsKeyDown(Keys.OemMinus))
+        //    {
+        //        toolTip.Hide(volProgressBar);
+        //        timerVolTT.Stop();
+        //    }
+        //}
 
         private void GoogleToolStripMenuItem_Click(object sender, EventArgs e)
         {
