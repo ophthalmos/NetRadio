@@ -34,7 +34,7 @@ namespace NetRadio
         public const int SW_SHOWNOACTIVATE = 4; // similar to SW_SHOWNORMAL, except that the window is not activated.
         public const int HT_CAPTION = 0x2;
         public const int WM_COPYDATA = 0x004A;
-
+        //public const int SC_MINIMIZE = 0xF020;
         public const int WM_SYSCOMMAND = 0x112;
         public const int MF_SEPARATOR = 0x800;
         public const int MF_BYPOSITION = 0x400;

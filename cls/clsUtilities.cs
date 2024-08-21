@@ -1,8 +1,11 @@
 ﻿using Microsoft.Win32; // Registry
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
+using System.IO;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Text;
@@ -24,6 +27,11 @@ namespace NetRadio
             taskDialogIcon ??= TaskDialogIcon.Error;
             TaskDialog.ShowDialog(hwnd, new TaskDialogPage() { Caption = caption, SizeToContent = true, Text = message, Icon = taskDialogIcon, AllowCancel = true, Buttons = { TaskDialogButton.OK } });
         }
+
+        //public static void TaskDialogMessage(string text, string heading, string caption, TaskDialogIcon icon)
+        //{
+        //    TaskDialog.ShowDialog(Form.ActiveForm, new TaskDialogPage() { Text = text, Heading = heading, Caption = caption, Buttons = { TaskDialogButton.OK, }, Icon = icon});
+        //}
 
         public static bool PingGoogleSuccess(int timeout)
         { // InternetGetConnectedState: This code only checks if the network cable is plugged in
@@ -50,16 +58,12 @@ namespace NetRadio
             return new StringFormat() { Alignment = align, LineAlignment = StringAlignment.Center };
         }
 
-        //public static void TaskDialogMessage(string text, string heading, string caption, TaskDialogIcon icon)
-        //{
-        //    TaskDialog.ShowDialog(Form.ActiveForm, new TaskDialogPage() { Text = text, Heading = heading, Caption = caption, Buttons = { TaskDialogButton.OK, }, Icon = icon});
-        //}
-
         public static string StationLong(string caption)
         {
             caption = Regex.Replace(caption, @"[\[{].*\||[\[{](.*)[]}]", "$1");
             caption = caption.Replace("[", string.Empty).Replace("]", string.Empty);
             caption = caption.Replace("{", string.Empty).Replace("}", string.Empty);
+            caption = caption.Replace("&", "&&"); // & wird sonst als Akzelerator interpretiert (nächstes Zeichen wird unterstrichen)
             return Regex.Replace(caption, @"\s+", " "); // doppelte Leerzeichen entfernen
         }
 
@@ -68,6 +72,7 @@ namespace NetRadio
             s = Regex.Replace(s, @"[\[{]([^\]|}]*)\|.*[]}]", "$1"); // innerhalb geschweifter Klammern wird Part1 genommen
             s = Regex.Replace(s, @"[\[{][^\]|}]*[]}]", string.Empty); // Text innerhalb eckiger Klammern wird entfernt, Zwischebereich darf keine schließende Klammer enthalten [^\]]*; [ muss maskiert werden, ] nicht
             s = Regex.Replace(s, @"\s+", " "); // doppelte Leerzeichen entfernen
+            s = s.Replace("&", "&&"); // & wird sonst als Akzelerator interpretiert (nächstes Zeichen wird unterstrichen)
             Match m = Regex.Match(s, @"(.+? .+?) ");
             if (m.Success) { s = m.Groups[1].Value; } // Text nach dem 2. Leerzeichen wird abgeschnitten
             return s.Trim();
@@ -177,32 +182,51 @@ namespace NetRadio
             key.DeleteValue(appName);
         }
 
-        public static string RemoveFromEnd(string str, string toRemove)
-        {
-            return str.EndsWith(toRemove) ? str[..^toRemove.Length] : str;
-        }
+        public static string RemoveFromEnd(string str, string toRemove) { return str.EndsWith(toRemove) ? str[..^toRemove.Length] : str; }
 
-        //public static string GetDescription()
+        //public static void WriteCSVRow(StringBuilder result, int itemsCount, Func<int, bool> isColumnNeeded, Func<int, string> columnValue)
         //{
-        //    Type clsType = typeof(FrmMain);
-        //    Assembly assy = clsType.Assembly;
-        //    AssemblyDescriptionAttribute adAttr = (AssemblyDescriptionAttribute)Attribute.GetCustomAttribute(assy, typeof(AssemblyDescriptionAttribute));
-        //    if (adAttr == null) { return string.Empty; }
-        //    return adAttr.Description;
+        //    bool isFirstTime = true;
+        //    for (int i = 0; i < itemsCount; i++)
+        //    {
+        //        if (!isColumnNeeded(i)) { continue; }
+
+        //        if (!isFirstTime) { result.Append(";"); }
+        //        isFirstTime = false;
+        //        result.Append(string.Format("\"{0}\"", columnValue(i)));
+        //    }
+        //    result.AppendLine();
         //}
 
-        public static void WriteCSVRow(StringBuilder result, int itemsCount, Func<int, bool> isColumnNeeded, Func<int, string> columnValue)
-        {
-            bool isFirstTime = true;
-            for (int i = 0; i < itemsCount; i++)
-            {
-                if (!isColumnNeeded(i)) { continue; }
+        //public static void ListView2CsvFile(string filePath, ListView historyListView)
+        //{
+        //    using StreamWriter sw = new(filePath, false, Encoding.UTF8);
+        //    for (int i = 0; i < historyListView.Columns.Count; i++) // Spaltenüberschriften
+        //    {
+        //        sw.Write($"\"{historyListView.Columns[i].Text}\"");
+        //        if (i < historyListView.Columns.Count - 1) { sw.Write(";"); }
+        //    }
+        //    sw.WriteLine();
+        //    foreach (ListViewItem item in historyListView.Items) // Daten aus jedem ListViewItem
+        //    {
+        //        for (int i = 0; i < item.SubItems.Count; i++)
+        //        {
+        //            if (i == 0) { sw.Write($"\"{DateTime.ParseExact(item.Tag.ToString(), "s", CultureInfo.InvariantCulture):yyyyMMdd-HH:mm:ss}\""); }
+        //            else { sw.Write($"\"{item.SubItems[i].Text}\""); }
+        //            if (i < item.SubItems.Count - 1) { sw.Write(";"); }
+        //        }
+        //        sw.WriteLine();
+        //    }
+        //}
 
-                if (!isFirstTime) { result.Append(";"); }
-                isFirstTime = false;
-                result.Append(string.Format("\"{0}\"", columnValue(i)));
-            }
-            result.AppendLine();
+        public static void SortHistoryNormal(ListView historyListView, CListViewItemComparer lviComparer, string[] lvSortOrderArray)
+        {
+            historyListView.ListViewItemSorter = lviComparer;
+            lviComparer.SortColumn = 0;
+            lviComparer.Order = SortOrder.Descending;
+            historyListView.Refresh(); // Arrows auf anderen ColumnHeader-Buttons werden entfernt
+            historyListView.Sort(); // MessageBox.Show(historyListView.TopItem.Tag.ToString()); // 2023-04-14T12:59:06.3463796Z
+            lvSortOrderArray[0] = "Descending";
         }
 
         public static bool IsDGVEmpty(DataGridView gridView)

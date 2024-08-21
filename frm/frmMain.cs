@@ -126,7 +126,9 @@ namespace NetRadio
         private int updateIndex = 0; // täglich
         private int startMode = 0; // Main window
         private DateTime lastUpdateTime;
-        private readonly string dateFormat = "u"; // UniversalSortableDateTimePattern yyyy'-'MM'-'dd HH':'mm':'ss'Z'
+        private readonly string readDateFormat = "yyyy-MM-dd HH:mm:ss:fff"; // wird innerhalb der History-CSV-Dateien verwendet
+        private readonly string longDateFormat = "yyyyMMddHHmmssfff";      // lastUpdateTime, ListViewItem.Tag (CListViewItemComparer)
+        private readonly string shortDateFormat = "yyyyMMdd-HHmmss";      // LogEvent, _downloadFileName, historyFile
         private Version updateVersion = null;
 
         public FrmMain()
@@ -299,6 +301,11 @@ namespace NetRadio
                             miniPlayer.MpVolProgBar.Value = volProgressBar.Value = volume;
                             lblVolume.Text = volProgressBar.Value.ToString();
                         }
+                        else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "SaveHistory")
+                        {
+                            xtr.MoveToAttribute("Value");
+                            numUpDnSaveHistory.Value = int.TryParse(xtr.Value, out int intHistory) ? intHistory : 0;
+                        }
                         else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "StartMode")
                         {
                             xtr.MoveToAttribute("Value");
@@ -315,7 +322,7 @@ namespace NetRadio
                         else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "UpdateSearch")
                         {
                             xtr.MoveToAttribute("DateTime");
-                            lastUpdateTime = DateTime.TryParseExact(xtr.Value, dateFormat, null, DateTimeStyles.None, out DateTime date) ? date : DateTime.UtcNow;
+                            lastUpdateTime = DateTime.TryParseExact(xtr.Value, longDateFormat, null, DateTimeStyles.None, out DateTime date) ? date : DateTime.UtcNow;
                         }
                         else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "FormLocation")
                         {
@@ -359,7 +366,7 @@ namespace NetRadio
                         }
                     }
                 }
-                catch (XmlException ex) { MessageBox.Show(ex.Message, Text, MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                catch (XmlException ex) { Utilities.ErrorMsgTaskDlg(Handle, ex.Message, appName); }
             }
             else
             {
@@ -373,6 +380,8 @@ namespace NetRadio
             foreach (DataGridViewColumn column in dgvStations.Columns) { column.SortMode = DataGridViewColumnSortMode.NotSortable; }
 
             if (keepActionsActive && tableActions.AsEnumerable().Any(row => row.Field<bool>("Enabled") == true)) { cbActions.Checked = true; }
+
+            if (!logHistory) { numUpDnSaveHistory.Value = 0; } // numUpDnSaveHistory.Text = "0";
 
             string[] args = Environment.GetCommandLineArgs().Skip(1).ToArray();
             if (args.Length > 0)
@@ -448,7 +457,7 @@ namespace NetRadio
                 miniPlayer.Location = new Point(x_Pos, y_Pos);
             }
             else { miniPlayer.Location = Location; }
-            historyListView.ListViewItemSorter = lviComparer;
+            historyLV.ListViewItemSorter = lviComparer;
             spectrumTimer.Tick += SpectrumTick;
             _netPreBuff = Bass.BASS_GetConfig(BASSConfig.BASS_CONFIG_NET_PREBUF) / 100f; // 0.75
         }
@@ -466,7 +475,7 @@ namespace NetRadio
                 {
                     if (_fs is null)
                     {
-                        _downloadFileName = _downloads + "\\" + appName + "_" + DateTime.Now.ToString("yyyyMMdd-hhmmss") + ".mp3";
+                        _downloadFileName = _downloads + "\\" + appName + "_" + DateTime.Now.ToString(shortDateFormat) + ".mp3";
                         BASS_CHANNELINFO info = Bass.BASS_ChannelGetInfo(_stream);
                         switch (info.ctype)
                         {
@@ -517,7 +526,7 @@ namespace NetRadio
                     BeginInvoke((System.Windows.Forms.MethodInvoker)delegate ()// this code runs on the UI thread!
                     {
                         RecordingStop(); // setzt _fs auf null; 
-                        MessageBox.Show(ex.Message, appName, MessageBoxButtons.OK, MessageBoxIcon.Error); // "An error occurred. Recording has stopped."
+                        Utilities.ErrorMsgTaskDlg(Handle, ex.Message, appName); // "An error occurred. Recording has stopped."
                     });
                 }
             }
@@ -677,7 +686,7 @@ namespace NetRadio
             }
             if (_tagInfo != null)
             {
-                lblD2.Text = _tagInfo.ToString();
+                lblD2.Text = _tagInfo.ToString().Replace("&", "&&"); // & wird sonst als Akzelerator interpretiert (nächstes Zeichen wird unterstrichen)
                 MiniPlayer.MpLblD2_Text(lblD2.Text);
                 if (tcMain.SelectedTab == tpSectrum) { StatusStrip_SingleLabel(false, lblD2.Text); }
                 if (logHistory) { AddToHistory(_tagInfo.ToString()); }
@@ -748,17 +757,18 @@ namespace NetRadio
 
         private void AddToHistory(string songTitle)
         {
+            if (string.IsNullOrEmpty(songTitle)) { return; }
             strArrHistory[0] = DateTime.Now.ToString("HH:mm:ss");
-            strArrHistory[1] = (tcMain.TabPages[0].Controls["rbtn" + _currentButtonNum.ToString("D2")] as RadioButton).Text;
-            strArrHistory[2] = songTitle;
+            strArrHistory[1] = (tcMain.TabPages[0].Controls["rbtn" + _currentButtonNum.ToString("D2")] as RadioButton).Text.Replace("&&", "&"); // frühere Umwandlung wg. Akzelerator rückgängig machen
+            strArrHistory[2] = songTitle.Replace("&&", "&"); // frühere Umwandlung wg. Akzelerator rückgängig machen
             lvItemHistory = new ListViewItem(strArrHistory)
             {
-                Tag = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Utc).ToString("o"),
+                Tag = DateTime.Now.ToString(longDateFormat), // DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Local).ToString("s")
                 ToolTipText = LongSubItemText(songTitle) ? songTitle : ""
             };
 
             // ToolTipText = LongSubItemText(songTitle) ? songTitle : "" // vorausgesetzt historyListView.ShowItemToolTips = true;
-            historyListView.Items.Insert(0, lvItemHistory);
+            historyLV.Items.Insert(0, lvItemHistory);
             historyExportButton.Enabled = histoyClearButton.Enabled = true;
             HistoryListView_SetDefaultColumnWidth();
             if (tcMain.SelectedIndex == 2) { TPHistory_SetStatusBarText(); }
@@ -767,7 +777,7 @@ namespace NetRadio
         private bool LongSubItemText(string songTitle)
         {
             using Graphics g = CreateGraphics();
-            return (int)g.MeasureString(songTitle, historyListView.Font, 0, StringFormat.GenericTypographic).Width > historyListView.Columns[2].Width;
+            return (int)g.MeasureString(songTitle, historyLV.Font, 0, StringFormat.GenericTypographic).Width > historyLV.Columns[2].Width;
         }
 
         private void FrmMain_Load(object sender, EventArgs e)
@@ -1147,13 +1157,19 @@ namespace NetRadio
             }
             else if (m.Msg == NativeMethods.WM_MOUSEWHEEL && tcMain.SelectedTab == tpPlayer)
             {
-                int delta = (int)m.WParam >> 16;
+                int delta = (int)m.WParam >> 16; // OverflowException!
                 if (delta.GetType() == typeof(int) && delta != 0) { SetProgressBarVolume(delta); } //SetProgressBarVolume(m.WParam.ToInt32());
             }
             else if (m.Msg == NativeMethods.WM_QUERYENDSESSION) { Close(); }
             else if (m.Msg == NativeMethods.WM_NCLBUTTONDBLCLK) { Hide(); ShowMiniPlayer(); }
             else if (m.Msg == NativeMethods.WM_NCLBUTTONDOWN && tcMain.SelectedTab == tpStations) { dgvStations.EndEdit(); }
             else if ((m.Msg == NativeMethods.WM_SYSCOMMAND) && ((int)m.WParam == NativeMethods.IDM_CUSTOMITEM1)) { Application.Exit(); }
+            ////else if ((m.Msg == NativeMethods.WM_SYSCOMMAND) && ((int)m.WParam == NativeMethods.SC_MINIMIZE))
+            //else if (m.Msg == NativeMethods.WM_SYSCOMMAND && m.WParam == new IntPtr(NativeMethods.SC_MINIMIZE))
+            //        {
+            //    if (miniPlayer.Visible) { miniPlayer.Hide(); }
+            //    else { Hide(); }
+            //}
             base.WndProc(ref m);
         }
 
@@ -1337,8 +1353,9 @@ namespace NetRadio
             else if (tcMain.SelectedIndex == 2)
             {
                 TopMost = false; // Workaround, damit Tooltip in Listview im Vordergrund angezeigt wird
+                loadHistoryBtn.Enabled = delAllHistoriesBtn.Enabled = Directory.GetFiles(Path.GetDirectoryName(xmlPath), appName + "_*.csv").Length > 0;
                 TPHistory_SetStatusBarText();
-                historyListView.Focus();
+                historyLV.Focus();
             }
             else if (tcMain.SelectedIndex == 3)
             {
@@ -1527,7 +1544,7 @@ namespace NetRadio
                     }
                 }
             }
-            catch (InvalidCastException ex) { MessageBox.Show(ex.Message, Text, MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            catch (InvalidCastException ex) { Utilities.ErrorMsgTaskDlg(Handle, ex.Message, appName); }
         }
 
         private void UpdateCaption_lblD1(string caption) // BtnReset_Click | autoStartRadioButton | TcMain_SelectedIndexChanged | 
@@ -1612,7 +1629,7 @@ namespace NetRadio
                 ProcessStartInfo psi = new("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=DK9WYLVBN7K4Y") { UseShellExecute = true };
                 Process.Start(psi);
             }
-            catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { MessageBox.Show(ex.Message, appName, MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+            catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { Utilities.ErrorMsgTaskDlg(Handle, ex.Message, appName); }
         }
 
         private void LinkHomepage_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -1622,7 +1639,7 @@ namespace NetRadio
                 ProcessStartInfo psi = new("https://www.ophthalmostar.de/freeware/#netradio") { UseShellExecute = true };
                 Process.Start(psi);
             }
-            catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { MessageBox.Show(ex.Message, appName, MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+            catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { Utilities.ErrorMsgTaskDlg(Handle, ex.Message, appName); }
         }
 
         private void PnlDisplay_Paint(object sender, PaintEventArgs e)
@@ -1785,7 +1802,7 @@ namespace NetRadio
         private void TPHistory_SetStatusBarText()
         {
             //string statusStripText = string.Empty;
-            int count = historyListView.Items.Count;
+            int count = historyLV.Items.Count;
             if (count > 0)
             {
                 //DateTime min = (from m in historyListView.Items.Cast<ListViewItem>() select DateTime.Parse(m.Tag.ToString(), null, DateTimeStyles.RoundtripKind)).Min(); // Tag enthält DateTime (Tag und Zeit)
@@ -1947,13 +1964,9 @@ namespace NetRadio
                         {
                             tcMain.SelectedIndex = 2; // History
                         }
-                        else if (tcMain.SelectedTab == tpHistory && historyListView.Items.Count > 0)
+                        else if (tcMain.SelectedTab == tpHistory && historyLV.Items.Count > 0)
                         {
-                            lviComparer.SortColumn = 0;
-                            lviComparer.Order = SortOrder.Descending;
-                            historyListView.Refresh(); // Arrows auf anderen ColumnHeader-Buttons werden entfernt
-                            historyListView.Sort(); // MessageBox.Show(historyListView.TopItem.Tag.ToString()); // 2023-04-14T12:59:06.3463796Z
-                            lvSortOrderArray[0] = "Descending";
+                            Utilities.SortHistoryNormal(historyLV, lviComparer, lvSortOrderArray);
                         }
                         return true;
                     }
@@ -2020,6 +2033,13 @@ namespace NetRadio
                         {
                             GoogleToolStripMenuItem_Click(null, null);
                         }
+                        return true;
+                    }
+                case Keys.M | Keys.LWin:
+                case Keys.M | Keys.RWin:
+                    {
+                        if (miniPlayer.Visible) { miniPlayer.Hide(); }
+                        else { Hide(); }
                         return true;
                     }
                 case Keys.F | Keys.Control:
@@ -2123,14 +2143,17 @@ namespace NetRadio
             {
                 if (MessageBox.Show(Path.GetFileName(pdfPath) + " was not found in the program directory.\nWould you like to download it from the Internet?", appName, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
-
-                    httpClient ??= new HttpClient();
-                    using (HttpResponseMessage response = await httpClient.GetAsync("https://www.ophthalmostar.de/NetRadio.pdf"))
+                    try
                     {
-                        using FileStream streamToWriteTo = new("NetRadio.pdf", FileMode.CreateNew);
-                        await response.Content.CopyToAsync(streamToWriteTo);
+                        httpClient ??= new HttpClient();
+                        using (HttpResponseMessage response = await httpClient.GetAsync("https://www.ophthalmostar.de/NetRadio.pdf"))
+                        {
+                            using FileStream streamToWriteTo = new("NetRadio.pdf", FileMode.CreateNew);
+                            await response.Content.CopyToAsync(streamToWriteTo);
+                        }
+                        ShowHelpPDF();
                     }
-                    ShowHelpPDF();
+                    catch (Exception ex) { Utilities.ErrorMsgTaskDlg(Application.OpenForms[0].Handle, ex.Message, appName); }
                 }
             }
         }
@@ -2158,6 +2181,7 @@ namespace NetRadio
             Bass.BASS_Stop();
             Bass.BASS_Free();
             if (somethingToSave || radioBtnChanged) { SaveConfig(); }
+            if (numUpDnSaveHistory.Value > 0) { SaveHistory(); }
         }
 
         private void SaveConfig() // FrmMain_FormClosing | TcMain_SelectedIndexChanged
@@ -2213,16 +2237,20 @@ namespace NetRadio
                 xw.WriteAttributeString("Value", strVolume);
                 xw.WriteEndElement(); // für Volume
 
+                xw.WriteStartElement("SaveHistory");
+                xw.WriteAttributeString("Value", Convert.ToInt32(numUpDnSaveHistory.Value).ToString());
+                xw.WriteEndElement();
+
                 xw.WriteStartElement("StartMode");
                 xw.WriteAttributeString("Value", startMode.ToString());
-                xw.WriteEndElement(); // für UpdateIndex
+                xw.WriteEndElement();
 
                 xw.WriteStartElement("UpdateIndex");
                 xw.WriteAttributeString("Value", updateIndex.ToString());
                 xw.WriteEndElement(); // für UpdateIndex
 
                 xw.WriteStartElement("UpdateSearch");
-                xw.WriteAttributeString("DateTime", lastUpdateTime.ToString(dateFormat, CultureInfo.InvariantCulture));
+                xw.WriteAttributeString("DateTime", lastUpdateTime.ToString(longDateFormat, CultureInfo.InvariantCulture));
                 xw.WriteEndElement(); // für UpdateSearch
 
                 xw.WriteStartElement("FormLocation"); // RestoreBounds.Location funktioniert nicht richtig
@@ -2266,9 +2294,52 @@ namespace NetRadio
                 xw.WriteEndElement(); // für NetRadio
                 xw.WriteEndDocument();
             }
-            catch (ArgumentNullException ex) { MessageBox.Show(ex.Message); }
+            catch (ArgumentNullException ex) { Utilities.ErrorMsgTaskDlg(Handle, ex.Message, appName + " - SaveConfig"); }
             somethingToSave = false;
         }
+
+        private void SaveHistory()
+        {
+            Utilities.SortHistoryNormal(historyLV, lviComparer, lvSortOrderArray);
+            string filePath = Path.Combine(Path.GetDirectoryName(xmlPath), appName + "_" + DateTime.Now.ToString(shortDateFormat) + ".csv");
+            HistoryListView2CsvFile(filePath);
+            string folderPath = Path.GetDirectoryName(xmlPath);
+            string searchPattern = appName + "_*.csv";
+            try
+            {
+                List<FileInfo> filesToDelete = ((List<FileInfo>)([.. Directory.GetFiles(folderPath, searchPattern).Select(f => new FileInfo(f)).
+                    OrderByDescending(f => f.LastWriteTime)])).Skip((int)numUpDnSaveHistory.Value).ToList();
+                foreach (FileInfo file in filesToDelete) { file.Delete(); }
+            }
+            catch (Exception ex) { Utilities.ErrorMsgTaskDlg(Handle, ex.Message, appName + " - SaveHistory"); }
+        }
+
+        public void HistoryListView2CsvFile(string filePath)
+        {
+            try
+            {
+                using StreamWriter sw = new(filePath, false, Encoding.UTF8);
+                for (int i = 0; i < historyLV.Columns.Count; i++) // Spaltenüberschriften
+                {
+                    sw.Write($"\"{historyLV.Columns[i].Text}\"");
+                    if (i < historyLV.Columns.Count - 1) { sw.Write(";"); }
+                }
+                sw.WriteLine();
+                foreach (ListViewItem item in historyLV.Items) // Daten aus jedem ListViewItem
+                {
+                    for (int i = 0; i < item.SubItems.Count; i++)
+                    {
+                        if (i == 0) { sw.Write($"\"{DateTime.ParseExact(item.Tag.ToString(), longDateFormat, CultureInfo.InvariantCulture).ToString(readDateFormat)}\""); }
+                        else { sw.Write($"\"{item.SubItems[i].Text}\""); }
+                        if (i < item.SubItems.Count - 1) { sw.Write(";"); }
+                    }
+                    sw.WriteLine();
+                }
+            }
+            catch (Exception ex) { Utilities.ErrorMsgTaskDlg(Handle, ex.Message, appName + " - HistoryListView2CsvFile"); }
+        }
+
+
 
         private void NotifyIcon_MouseClick(object sender, MouseEventArgs e)
         {
@@ -2635,7 +2706,7 @@ namespace NetRadio
                 ProcessStartInfo psi = new("https://www.radio-browser.info/") { UseShellExecute = true };
                 Process.Start(psi);
             }
-            catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { MessageBox.Show(ex.Message, appName, MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+            catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { Utilities.ErrorMsgTaskDlg(Handle, ex.Message, appName); }
         }
 
         private void PlayPauseToolStripMenuItem_Click(object sender, EventArgs e) { BtnPlayStop_Click(null, null); }
@@ -2657,7 +2728,7 @@ namespace NetRadio
                 ProcessStartInfo psi = new("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=DK9WYLVBN7K4Y") { UseShellExecute = true };
                 Process.Start(psi);
             }
-            catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { MessageBox.Show(ex.Message, appName, MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+            catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { Utilities.ErrorMsgTaskDlg(Handle, ex.Message, appName); }
         }
 
         private void PicBoxPayPal_MouseEnter(object sender, EventArgs e) { picBoxPayPal.Cursor = Cursors.Hand; }
@@ -2675,26 +2746,26 @@ namespace NetRadio
         private void GoogleToolStripMenuItem_Click(object sender, EventArgs e)
         {
             string search = string.Empty;
-            if (ActiveControl != null && ActiveControl == historyListView)
+            if (ActiveControl != null && ActiveControl == historyLV)
             {
-                if (historyListView.SelectedItems.Count > 0) { search = historyListView.Items[historyListView.SelectedIndices[0]].SubItems[2].Text; }
+                if (historyLV.SelectedItems.Count > 0) { search = historyLV.Items[historyLV.SelectedIndices[0]].SubItems[2].Text; }
             }
             else if (!string.IsNullOrEmpty(lblD2.Text)) { search = lblD2.Text; }
             if (!string.IsNullOrEmpty(search))
             {
                 try { Process.Start(new ProcessStartInfo("https://www.google.com/search?q=" + System.Web.HttpUtility.UrlEncode(search.Trim())) { UseShellExecute = true }); }
-                catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { MessageBox.Show(ex.Message, appName, MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+                catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { Utilities.ErrorMsgTaskDlg(Handle, ex.Message, appName); }
             }
         }
 
         private void CopyToClipboardToolStripMenuItem_Click(object sender, EventArgs e)
         {
 
-            if (ActiveControl != null && ActiveControl == historyListView)
+            if (ActiveControl != null && ActiveControl == historyLV)
             {
-                if (historyListView.SelectedItems.Count > 0)
+                if (historyLV.SelectedItems.Count > 0)
                 {
-                    string clip = historyListView.SelectedItems[0].SubItems[0].Text + " | " + historyListView.SelectedItems[0].SubItems[1].Text + " | " + historyListView.SelectedItems[0].SubItems[2].Text;
+                    string clip = historyLV.SelectedItems[0].SubItems[0].Text + " | " + historyLV.SelectedItems[0].SubItems[1].Text + " | " + historyLV.SelectedItems[0].SubItems[2].Text;
                     if (!string.IsNullOrEmpty(clip)) { Utilities.SetClipboardUnicodeText(clip.TrimEnd(new char[] { '|', ' ' })); }
                 }
 
@@ -2727,7 +2798,7 @@ namespace NetRadio
                         ProcessStartInfo psi = new("ms-settings:network-status") { UseShellExecute = true };
                         Process.Start(psi);
                     }
-                    catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { MessageBox.Show(ex.Message, appName, MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+                    catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { Utilities.ErrorMsgTaskDlg(Handle, ex.Message, appName); }
                 }
                 return;
             }
@@ -2810,7 +2881,7 @@ namespace NetRadio
                                 lblD3.Text += ", 00:00:00";
                                 if (_tagInfo.channelinfo.ctype == BASSChannelType.BASS_CTYPE_STREAM_MF && ((WAVEFORMATEX)Marshal.PtrToStructure(Bass.BASS_ChannelGetTags(_stream, BASSTag.BASS_TAG_WAVEFORMAT), typeof(WAVEFORMATEX))).wFormatTag
                                     == WAVEFormatTag.MPEG_HEAAC) { lblD3.Text = lblD3.Text.Replace("MF", "AAC"); }
-                                lblD2.Text = _tagInfo.ToString();
+                                lblD2.Text = _tagInfo.ToString().Replace("&", "&&"); // & wird sonst als Akzelerator interpretiert (nächstes Zeichen wird unterstrichen)
                                 MiniPlayer.MpLblD2_Text(lblD2.Text);
                                 LogEvent("Channelinfo: " + _tagInfo.channelinfo.ctype + ")");
                                 //if (_tagInfo.channelinfo.ctype == BASSChannelType.BASS_CTYPE_STREAM_FLAC_OGG) { MessageBox.Show("FLAC_OGG"); }
@@ -3067,7 +3138,7 @@ namespace NetRadio
             try { Process.Start(localSetupFile, "/deleteSetup=true"); } // /SILENT
             catch (Exception ex) // when (ex is ArgumentNullException or InvalidOperationException or Win32Exception)
             {
-                MessageBox.Show(ex.Message, Application.ProductName);
+                Utilities.ErrorMsgTaskDlg(Handle, ex.Message, appName);
                 File.Delete(localSetupFile);
             }
             finally { Close(); } // Application.Exit();
@@ -3095,7 +3166,7 @@ namespace NetRadio
                     catch (Exception ex) // when (ex is InvalidOperationException or ArgumentNullException or WebException)
                     {
                         btnUpdate.Enabled = true;
-                        MessageBox.Show(ex.Message, appName);
+                        Utilities.ErrorMsgTaskDlg(Handle, ex.Message, appName);
                     }
                 }
                 else // Portable version
@@ -3105,7 +3176,7 @@ namespace NetRadio
                         ProcessStartInfo psi = new("https://www.ophthalmostar.de/freeware/#netradio") { UseShellExecute = true };
                         Process.Start(psi);
                     }
-                    catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { MessageBox.Show(ex.Message, appName, MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+                    catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { Utilities.ErrorMsgTaskDlg(Handle, ex.Message, appName); }
                 }
             }
             else if (NativeMethods.InternetGetConnectedState(out int flags, 0)) // 18: binary 0001 0010, which would map to LAN(0x2) | RasInstalled(0x10)
@@ -3183,7 +3254,7 @@ namespace NetRadio
                 ProcessStartInfo psi = new("mmsys.cpl") { UseShellExecute = true, WorkingDirectory = Environment.SystemDirectory };
                 Process.Start(psi);
             }
-            catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { MessageBox.Show(ex.Message, appName, MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+            catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { Utilities.ErrorMsgTaskDlg(Handle, ex.Message, appName); }
         }
 
         private void FrmMain_Activated(object sender, EventArgs e)
@@ -3231,22 +3302,22 @@ namespace NetRadio
 
         private void HistoyClearButton_Click(object sender, EventArgs e)
         {
-            historyListView.Items.Clear();
+            historyLV.Items.Clear();
             historyExportButton.Enabled = histoyClearButton.Enabled = false;
             HistoryListView_SetDefaultColumnWidth();
-            historyListView.Refresh();
+            historyLV.Refresh();
             TPHistory_SetStatusBarText();
         }
 
         private void HistoryExportButton_Click(object sender, EventArgs e)
         {
-            saveFileDialog.FileName = appName + "_" + DateTime.Now.ToString("yyyyMMdd-hhmmss") + ".csv";
+            if (historyLV.Items.Count == 0) { return; }
+            saveFileDialog.FileName = appName + "_" + DateTime.Now.ToString(shortDateFormat) + ".csv";
             if (saveFileDialog.ShowDialog() == DialogResult.OK)
             {
-                StringBuilder result = new();
-                Utilities.WriteCSVRow(result, historyListView.Columns.Count, i => historyListView.Columns[i].Width > 0, i => historyListView.Columns[i].Text);
-                foreach (ListViewItem listItem in historyListView.Items) { Utilities.WriteCSVRow(result, historyListView.Columns.Count, i => historyListView.Columns[i].Width > 0, i => listItem.SubItems[i].Text); }
-                File.WriteAllText(saveFileDialog.FileName, result.ToString());
+                Utilities.SortHistoryNormal(historyLV, lviComparer, lvSortOrderArray);
+                HistoryListView2CsvFile(saveFileDialog.FileName);
+                loadHistoryBtn.Enabled = delAllHistoriesBtn.Enabled = true;
             }
         }
 
@@ -3255,22 +3326,26 @@ namespace NetRadio
             if (cbLogHistory.Focused)
             {
                 if (cbLogHistory.Checked) { logHistory = true; }
-                else { logHistory = false; }
+                else
+                {
+                    logHistory = false;
+                    numUpDnSaveHistory.Value = 0;
+                }
                 somethingToSave = true;
             }
         }
 
         private void HistoryListView_SetDefaultColumnWidth()
         {
-            historyListView.Columns[0].Width = 60;
-            historyListView.Columns[1].Width = 80;
-            if (!NativeMethods.VerticalScrollbarVisible(historyListView)) { historyListView.Columns[2].Width = historyListView.Width - historyListView.Columns[0].Width - historyListView.Columns[1].Width - 4; }
-            else { historyListView.Columns[2].Width = historyListView.Width - historyListView.Columns[0].Width - historyListView.Columns[1].Width - SystemInformation.VerticalScrollBarWidth - 5; }
+            historyLV.Columns[0].Width = 60;
+            historyLV.Columns[1].Width = 80;
+            if (!NativeMethods.VerticalScrollbarVisible(historyLV)) { historyLV.Columns[2].Width = historyLV.Width - historyLV.Columns[0].Width - historyLV.Columns[1].Width - 4; }
+            else { historyLV.Columns[2].Width = historyLV.Width - historyLV.Columns[0].Width - historyLV.Columns[1].Width - SystemInformation.VerticalScrollBarWidth - 5; }
         }
 
         private void HistoryListView_ColumnClick(object sender, ColumnClickEventArgs e)
         {
-            if (historyListView.Items.Count > 0)
+            if (historyLV.Items.Count > 0)
             {
                 if (!string.IsNullOrEmpty(lvSortOrderArray[e.Column]) && lvSortOrderArray[e.Column].Equals("Ascending"))
                 {
@@ -3288,15 +3363,15 @@ namespace NetRadio
                     lvSortOrderArray[e.Column] = "Ascending";
                 }
                 lviComparer.SortColumn = e.Column;
-                historyListView.Refresh(); // Arrows auf anderen ColumnHeader-Buttons werden entfernt
-                historyListView.Sort();
+                historyLV.Refresh(); // Arrows auf anderen ColumnHeader-Buttons werden entfernt
+                historyLV.Sort();
             }
         }
 
         private void ContextMenuDisplay_Opening(object sender, CancelEventArgs e)
         {
-            if (ActiveControl != null && ActiveControl == historyListView && historyListView.SelectedItems.Count <= 0) { e.Cancel = true; }
-            else if (ActiveControl != null && ActiveControl != historyListView) { tSMItemListViewDeleteEntry.Visible = tsSepListViewDeleteEntry.Visible = false; }
+            if (ActiveControl != null && ActiveControl == historyLV && historyLV.SelectedItems.Count <= 0) { e.Cancel = true; }
+            else if (ActiveControl != null && ActiveControl != historyLV) { tSMItemListViewDeleteEntry.Visible = tsSepListViewDeleteEntry.Visible = false; }
             else { tSMItemListViewDeleteEntry.Visible = tsSepListViewDeleteEntry.Visible = true; }
         }
 
@@ -3311,7 +3386,7 @@ namespace NetRadio
             ControlPaint.DrawBorder3D(e.Graphics, rect, Border3DStyle.RaisedOuter);
             using SolidBrush foreBrush = new(Color.White);
             StringFormat stringFormat = Utilities.GetStringFormat(e.Header.TextAlign); // Translate e.Header.TextAlign value ('HorizontalAlignment' with values of Right, Center, Left).
-            rect.X += MouseButtons == MouseButtons.Left && rect.Contains(historyListView.PointToClient(MousePosition)) ? 6 : 4;
+            rect.X += MouseButtons == MouseButtons.Left && rect.Contains(historyLV.PointToClient(MousePosition)) ? 6 : 4;
             string sortArrow = lviComparer.SortColumn == e.ColumnIndex ? !string.IsNullOrEmpty(lvSortOrderArray[e.ColumnIndex]) && lvSortOrderArray[e.ColumnIndex].Equals("Ascending") ? " ↓" : " ↑" : ""; // ▲▼
                                                                                                                                                                                                            //string sortArrow = string.Empty;
             e.Graphics.DrawString(e.Header.Text + sortArrow, e.Font, foreBrush, rect, stringFormat);
@@ -3321,23 +3396,16 @@ namespace NetRadio
 
         private void TpHistory_Leave(object sender, EventArgs e)
         {
-            if (logHistory && historyListView.Items.Count > 0)
-            {
-                HistoryListView_SetDefaultColumnWidth(); // wg. Tooltip LongSubItemText
-                lviComparer.SortColumn = 0;
-                lviComparer.Order = SortOrder.Descending;
-                historyListView.Sort(); // MessageBox.Show(historyListView.TopItem.Tag.ToString()); // 2023-04-14T12:59:06.3463796Z
-                lvSortOrderArray[0] = "Descending";
-            }
+            if (logHistory && historyLV.Items.Count > 0) { Utilities.SortHistoryNormal(historyLV, lviComparer, lvSortOrderArray); }
         }
         private void TSMItemListViewDeleteEntry_Click(object sender, EventArgs e)
         {
-            int index = historyListView.Items.IndexOf(historyListView.SelectedItems[0]);
-            historyListView.Items.RemoveAt(index);
+            int index = historyLV.Items.IndexOf(historyLV.SelectedItems[0]);
+            historyLV.Items.RemoveAt(index);
             if (index > 0)
             {
-                historyListView.Items[index - 1].Selected = true;
-                historyListView.SelectedItems[0].Focused = true;
+                historyLV.Items[index - 1].Selected = true;
+                historyLV.SelectedItems[0].Focused = true;
             }
         }
 
@@ -3345,40 +3413,40 @@ namespace NetRadio
         {
             if (e.Button == MouseButtons.Right)
             {
-                if (historyListView.FocusedItem != null)
+                if (historyLV.FocusedItem != null)
                 {
-                    historyListView.SelectedItems.Clear(); // nur 1 Eintrag soll bei Rechtsklick selected sein
-                    historyListView.Items[historyListView.FocusedItem.Index].Selected = true;
+                    historyLV.SelectedItems.Clear(); // nur 1 Eintrag soll bei Rechtsklick selected sein
+                    historyLV.Items[historyLV.FocusedItem.Index].Selected = true;
                 }
             }
         }
 
         private void HistoryListView_KeyDown(object sender, KeyEventArgs e)
         {
-            int focussedIndex = historyListView.FocusedItem != null ? historyListView.FocusedItem.Index : -1;
-            int selectedCount = historyListView.SelectedItems.Count;
+            int focussedIndex = historyLV.FocusedItem != null ? historyLV.FocusedItem.Index : -1;
+            int selectedCount = historyLV.SelectedItems.Count;
             if (e.KeyCode == Keys.Delete && focussedIndex >= 0)
             {
                 if (selectedCount >= 1)
                 {
-                    historyListView.BeginUpdate();
-                    int lastIndex = historyListView.Items.IndexOf(historyListView.SelectedItems[0]);
-                    for (int i = selectedCount - 1; i >= 0; i--) { historyListView.Items.RemoveAt(historyListView.SelectedIndices[i]); }
-                    if (historyListView.Items.Count > 0)
+                    historyLV.BeginUpdate();
+                    int lastIndex = historyLV.Items.IndexOf(historyLV.SelectedItems[0]);
+                    for (int i = selectedCount - 1; i >= 0; i--) { historyLV.Items.RemoveAt(historyLV.SelectedIndices[i]); }
+                    if (historyLV.Items.Count > 0)
                     {
-                        historyListView.Items[lastIndex <= historyListView.Items.Count && lastIndex > 0 ? lastIndex - 1 : 0].Selected = true;
-                        historyListView.SelectedItems[0].Focused = true;
+                        historyLV.Items[lastIndex <= historyLV.Items.Count && lastIndex > 0 ? lastIndex - 1 : 0].Selected = true;
+                        historyLV.SelectedItems[0].Focused = true;
                     }
-                    else if (historyListView.Items.Count == 0) { histoyClearButton.Enabled = historyExportButton.Enabled = false; }
-                    historyListView.EndUpdate();
+                    else if (historyLV.Items.Count == 0) { histoyClearButton.Enabled = historyExportButton.Enabled = false; }
+                    historyLV.EndUpdate();
                 }
                 else { Console.Beep(); }
             }
             else if (e.KeyCode == Keys.A && e.Modifiers == Keys.Control)
             {
-                historyListView.BeginUpdate();
-                foreach (ListViewItem item in historyListView.Items) { item.Selected = true; }
-                historyListView.EndUpdate();
+                historyLV.BeginUpdate();
+                foreach (ListViewItem item in historyLV.Items) { item.Selected = true; }
+                historyLV.EndUpdate();
             }
         }
 
@@ -3622,7 +3690,7 @@ namespace NetRadio
                 ProcessStartInfo psi = new("https://github.com/ophthalmos/NetRadio") { UseShellExecute = true };
                 Process.Start(psi);
             }
-            catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { MessageBox.Show(ex.Message, appName, MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+            catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { Utilities.ErrorMsgTaskDlg(Handle, ex.Message, appName); }
         }
 
         private void PbLevel_Click(object sender, EventArgs e) { if (timerLevel.Enabled) { tcMain.SelectedIndex = 6; } }
@@ -3634,7 +3702,7 @@ namespace NetRadio
                 ProcessStartInfo psi = new("https://www.gnu.org/licenses/") { UseShellExecute = true };
                 Process.Start(psi);
             }
-            catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { MessageBox.Show(ex.Message, appName, MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+            catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { Utilities.ErrorMsgTaskDlg(Handle, ex.Message, appName); }
         }
 
         private void DgvStations_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
@@ -3806,43 +3874,72 @@ namespace NetRadio
             try
             {
                 using StreamWriter writer = new(logPath, true, Encoding.UTF8); // Datei erstellen oder öffnen
-                writer.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " | " + message); // Ereignisprotokollieren
+                writer.WriteLine(DateTime.Now.ToString(shortDateFormat) + " | " + message); // Ereignisprotokollieren
                 writer.Flush();
             }
             catch { }
         }
 
-        //private void tcMain_DrawItem(object sender, DrawItemEventArgs e)
-        //{
-        //    if (e.Index == 7)
-        //    {
-        //        Color cColor = Color.LightPink;
-        //        using (Brush br = new SolidBrush(cColor))
-        //        {
-        //            e.Graphics.FillRectangle(br, e.Bounds);
-        //            SizeF sz = e.Graphics.MeasureString(tcMain.TabPages[e.Index].Text, e.Font);
-        //            e.Graphics.DrawString(tcMain.TabPages[e.Index].Text, e.Font, Brushes.Black, e.Bounds.Left + (e.Bounds.Width - sz.Width) / 2, e.Bounds.Top + (e.Bounds.Height - sz.Height) / 2 + 1);
+        private void LoadHistoryBtn_Click(object sender, EventArgs e)
+        {
+            SaveHistory(); // Sortiert Liste normal (nach Datum)
+            openFileDialog.InitialDirectory = Path.GetDirectoryName(xmlPath);
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    historyLV.Items.Clear();
+                    string fileName = Path.GetFileName(openFileDialog.FileName);
+                    using StreamReader sr = new(openFileDialog.FileName);
+                    sr.ReadLine(); // Überspringe die erste Zeile (Header)
+                    string[] values;
+                    ListViewItem item;
+                    while (!sr.EndOfStream)
+                    {
+                        values = sr.ReadLine().Split(';');
+                        DateTime time = DateTime.ParseExact(values[0].Trim('"'), readDateFormat, CultureInfo.InvariantCulture);
+                        item = new ListViewItem(time.ToString("HH:mm:ss")) { Tag = time.ToString(longDateFormat) };
+                        for (int i = 1; i < values.Length; i++) { item.SubItems.Add(values[i].Trim('"')); }
+                        item.ToolTipText = item.SubItems[1].Text;
+                        historyLV.Items.Add(item);
+                    }
+                    histoyClearButton.Enabled = historyExportButton.Enabled = historyLV.Items.Count > 0; // falls "leere" Datei importiert wurde
+                }
+                catch (Exception ex) { Utilities.ErrorMsgTaskDlg(Handle, ex.Message, appName + " - LoadHistory"); }
+                finally { TPHistory_SetStatusBarText(); }
+            }
+        }
 
-        //            Rectangle rect = e.Bounds;
-        //            rect.Offset(0, 1);
-        //            rect.Inflate(0, -1);
-        //            e.Graphics.DrawRectangle(Pens.DarkGray, rect);
-        //            e.DrawFocusRectangle();
-        //        }
-        //    }
-        //    else
-        //    {
-        //        e.DrawBackground();
-        //        Color color; Color tabTextColor;
-        //        if (e.Index == tcMain.SelectedIndex)
-        //            color = Color.White;
-        //        else
-        //        {
-        //            tabTextColor = Color.FromArgb(0x000001);
-        //            color = Color.FromArgb(tabTextColor.R, tabTextColor.G, tabTextColor.B);
-        //        }
-        //        TextRenderer.DrawText(e.Graphics, tcMain.TabPages[e.Index].Text, e.Font, e.Bounds, color);
-        //    }
-        //}
+        private void DelAllHistoriesBtn_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string[] files = Directory.GetFiles(Path.GetDirectoryName(xmlPath), appName + "_*.csv");
+                if (files.Length > 0)
+                {
+                    TaskDialogButton deleteButton = new("&Delete");
+                    string heading = "Do you want to delete " + (files.Length > 1 ? "these files?" : "this file?");
+                    if (TaskDialog.ShowDialog(this, new TaskDialogPage()
+                    {
+                        Caption = appName,
+                        Heading = heading,
+                        Text = string.Join(Environment.NewLine, files),
+                        Buttons = { TaskDialogButton.Cancel, deleteButton }
+                    }) == deleteButton)
+                    {
+                        foreach (string file in files) { File.Delete(file); }
+                        loadHistoryBtn.Enabled = delAllHistoriesBtn.Enabled = false;
+                    }
+                }
+            }
+            catch (Exception ex) { Utilities.ErrorMsgTaskDlg(Handle, ex.Message, appName); }
+        }
+
+        private void NumUpDnSaveHistory_ValueChanged(object sender, EventArgs e)
+        {
+            if (numUpDnSaveHistory.Focused) { somethingToSave = true; }
+            if (numUpDnSaveHistory.Value > 0) { cbLogHistory.Checked = logHistory = true; }
+        }
+
     }
 }
