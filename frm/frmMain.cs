@@ -2120,7 +2120,7 @@ namespace NetRadio
         }
 
         private void FrmMain_HelpRequested(object sender, HelpEventArgs hlpevent)
-        {// Das HelpRequested-Ereignis wird ausgelöst, wenn der Benutzer F1 drückt
+        {// Das HelpRequested-Ereignis wird ausgelöst, wenn der Benutzer F1 drückt 
             if (helpRequested)
             {
                 hlpevent.Handled = true;
