@@ -1,5 +1,5 @@
 #define MyAppName "NetRadio"
-#define MyAppVersion "2.5.4.3"
+#define MyAppVersion "2.5.5.0"
 #pragma include __INCLUDE__ + ";" + "C:\Program Files (x86)\Inno Download Plugin"
 #include <idp.iss>
 

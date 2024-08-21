@@ -14,10 +14,10 @@
     <StartupObject>NetRadio.Program</StartupObject>
     <Title>NetRadio</Title>
     <Description>NetRadio</Description>
-    <AssemblyVersion>2.5.4.3</AssemblyVersion>
-    <FileVersion>2.5.4.3</FileVersion>
+    <AssemblyVersion>2.5.5.0</AssemblyVersion>
+    <FileVersion>2.5.5.0</FileVersion>
     <Copyright>(c) 2024 by W. Happe, GPL v3</Copyright>
-    <Version>2.5.4</Version>
+    <Version>2.5.5</Version>
     <GenerateResourceWarnOnBinaryFormatterUse>false</GenerateResourceWarnOnBinaryFormatterUse>
     <SupportedOSPlatformVersion>8.0</SupportedOSPlatformVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -53,6 +53,11 @@
 
   <ItemGroup>
     <Compile Remove="cls\clsDarkMode.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="RadioMaster.exe.lnk" />
+    <None Remove="RetterNetRadio.iss" />
   </ItemGroup>
 
   <ItemGroup>

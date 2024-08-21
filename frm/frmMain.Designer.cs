@@ -117,7 +117,7 @@ namespace NetRadio
             toolStripSeparator1 = new ToolStripSeparator();
             searchStationToolStripMenuItem = new ToolStripMenuItem();
             tpHistory = new TabPage();
-            historyListView = new ListView();
+            historyLV = new ListView();
             chDate = new ColumnHeader();
             chStation = new ColumnHeader();
             chSong = new ColumnHeader();
@@ -127,6 +127,11 @@ namespace NetRadio
             tsSepListViewDeleteEntry = new ToolStripSeparator();
             tSMItemListViewDeleteEntry = new ToolStripMenuItem();
             historyPanel = new Panel();
+            numUpDnSaveHistory = new NumericUpDown();
+            loadHistoryBtn = new Button();
+            delAllHistoriesBtn = new Button();
+            lblSaveHistory2 = new Label();
+            lblSaveHistory1 = new Label();
             historyExportButton = new Button();
             histoyClearButton = new Button();
             cbLogHistory = new CheckBox();
@@ -251,6 +256,8 @@ namespace NetRadio
             saveFileDialog = new SaveFileDialog();
             timer1 = new Timer(components);
             timerResume = new Timer(components);
+            openFileDialog = new OpenFileDialog();
+            gbxModeSettings = new GroupBox();
             tcMain.SuspendLayout();
             tpPlayer.SuspendLayout();
             contextMenuPlayer.SuspendLayout();
@@ -264,6 +271,7 @@ namespace NetRadio
             tpHistory.SuspendLayout();
             contextMenuDisplay.SuspendLayout();
             historyPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)numUpDnSaveHistory).BeginInit();
             tpSettings.SuspendLayout();
             panel1.SuspendLayout();
             gbAutoRecord.SuspendLayout();
@@ -283,6 +291,7 @@ namespace NetRadio
             spectrumPanel.SuspendLayout();
             statusStrip.SuspendLayout();
             contextMenuTrayIcon.SuspendLayout();
+            gbxModeSettings.SuspendLayout();
             SuspendLayout();
             // 
             // tcMain
@@ -1404,7 +1413,7 @@ namespace NetRadio
             // 
             // tpHistory
             // 
-            tpHistory.Controls.Add(historyListView);
+            tpHistory.Controls.Add(historyLV);
             tpHistory.Controls.Add(historyPanel);
             tpHistory.ImageIndex = 2;
             tpHistory.Location = new System.Drawing.Point(4, 29);
@@ -1415,26 +1424,26 @@ namespace NetRadio
             tpHistory.UseVisualStyleBackColor = true;
             tpHistory.Leave += TpHistory_Leave;
             // 
-            // historyListView
+            // historyLV
             // 
-            historyListView.Columns.AddRange(new ColumnHeader[] { chDate, chStation, chSong });
-            historyListView.ContextMenuStrip = contextMenuDisplay;
-            historyListView.Dock = DockStyle.Fill;
-            historyListView.FullRowSelect = true;
-            historyListView.Location = new System.Drawing.Point(0, 0);
-            historyListView.Name = "historyListView";
-            historyListView.OwnerDraw = true;
-            historyListView.ShowItemToolTips = true;
-            historyListView.Size = new System.Drawing.Size(395, 301);
-            historyListView.TabIndex = 1;
-            historyListView.UseCompatibleStateImageBehavior = false;
-            historyListView.View = View.Details;
-            historyListView.ColumnClick += HistoryListView_ColumnClick;
-            historyListView.DrawColumnHeader += HistoryListView_DrawColumnHeader;
-            historyListView.DrawItem += HistoryListView_DrawItem;
-            historyListView.KeyDown += HistoryListView_KeyDown;
-            historyListView.MouseDoubleClick += HistoryListView_MouseDoubleClick;
-            historyListView.MouseDown += HistoryListView_MouseDown;
+            historyLV.Columns.AddRange(new ColumnHeader[] { chDate, chStation, chSong });
+            historyLV.ContextMenuStrip = contextMenuDisplay;
+            historyLV.Dock = DockStyle.Fill;
+            historyLV.FullRowSelect = true;
+            historyLV.Location = new System.Drawing.Point(0, 0);
+            historyLV.Name = "historyLV";
+            historyLV.OwnerDraw = true;
+            historyLV.ShowItemToolTips = true;
+            historyLV.Size = new System.Drawing.Size(395, 266);
+            historyLV.TabIndex = 1;
+            historyLV.UseCompatibleStateImageBehavior = false;
+            historyLV.View = View.Details;
+            historyLV.ColumnClick += HistoryListView_ColumnClick;
+            historyLV.DrawColumnHeader += HistoryListView_DrawColumnHeader;
+            historyLV.DrawItem += HistoryListView_DrawItem;
+            historyLV.KeyDown += HistoryListView_KeyDown;
+            historyLV.MouseDoubleClick += HistoryListView_MouseDoubleClick;
+            historyLV.MouseDown += HistoryListView_MouseDown;
             // 
             // chDate
             // 
@@ -1495,14 +1504,70 @@ namespace NetRadio
             // historyPanel
             // 
             historyPanel.BackColor = System.Drawing.SystemColors.Control;
+            historyPanel.Controls.Add(numUpDnSaveHistory);
+            historyPanel.Controls.Add(loadHistoryBtn);
+            historyPanel.Controls.Add(delAllHistoriesBtn);
+            historyPanel.Controls.Add(lblSaveHistory2);
+            historyPanel.Controls.Add(lblSaveHistory1);
             historyPanel.Controls.Add(historyExportButton);
             historyPanel.Controls.Add(histoyClearButton);
             historyPanel.Controls.Add(cbLogHistory);
             historyPanel.Dock = DockStyle.Bottom;
-            historyPanel.Location = new System.Drawing.Point(0, 301);
+            historyPanel.Location = new System.Drawing.Point(0, 266);
             historyPanel.Name = "historyPanel";
-            historyPanel.Size = new System.Drawing.Size(395, 36);
+            historyPanel.Size = new System.Drawing.Size(395, 71);
             historyPanel.TabIndex = 0;
+            // 
+            // numUpDnSaveHistory
+            // 
+            numUpDnSaveHistory.BorderStyle = BorderStyle.FixedSingle;
+            numUpDnSaveHistory.Location = new System.Drawing.Point(45, 39);
+            numUpDnSaveHistory.Maximum = new decimal(new int[] { 9, 0, 0, 0 });
+            numUpDnSaveHistory.Name = "numUpDnSaveHistory";
+            numUpDnSaveHistory.Size = new System.Drawing.Size(33, 25);
+            numUpDnSaveHistory.TabIndex = 7;
+            numUpDnSaveHistory.TextAlign = HorizontalAlignment.Center;
+            numUpDnSaveHistory.ValueChanged += NumUpDnSaveHistory_ValueChanged;
+            // 
+            // loadHistoryBtn
+            // 
+            loadHistoryBtn.Enabled = false;
+            loadHistoryBtn.Location = new System.Drawing.Point(280, 39);
+            loadHistoryBtn.Name = "loadHistoryBtn";
+            loadHistoryBtn.Size = new System.Drawing.Size(115, 29);
+            loadHistoryBtn.TabIndex = 10;
+            loadHistoryBtn.Text = "Load history…";
+            loadHistoryBtn.UseVisualStyleBackColor = true;
+            loadHistoryBtn.Click += LoadHistoryBtn_Click;
+            // 
+            // delAllHistoriesBtn
+            // 
+            delAllHistoriesBtn.Enabled = false;
+            delAllHistoriesBtn.Location = new System.Drawing.Point(158, 39);
+            delAllHistoriesBtn.Name = "delAllHistoriesBtn";
+            delAllHistoriesBtn.Size = new System.Drawing.Size(115, 29);
+            delAllHistoriesBtn.TabIndex = 9;
+            delAllHistoriesBtn.Text = "Delete all files…";
+            delAllHistoriesBtn.UseVisualStyleBackColor = true;
+            delAllHistoriesBtn.Click += DelAllHistoriesBtn_Click;
+            // 
+            // lblSaveHistory2
+            // 
+            lblSaveHistory2.AutoSize = true;
+            lblSaveHistory2.Location = new System.Drawing.Point(79, 41);
+            lblSaveHistory2.Name = "lblSaveHistory2";
+            lblSaveHistory2.Size = new System.Drawing.Size(60, 19);
+            lblSaveHistory2.TabIndex = 8;
+            lblSaveHistory2.Text = "histories";
+            // 
+            // lblSaveHistory1
+            // 
+            lblSaveHistory1.AutoSize = true;
+            lblSaveHistory1.Location = new System.Drawing.Point(7, 41);
+            lblSaveHistory1.Name = "lblSaveHistory1";
+            lblSaveHistory1.Size = new System.Drawing.Size(37, 19);
+            lblSaveHistory1.TabIndex = 5;
+            lblSaveHistory1.Text = "Save";
             // 
             // historyExportButton
             // 
@@ -1554,10 +1619,7 @@ namespace NetRadio
             // panel1
             // 
             panel1.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            panel1.Controls.Add(rbStartModeTray);
-            panel1.Controls.Add(rbStartModeMini);
-            panel1.Controls.Add(rbStartModeMain);
-            panel1.Controls.Add(labelStartMode);
+            panel1.Controls.Add(gbxModeSettings);
             panel1.Controls.Add(gbAutoRecord);
             panel1.Controls.Add(gbOutput);
             panel1.Controls.Add(gbMiscel);
@@ -1574,7 +1636,8 @@ namespace NetRadio
             // rbStartModeTray
             // 
             rbStartModeTray.AutoSize = true;
-            rbStartModeTray.Location = new System.Drawing.Point(298, 69);
+            rbStartModeTray.Font = new System.Drawing.Font("Segoe UI", 10F);
+            rbStartModeTray.Location = new System.Drawing.Point(265, 16);
             rbStartModeTray.Name = "rbStartModeTray";
             rbStartModeTray.Size = new System.Drawing.Size(91, 23);
             rbStartModeTray.TabIndex = 10;
@@ -1585,7 +1648,8 @@ namespace NetRadio
             // rbStartModeMini
             // 
             rbStartModeMini.AutoSize = true;
-            rbStartModeMini.Location = new System.Drawing.Point(204, 69);
+            rbStartModeMini.Font = new System.Drawing.Font("Segoe UI", 10F);
+            rbStartModeMini.Location = new System.Drawing.Point(168, 16);
             rbStartModeMini.Name = "rbStartModeMini";
             rbStartModeMini.Size = new System.Drawing.Size(91, 23);
             rbStartModeMini.TabIndex = 9;
@@ -1597,7 +1661,8 @@ namespace NetRadio
             // 
             rbStartModeMain.AutoSize = true;
             rbStartModeMain.Checked = true;
-            rbStartModeMain.Location = new System.Drawing.Point(92, 69);
+            rbStartModeMain.Font = new System.Drawing.Font("Segoe UI", 10F);
+            rbStartModeMain.Location = new System.Drawing.Point(53, 16);
             rbStartModeMain.Name = "rbStartModeMain";
             rbStartModeMain.Size = new System.Drawing.Size(109, 23);
             rbStartModeMain.TabIndex = 8;
@@ -1609,22 +1674,23 @@ namespace NetRadio
             // labelStartMode
             // 
             labelStartMode.AutoSize = true;
-            labelStartMode.Location = new System.Drawing.Point(9, 71);
+            labelStartMode.Font = new System.Drawing.Font("Segoe UI", 10F);
+            labelStartMode.Location = new System.Drawing.Point(6, 19);
             labelStartMode.Name = "labelStartMode";
-            labelStartMode.Size = new System.Drawing.Size(80, 19);
+            labelStartMode.Size = new System.Drawing.Size(41, 19);
             labelStartMode.TabIndex = 7;
-            labelStartMode.Text = "Start mode:";
+            labelStartMode.Text = "Start:";
             // 
             // gbAutoRecord
             // 
             gbAutoRecord.Controls.Add(cbActions);
             gbAutoRecord.Controls.Add(btnActions);
             gbAutoRecord.Font = new System.Drawing.Font("Segoe UI", 9F);
-            gbAutoRecord.Location = new System.Drawing.Point(266, 10);
+            gbAutoRecord.Location = new System.Drawing.Point(266, 6);
             gbAutoRecord.Margin = new Padding(4, 3, 4, 3);
             gbAutoRecord.Name = "gbAutoRecord";
             gbAutoRecord.Padding = new Padding(4, 3, 4, 3);
-            gbAutoRecord.Size = new System.Drawing.Size(121, 50);
+            gbAutoRecord.Size = new System.Drawing.Size(121, 48);
             gbAutoRecord.TabIndex = 6;
             gbAutoRecord.TabStop = false;
             gbAutoRecord.Text = "Scheduled tasks";
@@ -1633,7 +1699,7 @@ namespace NetRadio
             // 
             cbActions.AutoSize = true;
             cbActions.Font = new System.Drawing.Font("Segoe UI", 10F);
-            cbActions.Location = new System.Drawing.Point(8, 25);
+            cbActions.Location = new System.Drawing.Point(8, 23);
             cbActions.Margin = new Padding(4, 3, 4, 3);
             cbActions.Name = "cbActions";
             cbActions.Size = new System.Drawing.Size(15, 14);
@@ -1644,7 +1710,7 @@ namespace NetRadio
             // btnActions
             // 
             btnActions.Font = new System.Drawing.Font("Segoe UI", 10F);
-            btnActions.Location = new System.Drawing.Point(30, 18);
+            btnActions.Location = new System.Drawing.Point(30, 16);
             btnActions.Name = "btnActions";
             btnActions.Size = new System.Drawing.Size(84, 26);
             btnActions.TabIndex = 0;
@@ -1683,16 +1749,15 @@ namespace NetRadio
             // gbMiscel
             // 
             gbMiscel.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            gbMiscel.Controls.Add(cbClose2Tray);
             gbMiscel.Controls.Add(cbAutoStopRecording);
             gbMiscel.Controls.Add(cbShowBalloonTip);
             gbMiscel.Controls.Add(cbAlwaysOnTop);
             gbMiscel.Font = new System.Drawing.Font("Segoe UI", 9F);
-            gbMiscel.Location = new System.Drawing.Point(9, 159);
+            gbMiscel.Location = new System.Drawing.Point(9, 188);
             gbMiscel.Margin = new Padding(4, 3, 4, 3);
             gbMiscel.Name = "gbMiscel";
             gbMiscel.Padding = new Padding(4, 3, 4, 3);
-            gbMiscel.Size = new System.Drawing.Size(379, 121);
+            gbMiscel.Size = new System.Drawing.Size(379, 93);
             gbMiscel.TabIndex = 2;
             gbMiscel.TabStop = false;
             gbMiscel.Text = "Miscellaneous";
@@ -1701,7 +1766,7 @@ namespace NetRadio
             // 
             cbClose2Tray.AutoSize = true;
             cbClose2Tray.Font = new System.Drawing.Font("Segoe UI", 10F);
-            cbClose2Tray.Location = new System.Drawing.Point(9, 45);
+            cbClose2Tray.Location = new System.Drawing.Point(8, 42);
             cbClose2Tray.Margin = new Padding(4, 3, 4, 3);
             cbClose2Tray.Name = "cbClose2Tray";
             cbClose2Tray.Size = new System.Drawing.Size(355, 23);
@@ -1714,7 +1779,7 @@ namespace NetRadio
             // 
             cbAutoStopRecording.AutoSize = true;
             cbAutoStopRecording.Font = new System.Drawing.Font("Segoe UI", 10F);
-            cbAutoStopRecording.Location = new System.Drawing.Point(9, 93);
+            cbAutoStopRecording.Location = new System.Drawing.Point(9, 67);
             cbAutoStopRecording.Margin = new Padding(4, 3, 4, 3);
             cbAutoStopRecording.Name = "cbAutoStopRecording";
             cbAutoStopRecording.Size = new System.Drawing.Size(329, 23);
@@ -1727,7 +1792,7 @@ namespace NetRadio
             // 
             cbShowBalloonTip.AutoSize = true;
             cbShowBalloonTip.Font = new System.Drawing.Font("Segoe UI", 10F);
-            cbShowBalloonTip.Location = new System.Drawing.Point(9, 69);
+            cbShowBalloonTip.Location = new System.Drawing.Point(9, 43);
             cbShowBalloonTip.Margin = new Padding(4, 3, 4, 3);
             cbShowBalloonTip.Name = "cbShowBalloonTip";
             cbShowBalloonTip.Size = new System.Drawing.Size(318, 23);
@@ -1740,7 +1805,7 @@ namespace NetRadio
             // 
             cbAlwaysOnTop.AutoSize = true;
             cbAlwaysOnTop.Font = new System.Drawing.Font("Segoe UI", 10F);
-            cbAlwaysOnTop.Location = new System.Drawing.Point(9, 21);
+            cbAlwaysOnTop.Location = new System.Drawing.Point(9, 19);
             cbAlwaysOnTop.Margin = new Padding(4, 3, 4, 3);
             cbAlwaysOnTop.Name = "cbAlwaysOnTop";
             cbAlwaysOnTop.Size = new System.Drawing.Size(270, 23);
@@ -1753,11 +1818,11 @@ namespace NetRadio
             // 
             gbAutostart.Controls.Add(cbAutostart);
             gbAutostart.Font = new System.Drawing.Font("Segoe UI", 9F);
-            gbAutostart.Location = new System.Drawing.Point(141, 10);
+            gbAutostart.Location = new System.Drawing.Point(141, 6);
             gbAutostart.Margin = new Padding(4, 3, 4, 3);
             gbAutostart.Name = "gbAutostart";
             gbAutostart.Padding = new Padding(4, 3, 4, 3);
-            gbAutostart.Size = new System.Drawing.Size(116, 50);
+            gbAutostart.Size = new System.Drawing.Size(116, 48);
             gbAutostart.TabIndex = 0;
             gbAutostart.TabStop = false;
             gbAutostart.Text = "Autostart";
@@ -1766,7 +1831,7 @@ namespace NetRadio
             // 
             cbAutostart.AutoSize = true;
             cbAutostart.Font = new System.Drawing.Font("Segoe UI", 10F);
-            cbAutostart.Location = new System.Drawing.Point(8, 21);
+            cbAutostart.Location = new System.Drawing.Point(8, 19);
             cbAutostart.Margin = new Padding(4, 3, 4, 3);
             cbAutostart.Name = "cbAutostart";
             cbAutostart.Size = new System.Drawing.Size(106, 23);
@@ -1781,11 +1846,11 @@ namespace NetRadio
             gbPreselection.Controls.Add(lblAutostartStation);
             gbPreselection.Controls.Add(cmbxStation);
             gbPreselection.Font = new System.Drawing.Font("Segoe UI", 9F);
-            gbPreselection.Location = new System.Drawing.Point(9, 10);
+            gbPreselection.Location = new System.Drawing.Point(9, 6);
             gbPreselection.Margin = new Padding(4, 3, 4, 3);
             gbPreselection.Name = "gbPreselection";
             gbPreselection.Padding = new Padding(4, 3, 4, 3);
-            gbPreselection.Size = new System.Drawing.Size(123, 50);
+            gbPreselection.Size = new System.Drawing.Size(123, 48);
             gbPreselection.TabIndex = 0;
             gbPreselection.TabStop = false;
             gbPreselection.Text = "Autoplay";
@@ -1794,7 +1859,7 @@ namespace NetRadio
             // 
             lblAutostartStation.AutoSize = true;
             lblAutostartStation.Font = new System.Drawing.Font("Segoe UI", 10F);
-            lblAutostartStation.Location = new System.Drawing.Point(6, 22);
+            lblAutostartStation.Location = new System.Drawing.Point(6, 20);
             lblAutostartStation.Margin = new Padding(4, 0, 4, 0);
             lblAutostartStation.Name = "lblAutostartStation";
             lblAutostartStation.Size = new System.Drawing.Size(55, 19);
@@ -1808,7 +1873,7 @@ namespace NetRadio
             cmbxStation.Font = new System.Drawing.Font("Segoe UI", 10F);
             cmbxStation.FormattingEnabled = true;
             cmbxStation.Items.AddRange(new object[] { "", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25" });
-            cmbxStation.Location = new System.Drawing.Point(69, 19);
+            cmbxStation.Location = new System.Drawing.Point(69, 17);
             cmbxStation.Margin = new Padding(4, 3, 4, 3);
             cmbxStation.MaxLength = 1;
             cmbxStation.Name = "cmbxStation";
@@ -1823,11 +1888,11 @@ namespace NetRadio
             gbHotkeys.Controls.Add(cmbxHotkey);
             gbHotkeys.Controls.Add(cbHotkey);
             gbHotkeys.Font = new System.Drawing.Font("Segoe UI", 9F);
-            gbHotkeys.Location = new System.Drawing.Point(9, 103);
+            gbHotkeys.Location = new System.Drawing.Point(9, 135);
             gbHotkeys.Margin = new Padding(4, 3, 4, 3);
             gbHotkeys.Name = "gbHotkeys";
             gbHotkeys.Padding = new Padding(4, 3, 4, 3);
-            gbHotkeys.Size = new System.Drawing.Size(379, 50);
+            gbHotkeys.Size = new System.Drawing.Size(379, 48);
             gbHotkeys.TabIndex = 1;
             gbHotkeys.TabStop = false;
             gbHotkeys.Text = "Global hotkey";
@@ -1837,7 +1902,7 @@ namespace NetRadio
             lblHotkey.AutoSize = true;
             lblHotkey.Enabled = false;
             lblHotkey.Font = new System.Drawing.Font("Segoe UI", 10F);
-            lblHotkey.Location = new System.Drawing.Point(176, 22);
+            lblHotkey.Location = new System.Drawing.Point(176, 20);
             lblHotkey.Margin = new Padding(4, 0, 4, 0);
             lblHotkey.Name = "lblHotkey";
             lblHotkey.Size = new System.Drawing.Size(83, 19);
@@ -1852,7 +1917,7 @@ namespace NetRadio
             cmbxHotkey.Font = new System.Drawing.Font("Segoe UI", 10F);
             cmbxHotkey.FormattingEnabled = true;
             cmbxHotkey.Items.AddRange(new object[] { "", "A", "B", "C", "D", "E", "G", "H", "I", "J", "K", "L", "M", "N", "O", "Q", "R", "S", "T", "V", "W", "X", "Y", "Z" });
-            cmbxHotkey.Location = new System.Drawing.Point(264, 18);
+            cmbxHotkey.Location = new System.Drawing.Point(264, 16);
             cmbxHotkey.Margin = new Padding(4, 3, 4, 3);
             cmbxHotkey.MaxLength = 1;
             cmbxHotkey.Name = "cmbxHotkey";
@@ -1865,7 +1930,7 @@ namespace NetRadio
             // 
             cbHotkey.AutoSize = true;
             cbHotkey.Font = new System.Drawing.Font("Segoe UI", 10F);
-            cbHotkey.Location = new System.Drawing.Point(8, 20);
+            cbHotkey.Location = new System.Drawing.Point(8, 18);
             cbHotkey.Margin = new Padding(4, 3, 4, 3);
             cbHotkey.Name = "cbHotkey";
             cbHotkey.Size = new System.Drawing.Size(158, 23);
@@ -2250,7 +2315,7 @@ namespace NetRadio
             lblCredits.Name = "lblCredits";
             lblCredits.Size = new System.Drawing.Size(388, 72);
             lblCredits.TabIndex = 10;
-            lblCredits.Text = "Acknowledgments\r\nNetRadio uses libraries for streaming and audio playback:\r\nbass.dll © 1999-2022, Un4seen Developments Ltd.\r\nbass.net.dll © 2005-2022 by radio42, Hamburg, Germany";
+            lblCredits.Text = "Acknowledgments\r\nNetRadio uses libraries for streaming and audio playback:\r\nbass.dll © 1999-2022, Un4seen Developments Ltd.\r\nbass.net.dll © 2005-2023 by radio42, Hamburg, Germany";
             // 
             // lblHorizontalLine
             // 
@@ -2908,6 +2973,26 @@ namespace NetRadio
             timerResume.Interval = 1000;
             timerResume.Tick += TimerResume_Tick;
             // 
+            // openFileDialog
+            // 
+            openFileDialog.DefaultExt = "xml";
+            openFileDialog.Filter = "CSV Files|*.csv";
+            // 
+            // gbxModeSettings
+            // 
+            gbxModeSettings.Controls.Add(cbClose2Tray);
+            gbxModeSettings.Controls.Add(rbStartModeTray);
+            gbxModeSettings.Controls.Add(labelStartMode);
+            gbxModeSettings.Controls.Add(rbStartModeMini);
+            gbxModeSettings.Controls.Add(rbStartModeMain);
+            gbxModeSettings.Font = new System.Drawing.Font("Segoe UI", 9F);
+            gbxModeSettings.Location = new System.Drawing.Point(9, 59);
+            gbxModeSettings.Name = "gbxModeSettings";
+            gbxModeSettings.Size = new System.Drawing.Size(378, 71);
+            gbxModeSettings.TabIndex = 11;
+            gbxModeSettings.TabStop = false;
+            gbxModeSettings.Text = "Mode";
+            // 
             // FrmMain
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -2950,9 +3035,9 @@ namespace NetRadio
             contextMenuDisplay.ResumeLayout(false);
             historyPanel.ResumeLayout(false);
             historyPanel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)numUpDnSaveHistory).EndInit();
             tpSettings.ResumeLayout(false);
             panel1.ResumeLayout(false);
-            panel1.PerformLayout();
             gbAutoRecord.ResumeLayout(false);
             gbAutoRecord.PerformLayout();
             gbOutput.ResumeLayout(false);
@@ -2981,6 +3066,8 @@ namespace NetRadio
             statusStrip.ResumeLayout(false);
             statusStrip.PerformLayout();
             contextMenuTrayIcon.ResumeLayout(false);
+            gbxModeSettings.ResumeLayout(false);
+            gbxModeSettings.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -3133,7 +3220,7 @@ namespace NetRadio
         private ToolStripMenuItem controlToolStripMenuItem;
         private ToolStripSeparator toolStripSeparator9;
         private TabPage tpHistory;
-        private ListView historyListView;
+        private ListView historyLV;
         private ColumnHeader chDate;
         private ColumnHeader chStation;
         private ColumnHeader chSong;
@@ -3205,6 +3292,13 @@ namespace NetRadio
         private RadioButton rbStartModeTray;
         private RadioButton rbStartModeMini;
         private RadioButton rbStartModeMain;
+        private Label lblSaveHistory1;
+        private Label lblSaveHistory2;
+        private NumericUpDown numUpDnSaveHistory;
+        private Button loadHistoryBtn;
+        private Button delAllHistoriesBtn;
+        private OpenFileDialog openFileDialog;
+        private GroupBox gbxModeSettings;
     }
 }
 
