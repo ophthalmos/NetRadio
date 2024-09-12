@@ -190,7 +190,9 @@ namespace NetRadio
             }
             else
             {
-                MessageBox.Show("This application failed to start because bass.dll was not found.\nRe-installing the application may fix this problem.", appName, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                string strError = Utilities.GetErrorDescription(Bass.BASS_ErrorGetCode());
+                strError = string.IsNullOrEmpty(strError) ? "bass.dll was not found.\nRe-installing may fix this problem." : strError; 
+                MessageBox.Show(strError, appName, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 Environment.Exit(0); return;
             }
 
@@ -801,7 +803,7 @@ namespace NetRadio
                 "NetRadio uses libraries for streaming and audio playback:" + Environment.NewLine +
                 "bass.dll © 1999-2022, Un4seen Developments Ltd. (" + Bass.BASS_GetVersion(4) + ")" + Environment.NewLine +
                 //"bass_aac.dll © 2002-2012, Sebastian Andersson (" + fvi.FileMajorPart + "." + fvi.FileMinorPart + "." + fvi.FileBuildPart + "." + fvi.FilePrivatePart + ")" + Environment.NewLine +
-                "bass.net.dll © 2005-2022, radio42, B. Niedergesaess " + "(" + Utils.GetVersion() + ")";
+                "bass.net.dll © 2005-2023, radio42, B. Niedergesaess " + "(" + Utils.GetVersion() + ")";
             List<string> devicelist = new();
             int defaultDevice = -1;
             BASS_DEVICEINFO info; // = new BASS_DEVICEINFO();
@@ -2181,7 +2183,7 @@ namespace NetRadio
             Bass.BASS_Stop();
             Bass.BASS_Free();
             if (somethingToSave || radioBtnChanged) { SaveConfig(); }
-            if (numUpDnSaveHistory.Value > 0) { SaveHistory(); }
+            if (numUpDnSaveHistory.Value > 0) { SaveHistory(true); }
         }
 
         private void SaveConfig() // FrmMain_FormClosing | TcMain_SelectedIndexChanged
@@ -2298,20 +2300,25 @@ namespace NetRadio
             somethingToSave = false;
         }
 
-        private void SaveHistory()
+        private void SaveHistory(bool deleteFiles = false) // LoadHistoryBtn_Click und FrmMain_FormClosing
         {
             Utilities.SortHistoryNormal(historyLV, lviComparer, lvSortOrderArray);
             string filePath = Path.Combine(Path.GetDirectoryName(xmlPath), appName + "_" + DateTime.Now.ToString(shortDateFormat) + ".csv");
             HistoryListView2CsvFile(filePath);
-            string folderPath = Path.GetDirectoryName(xmlPath);
-            string searchPattern = appName + "_*.csv";
-            try
+            if (deleteFiles)
             {
-                List<FileInfo> filesToDelete = ((List<FileInfo>)([.. Directory.GetFiles(folderPath, searchPattern).Select(f => new FileInfo(f)).
+                string folderPath = Path.GetDirectoryName(xmlPath);
+                string searchPattern = appName + "_*.csv";
+                try
+                {
+                    List<FileInfo> filesToDelete = ((List<FileInfo>)([.. Directory.GetFiles(folderPath, searchPattern).Select(f => new FileInfo(f)).
                     OrderByDescending(f => f.LastWriteTime)])).Skip((int)numUpDnSaveHistory.Value).ToList();
-                foreach (FileInfo file in filesToDelete) { file.Delete(); }
+                    foreach (FileInfo file in filesToDelete) { file.Delete(); }
+                    loadHistoryBtn.Enabled = delAllHistoriesBtn.Enabled = Directory.GetFiles(Path.GetDirectoryName(xmlPath), appName + "_*.csv").Length > 0;
+                }
+                catch (Exception ex) { Utilities.ErrorMsgTaskDlg(Handle, ex.Message, appName + " - SaveHistory"); }
+                finally { deleteFiles = false; }
             }
-            catch (Exception ex) { Utilities.ErrorMsgTaskDlg(Handle, ex.Message, appName + " - SaveHistory"); }
         }
 
         public void HistoryListView2CsvFile(string filePath)
