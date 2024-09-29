@@ -32,7 +32,7 @@ namespace NetRadio
         {
             components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmMain));
-            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
             tcMain = new TabControl();
             tpPlayer = new TabPage();
             rbtn25 = new RadioButton();
@@ -137,17 +137,18 @@ namespace NetRadio
             cbLogHistory = new CheckBox();
             tpSettings = new TabPage();
             panel1 = new Panel();
+            gbxModeSettings = new GroupBox();
+            cbClose2Tray = new CheckBox();
             rbStartModeTray = new RadioButton();
+            labelStartMode = new Label();
             rbStartModeMini = new RadioButton();
             rbStartModeMain = new RadioButton();
-            labelStartMode = new Label();
             gbAutoRecord = new GroupBox();
             cbActions = new CheckBox();
             btnActions = new Button();
             gbOutput = new GroupBox();
             cmbxOutput = new ComboBox();
             gbMiscel = new GroupBox();
-            cbClose2Tray = new CheckBox();
             cbAutoStopRecording = new CheckBox();
             cbShowBalloonTip = new CheckBox();
             cbAlwaysOnTop = new CheckBox();
@@ -257,7 +258,6 @@ namespace NetRadio
             timer1 = new Timer(components);
             timerResume = new Timer(components);
             openFileDialog = new OpenFileDialog();
-            gbxModeSettings = new GroupBox();
             tcMain.SuspendLayout();
             tpPlayer.SuspendLayout();
             contextMenuPlayer.SuspendLayout();
@@ -274,6 +274,7 @@ namespace NetRadio
             ((System.ComponentModel.ISupportInitialize)numUpDnSaveHistory).BeginInit();
             tpSettings.SuspendLayout();
             panel1.SuspendLayout();
+            gbxModeSettings.SuspendLayout();
             gbAutoRecord.SuspendLayout();
             gbOutput.SuspendLayout();
             gbMiscel.SuspendLayout();
@@ -291,7 +292,6 @@ namespace NetRadio
             spectrumPanel.SuspendLayout();
             statusStrip.SuspendLayout();
             contextMenuTrayIcon.SuspendLayout();
-            gbxModeSettings.SuspendLayout();
             SuspendLayout();
             // 
             // tcMain
@@ -1136,14 +1136,14 @@ namespace NetRadio
             dgvStations.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvStations.BackgroundColor = System.Drawing.SystemColors.ControlLightLight;
             dgvStations.ClipboardCopyMode = DataGridViewClipboardCopyMode.Disable;
-            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.ControlDark;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Segoe UI", 10F);
-            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.ControlDark;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.True;
-            dgvStations.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.ControlDark;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI", 10F);
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.ControlDark;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = DataGridViewTriState.True;
+            dgvStations.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             dgvStations.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             dgvStations.Columns.AddRange(new DataGridViewColumn[] { col1, col2 });
             dgvStations.ContextMenuStrip = contextMenuStations;
@@ -1633,6 +1633,34 @@ namespace NetRadio
             panel1.Size = new System.Drawing.Size(395, 337);
             panel1.TabIndex = 3;
             // 
+            // gbxModeSettings
+            // 
+            gbxModeSettings.Controls.Add(cbClose2Tray);
+            gbxModeSettings.Controls.Add(rbStartModeTray);
+            gbxModeSettings.Controls.Add(labelStartMode);
+            gbxModeSettings.Controls.Add(rbStartModeMini);
+            gbxModeSettings.Controls.Add(rbStartModeMain);
+            gbxModeSettings.Font = new System.Drawing.Font("Segoe UI", 9F);
+            gbxModeSettings.Location = new System.Drawing.Point(9, 59);
+            gbxModeSettings.Name = "gbxModeSettings";
+            gbxModeSettings.Size = new System.Drawing.Size(378, 71);
+            gbxModeSettings.TabIndex = 11;
+            gbxModeSettings.TabStop = false;
+            gbxModeSettings.Text = "Mode";
+            // 
+            // cbClose2Tray
+            // 
+            cbClose2Tray.AutoSize = true;
+            cbClose2Tray.Font = new System.Drawing.Font("Segoe UI", 10F);
+            cbClose2Tray.Location = new System.Drawing.Point(8, 42);
+            cbClose2Tray.Margin = new Padding(4, 3, 4, 3);
+            cbClose2Tray.Name = "cbClose2Tray";
+            cbClose2Tray.Size = new System.Drawing.Size(355, 23);
+            cbClose2Tray.TabIndex = 4;
+            cbClose2Tray.Text = "Close button minimizes to tray instead of terminating";
+            cbClose2Tray.UseVisualStyleBackColor = true;
+            cbClose2Tray.CheckedChanged += CbClose2Tray_CheckedChanged;
+            // 
             // rbStartModeTray
             // 
             rbStartModeTray.AutoSize = true;
@@ -1644,6 +1672,16 @@ namespace NetRadio
             rbStartModeTray.Text = "Tray mode";
             rbStartModeTray.UseVisualStyleBackColor = true;
             rbStartModeTray.CheckedChanged += RbStartMode_CheckedChanged;
+            // 
+            // labelStartMode
+            // 
+            labelStartMode.AutoSize = true;
+            labelStartMode.Font = new System.Drawing.Font("Segoe UI", 10F);
+            labelStartMode.Location = new System.Drawing.Point(6, 19);
+            labelStartMode.Name = "labelStartMode";
+            labelStartMode.Size = new System.Drawing.Size(41, 19);
+            labelStartMode.TabIndex = 7;
+            labelStartMode.Text = "Start:";
             // 
             // rbStartModeMini
             // 
@@ -1670,16 +1708,6 @@ namespace NetRadio
             rbStartModeMain.Text = "Main window";
             rbStartModeMain.UseVisualStyleBackColor = true;
             rbStartModeMain.CheckedChanged += RbStartMode_CheckedChanged;
-            // 
-            // labelStartMode
-            // 
-            labelStartMode.AutoSize = true;
-            labelStartMode.Font = new System.Drawing.Font("Segoe UI", 10F);
-            labelStartMode.Location = new System.Drawing.Point(6, 19);
-            labelStartMode.Name = "labelStartMode";
-            labelStartMode.Size = new System.Drawing.Size(41, 19);
-            labelStartMode.TabIndex = 7;
-            labelStartMode.Text = "Start:";
             // 
             // gbAutoRecord
             // 
@@ -1761,19 +1789,6 @@ namespace NetRadio
             gbMiscel.TabIndex = 2;
             gbMiscel.TabStop = false;
             gbMiscel.Text = "Miscellaneous";
-            // 
-            // cbClose2Tray
-            // 
-            cbClose2Tray.AutoSize = true;
-            cbClose2Tray.Font = new System.Drawing.Font("Segoe UI", 10F);
-            cbClose2Tray.Location = new System.Drawing.Point(8, 42);
-            cbClose2Tray.Margin = new Padding(4, 3, 4, 3);
-            cbClose2Tray.Name = "cbClose2Tray";
-            cbClose2Tray.Size = new System.Drawing.Size(355, 23);
-            cbClose2Tray.TabIndex = 4;
-            cbClose2Tray.Text = "Close button minimizes to tray instead of terminating";
-            cbClose2Tray.UseVisualStyleBackColor = true;
-            cbClose2Tray.CheckedChanged += CbClose2Tray_CheckedChanged;
             // 
             // cbAutoStopRecording
             // 
@@ -2978,21 +2993,6 @@ namespace NetRadio
             openFileDialog.DefaultExt = "xml";
             openFileDialog.Filter = "CSV Files|*.csv";
             // 
-            // gbxModeSettings
-            // 
-            gbxModeSettings.Controls.Add(cbClose2Tray);
-            gbxModeSettings.Controls.Add(rbStartModeTray);
-            gbxModeSettings.Controls.Add(labelStartMode);
-            gbxModeSettings.Controls.Add(rbStartModeMini);
-            gbxModeSettings.Controls.Add(rbStartModeMain);
-            gbxModeSettings.Font = new System.Drawing.Font("Segoe UI", 9F);
-            gbxModeSettings.Location = new System.Drawing.Point(9, 59);
-            gbxModeSettings.Name = "gbxModeSettings";
-            gbxModeSettings.Size = new System.Drawing.Size(378, 71);
-            gbxModeSettings.TabIndex = 11;
-            gbxModeSettings.TabStop = false;
-            gbxModeSettings.Text = "Mode";
-            // 
             // FrmMain
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -3010,7 +3010,7 @@ namespace NetRadio
             MinimumSize = new System.Drawing.Size(419, 435);
             Name = "FrmMain";
             SizeGripStyle = SizeGripStyle.Hide;
-            StartPosition = FormStartPosition.CenterScreen;
+            StartPosition = FormStartPosition.Manual;
             Text = "NetRadio";
             HelpButtonClicked += FrmMain_HelpButtonClicked;
             Activated += FrmMain_Activated;
@@ -3038,6 +3038,8 @@ namespace NetRadio
             ((System.ComponentModel.ISupportInitialize)numUpDnSaveHistory).EndInit();
             tpSettings.ResumeLayout(false);
             panel1.ResumeLayout(false);
+            gbxModeSettings.ResumeLayout(false);
+            gbxModeSettings.PerformLayout();
             gbAutoRecord.ResumeLayout(false);
             gbAutoRecord.PerformLayout();
             gbOutput.ResumeLayout(false);
@@ -3066,8 +3068,6 @@ namespace NetRadio
             statusStrip.ResumeLayout(false);
             statusStrip.PerformLayout();
             contextMenuTrayIcon.ResumeLayout(false);
-            gbxModeSettings.ResumeLayout(false);
-            gbxModeSettings.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }

@@ -81,7 +81,7 @@ namespace NetRadio
         private bool firstEmptyStart = false;
         private static bool close2Tray = false;
         private bool showBalloonTip = false;
-        private bool keepActionsActive;
+        private bool repeatActionsDaily;
         private float channelVolume = 1.0f;
         private readonly int stationSum = 25; // Rows = stationSum * 2
         private static HttpClient httpClient;
@@ -130,6 +130,7 @@ namespace NetRadio
         private readonly string longDateFormat = "yyyyMMddHHmmssfff";      // lastUpdateTime, ListViewItem.Tag (CListViewItemComparer)
         private readonly string shortDateFormat = "yyyyMMdd-HHmmss";      // LogEvent, _downloadFileName, historyFile
         private Version updateVersion = null;
+        private string formPosX, formPosY, miniPosX, miniPosY;
 
         public FrmMain()
         {
@@ -144,10 +145,10 @@ namespace NetRadio
             timerAction7.Tick += new EventHandler(OnTimedEvent);
             timerAction8.Tick += new EventHandler(OnTimedEvent);
             statusStrip.Renderer = new AutoEllipsisToolStripRenderer();
-            string formPosX = string.Empty;
-            string formPosY = string.Empty;
-            string miniPosX = string.Empty;
-            string miniPosY = string.Empty;
+            //string formPosX = string.Empty;
+            //string formPosY = string.Empty;
+            //string miniPosX = string.Empty;
+            //string miniPosY = string.Empty;
             _myUserAgentPtr = Marshal.StringToHGlobalAnsi(_myUserAgent);
             CreateLogFile();
             LogEvent(appName + ": Version " + _curVersion.ToString());
@@ -191,7 +192,7 @@ namespace NetRadio
             else
             {
                 string strError = Utilities.GetErrorDescription(Bass.BASS_ErrorGetCode());
-                strError = string.IsNullOrEmpty(strError) ? "bass.dll was not found.\nRe-installing may fix this problem." : strError; 
+                strError = string.IsNullOrEmpty(strError) ? "bass.dll was not found.\nRe-installing may fix this problem." : strError;
                 MessageBox.Show(strError, appName, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 Environment.Exit(0); return;
             }
@@ -348,10 +349,10 @@ namespace NetRadio
                                 if (intStation > 0 && intStation <= stationSum) { cmbxStation.Text = autostartStation = xtr.Value; }
                             }
                         }
-                        else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "KeepActionsActive")
+                        else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "RepeatActionsDaily")
                         {
                             xtr.MoveToAttribute("Enabled");
-                            if (int.TryParse(xtr.Value, out int intEnabeld)) { keepActionsActive = Convert.ToBoolean(Convert.ToInt16(intEnabeld)); }
+                            if (int.TryParse(xtr.Value, out int intEnabeld)) { repeatActionsDaily = Convert.ToBoolean(Convert.ToInt16(intEnabeld)); }
                         }
                         if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "Action")
                         {
@@ -381,7 +382,7 @@ namespace NetRadio
             }
             foreach (DataGridViewColumn column in dgvStations.Columns) { column.SortMode = DataGridViewColumnSortMode.NotSortable; }
 
-            if (keepActionsActive && tableActions.AsEnumerable().Any(row => row.Field<bool>("Enabled") == true)) { cbActions.Checked = true; }
+            if (tableActions.AsEnumerable().Any(row => row.Field<bool>("Enabled"))) { cbActions.Checked = true; }
 
             if (!logHistory) { numUpDnSaveHistory.Value = 0; } // numUpDnSaveHistory.Text = "0";
 
@@ -430,35 +431,6 @@ namespace NetRadio
             StatusStrip_SingleLabel(true, findNewStations);
             cbAutostart.Checked = Utilities.IsAutoStartEnabled(appName, "\"" + appPath + "\"" + " -min");
 
-            Rectangle screen = Screen.PrimaryScreen.WorkingArea;
-            if (int.TryParse(formPosX, out int xPos) && int.TryParse(formPosY, out int yPos))
-            {// MainForm komplett innerhalb der WorkingArea angezeigt werden
-                xPos = xPos < 0 ? 0
-                    : xPos + Width > screen.Width
-                    ? screen.Width - Width
-                    : xPos;
-                yPos = yPos < 0
-                    ? yPos = 0
-                    : yPos + Height > screen.Height
-                    ? yPos = screen.Height - Height
-                    : yPos;
-                Location = new Point(xPos, yPos);
-            } // else StartPosition = FormStartPosition.CenterScreen => s. Designer
-
-            if (int.TryParse(miniPosX, out int x_Pos) && int.TryParse(miniPosY, out int y_Pos))
-            {// MiniPlayer komplett innerhalb der WorkingArea angezeigt werden
-                x_Pos = x_Pos < 0 ? 0
-                    : x_Pos + miniPlayer.Width > screen.Width
-                    ? screen.Width - miniPlayer.Width
-                    : x_Pos;
-                y_Pos = y_Pos < 0
-                    ? y_Pos = 0
-                    : y_Pos + miniPlayer.Height > screen.Height
-                    ? y_Pos = screen.Height - miniPlayer.Height
-                    : y_Pos;
-                miniPlayer.Location = new Point(x_Pos, y_Pos);
-            }
-            else { miniPlayer.Location = Location; }
             historyLV.ListViewItemSorter = lviComparer;
             spectrumTimer.Tick += SpectrumTick;
             _netPreBuff = Bass.BASS_GetConfig(BASSConfig.BASS_CONFIG_NET_PREBUF) / 100f; // 0.75
@@ -883,6 +855,39 @@ namespace NetRadio
                 Console.Beep();
                 LogEvent("RegisterMediaKeys: failed");
             }
+
+
+            Rectangle screen = Screen.PrimaryScreen.WorkingArea;
+            if (int.TryParse(formPosX, out int xPos) && int.TryParse(formPosY, out int yPos)) // formPosX/Y ist string
+            {// MainForm komplett innerhalb der WorkingArea angezeigt werden
+                xPos = xPos < 0 ? 0
+                    : xPos + Width > screen.Width
+                    ? screen.Width - Width
+                    : xPos;
+                yPos = yPos < 0
+                    ? yPos = 0
+                    : yPos + Height > screen.Height
+                    ? yPos = screen.Height - Height
+                    : yPos;
+                //MessageBox.Show(xPos + "|" + yPos);
+                Location = new Point(xPos, yPos);
+            }
+            else { StartPosition = FormStartPosition.CenterScreen; } // => s. Designer
+
+            if (int.TryParse(miniPosX, out int x_Pos) && int.TryParse(miniPosY, out int y_Pos))
+            {// MiniPlayer komplett innerhalb der WorkingArea angezeigt werden
+                x_Pos = x_Pos < 0 ? 0
+                    : x_Pos + miniPlayer.Width > screen.Width
+                    ? screen.Width - miniPlayer.Width
+                    : x_Pos;
+                y_Pos = y_Pos < 0
+                    ? y_Pos = 0
+                    : y_Pos + miniPlayer.Height > screen.Height
+                    ? y_Pos = screen.Height - miniPlayer.Height
+                    : y_Pos;
+                miniPlayer.Location = new Point(x_Pos, y_Pos);
+            }
+            else { miniPlayer.Location = Location; }
         }
 
         private void GlobalKeyboardHook_KeyDown(object sender, KeyEventArgs e)
@@ -1551,7 +1556,8 @@ namespace NetRadio
 
         private void UpdateCaption_lblD1(string caption) // BtnReset_Click | autoStartRadioButton | TcMain_SelectedIndexChanged | 
         {
-            miniPlayer.MpCmBxStations.Text = lblD1.Text = string.IsNullOrEmpty(caption) ? "" : Utilities.StationLong(caption); // Regex.Replace(caption, @"\s+", " "); // doppelte Leerzeichen entfernen
+            miniPlayer.MpCmBxStations.Text = string.IsNullOrEmpty(caption) ? "" : Utilities.StationLong(caption); // Regex.Replace(caption, @"\s+", " "); // doppelte Leerzeichen entfernen
+            lblD1.Text = string.IsNullOrEmpty(caption) ? "" : Utilities.StationLong(caption, true); // Regex.Replace(caption, @"\s+", " "); // doppelte Leerzeichen entfernen
         }
 
         private void RewriteButtonText() // initial FrmMain_Load und dann TcMain_SelectedIndexChanged 
@@ -1564,7 +1570,7 @@ namespace NetRadio
                 {
                     if (dgvStations.Rows[i - 1].Cells[0].Value != null)
                     {
-                        foundBtn.Text = Utilities.StationShort(dgvStations.Rows[i - 1].Cells[0].Value.ToString());
+                        foundBtn.Text = Utilities.StationShort(dgvStations.Rows[i - 1].Cells[0].Value.ToString(), true); // true = button
                         toolTip.SetToolTip(foundBtn, Utilities.StationLong(dgvStations.Rows[i - 1].Cells[0].Value.ToString()) + " (" + i + ")");
                         miniPlayer.MpCmBxStations.Items.Add(Utilities.StationLong(dgvStations.Rows[i - 1].Cells[0].Value.ToString()));
                     }
@@ -1576,7 +1582,7 @@ namespace NetRadio
                     foundBtn.Enabled = false;
                 }
             }
-            int index = miniPlayer.MpCmBxStations.FindStringExact(lblD1.Text);
+            int index = miniPlayer.MpCmBxStations.FindStringExact(lblD1.Text.Replace("&&", "&"));
             if (index >= 0 && miniPlayer.MpCmBxStations.SelectedIndex != index) { miniPlayer.MpCmBxStations.SelectedIndex = index; } // erforderlich nach Veränderungen an dgvStations.Rows[i - 1].Cells[0]
         }
 
@@ -1892,6 +1898,31 @@ namespace NetRadio
                 else { lblUpdate.Text = "Current version: " + _curVersion.ToString(); }
             }
             mainShown = true;
+
+            foreach (DataRow r in tableActions.Rows)
+            {
+                if (r.Field<string>("Task") == Utilities.TaskNames[6] && r.Field<bool>("Enabled") && (DateTime.Parse(r.Field<string>("Time")) - DateTime.Now > TimeSpan.Zero || repeatActionsDaily)) 
+                {
+                    TaskDialogButton btnCancel = TaskDialogButton.Continue;
+                    TaskDialogButton btnAction = new TaskDialogCommandLinkButton("Check the settings");
+                    TaskDialogPage taskDialogPage = new()
+                    {
+                        Icon = TaskDialogIcon.ShieldWarningYellowBar,
+                        Caption = appName,
+                        Heading = "Following task is active!",
+                        Text = "The computer will shutdown at " + r.Field<string>("Time") + ".",
+                        AllowCancel = true,
+                        Buttons = { btnCancel, btnAction },
+                        DefaultButton = btnCancel
+                    };
+                    if (TaskDialog.ShowDialog(this, taskDialogPage) == btnAction)
+                    {
+                        if (tcMain.SelectedTab != tpSettings) { tcMain.SelectedIndex = 3; } // Setting
+                        BtnActions_Click(null, null);
+                    }
+                    break;
+                }
+            }
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -2269,9 +2300,9 @@ namespace NetRadio
                 xw.WriteAttributeString("Station", autostartStation);
                 xw.WriteEndElement(); // für Autostart
 
-                xw.WriteStartElement("KeepActionsActive");
-                xw.WriteAttributeString("Enabled", keepActionsActive == true ? "1" : "0");
-                xw.WriteEndElement(); // für KeepActionsActive
+                xw.WriteStartElement("RepeatActionsDaily");
+                xw.WriteAttributeString("Enabled", repeatActionsDaily == true ? "1" : "0");
+                xw.WriteEndElement(); // für RepeatActionsDaily
 
                 for (int i = 0; i < tableActions.Rows.Count; ++i)
                 {
@@ -3471,21 +3502,21 @@ namespace NetRadio
             frmSchedules.ActionListView.Items.Clear();
             for (int j = 0; j < tableActions.Rows.Count; j++)
             {
-                frmSchedules.ActionListView.Items.Add(new ListViewItem(new string[] { "", tableActions.Rows[j][1].ToString(), tableActions.Rows[j][2].ToString(), tableActions.Rows[j][3].ToString() }));
+                frmSchedules.ActionListView.Items.Add(new ListViewItem(["", tableActions.Rows[j][1].ToString(), tableActions.Rows[j][2].ToString(), tableActions.Rows[j][3].ToString()]));
                 frmSchedules.ActionListView.Items[j].Checked = tableActions.Rows[j].Field<bool>("Enabled");
             }
             for (int l = frmSchedules.ActionListView.Items.Count; l < 9; l++) // mit Leerzeilen auffüllen - erspart Butte "Add" für neue Einträge
             {
-                frmSchedules.ActionListView.Items.Add(new ListViewItem(new string[] { "", "", "", "" }));
+                frmSchedules.ActionListView.Items.Add(new ListViewItem(["", "", "", ""]));
             }
             frmSchedules.ActionListView.Items[0].Selected = true;
-            frmSchedules.KeepActionsActive.Checked = keepActionsActive && tableActions.AsEnumerable().Any(row => row.Field<bool>("Enabled") == true);
+            frmSchedules.RepeatActionsDaily.Checked = repeatActionsDaily && tableActions.AsEnumerable().Any(row => row.Field<bool>("Enabled"));
             if (frmSchedules.ShowDialog() == DialogResult.OK)
             {
                 StopActions(); // erst jetzt weil alle Zeilen in tableActions auf not enabled (False) gesetzt werden
                 tableActions.Rows.Clear();
                 cbActions.Checked = false;
-                keepActionsActive = frmSchedules.KeepActionsActive.Checked;
+                repeatActionsDaily = frmSchedules.RepeatActionsDaily.Checked;
                 foreach (ListViewItem item in frmSchedules.ActionListView.Items) //for (int i = 0; i < frmSchedules.ActionListView.Items.Count; i++)
                 {
                     int columns = frmSchedules.ActionListView.Columns.Count;
@@ -3590,7 +3621,7 @@ namespace NetRadio
             else if (sender == timerAction8) { num = 7; }
             else if (sender == timerAction9) { num = 8; }
 
-            tableActions.Rows[num][0] = false; // Aufgabe deaktivieren
+            if (!repeatActionsDaily) { tableActions.Rows[num][0] = false; } // Aufgabe deaktivieren
             if (!tableActions.AsEnumerable().Any(row => row.Field<bool>("Enabled") == true)) { cbActions.Checked = false; }
 
             if (tcMain.SelectedIndex != 0) { tcMain.SelectedIndex = 0; }
@@ -3673,7 +3704,7 @@ namespace NetRadio
         private void CbActions_CheckedChanged(object sender, EventArgs e)
         {
             if (!cbActions.Checked && cbActions == ActiveControl) { StopActions(); }
-            else if (!tableActions.AsEnumerable().Any(row => row.Field<bool>("Enabled") == true)) { cbActions.Checked = false; }
+            else if (!tableActions.AsEnumerable().Any(row => row.Field<bool>("Enabled"))) { cbActions.Checked = false; }
         }
 
         private void StopActions()

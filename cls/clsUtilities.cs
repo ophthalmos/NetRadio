@@ -1,14 +1,10 @@
 ﻿using Microsoft.Win32; // Registry
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.Globalization;
-using System.IO;
 using System.Net;
 using System.Net.NetworkInformation;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
@@ -58,21 +54,21 @@ namespace NetRadio
             return new StringFormat() { Alignment = align, LineAlignment = StringAlignment.Center };
         }
 
-        public static string StationLong(string caption)
+        public static string StationLong(string caption, bool button = false)
         {
             caption = Regex.Replace(caption, @"[\[{].*\||[\[{](.*)[]}]", "$1");
             caption = caption.Replace("[", string.Empty).Replace("]", string.Empty);
             caption = caption.Replace("{", string.Empty).Replace("}", string.Empty);
-            caption = caption.Replace("&", "&&"); // & wird sonst als Akzelerator interpretiert (nächstes Zeichen wird unterstrichen)
+            if (button) { caption = caption.Replace("&", "&&"); } // & wird sonst als Akzelerator interpretiert (nächstes Zeichen wird unterstrichen)
             return Regex.Replace(caption, @"\s+", " "); // doppelte Leerzeichen entfernen
         }
 
-        public static string StationShort(string s)
+        public static string StationShort(string s, bool button = false)
         {
             s = Regex.Replace(s, @"[\[{]([^\]|}]*)\|.*[]}]", "$1"); // innerhalb geschweifter Klammern wird Part1 genommen
             s = Regex.Replace(s, @"[\[{][^\]|}]*[]}]", string.Empty); // Text innerhalb eckiger Klammern wird entfernt, Zwischebereich darf keine schließende Klammer enthalten [^\]]*; [ muss maskiert werden, ] nicht
             s = Regex.Replace(s, @"\s+", " "); // doppelte Leerzeichen entfernen
-            s = s.Replace("&", "&&"); // & wird sonst als Akzelerator interpretiert (nächstes Zeichen wird unterstrichen)
+            if (button) { s = s.Replace("&", "&&"); } // & wird sonst als Akzelerator interpretiert (nächstes Zeichen wird unterstrichen)
             Match m = Regex.Match(s, @"(.+? .+?) ");
             if (m.Success) { s = m.Groups[1].Value; } // Text nach dem 2. Leerzeichen wird abgeschnitten
             return s.Trim();
