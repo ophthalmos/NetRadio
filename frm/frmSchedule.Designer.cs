@@ -28,15 +28,15 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.ListViewItem listViewItem28 = new System.Windows.Forms.ListViewItem(new string[] { "", "", "", "" }, -1);
-            System.Windows.Forms.ListViewItem listViewItem29 = new System.Windows.Forms.ListViewItem(new string[] { "", "", "", "" }, -1);
-            System.Windows.Forms.ListViewItem listViewItem30 = new System.Windows.Forms.ListViewItem(new string[] { "", "", "", "" }, -1);
-            System.Windows.Forms.ListViewItem listViewItem31 = new System.Windows.Forms.ListViewItem(new string[] { "", "", "", "" }, -1);
-            System.Windows.Forms.ListViewItem listViewItem32 = new System.Windows.Forms.ListViewItem(new string[] { "", "", "", "" }, -1);
-            System.Windows.Forms.ListViewItem listViewItem33 = new System.Windows.Forms.ListViewItem(new string[] { "", "", "", "" }, -1);
-            System.Windows.Forms.ListViewItem listViewItem34 = new System.Windows.Forms.ListViewItem(new string[] { "", "", "", "" }, -1);
-            System.Windows.Forms.ListViewItem listViewItem35 = new System.Windows.Forms.ListViewItem(new string[] { "", "", "", "" }, -1);
-            System.Windows.Forms.ListViewItem listViewItem36 = new System.Windows.Forms.ListViewItem(new string[] { "", "", "", "" }, -1);
+            System.Windows.Forms.ListViewItem listViewItem1 = new System.Windows.Forms.ListViewItem(new string[] { "", "", "", "" }, -1);
+            System.Windows.Forms.ListViewItem listViewItem2 = new System.Windows.Forms.ListViewItem(new string[] { "", "", "", "" }, -1);
+            System.Windows.Forms.ListViewItem listViewItem3 = new System.Windows.Forms.ListViewItem(new string[] { "", "", "", "" }, -1);
+            System.Windows.Forms.ListViewItem listViewItem4 = new System.Windows.Forms.ListViewItem(new string[] { "", "", "", "" }, -1);
+            System.Windows.Forms.ListViewItem listViewItem5 = new System.Windows.Forms.ListViewItem(new string[] { "", "", "", "" }, -1);
+            System.Windows.Forms.ListViewItem listViewItem6 = new System.Windows.Forms.ListViewItem(new string[] { "", "", "", "" }, -1);
+            System.Windows.Forms.ListViewItem listViewItem7 = new System.Windows.Forms.ListViewItem(new string[] { "", "", "", "" }, -1);
+            System.Windows.Forms.ListViewItem listViewItem8 = new System.Windows.Forms.ListViewItem(new string[] { "", "", "", "" }, -1);
+            System.Windows.Forms.ListViewItem listViewItem9 = new System.Windows.Forms.ListViewItem(new string[] { "", "", "", "" }, -1);
             aLV = new System.Windows.Forms.ListView();
             chStatus = new System.Windows.Forms.ColumnHeader();
             chAction = new System.Windows.Forms.ColumnHeader();
@@ -46,7 +46,7 @@
             btnEdit = new System.Windows.Forms.Button();
             btnDelete = new System.Windows.Forms.Button();
             btnClose = new System.Windows.Forms.Button();
-            cbKeepActionsActive = new System.Windows.Forms.CheckBox();
+            cbRepeatActionsDaily = new System.Windows.Forms.CheckBox();
             lblRepeat = new System.Windows.Forms.Label();
             SuspendLayout();
             // 
@@ -56,16 +56,16 @@
             aLV.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] { chStatus, chAction, chStation, chTime });
             aLV.Dock = System.Windows.Forms.DockStyle.Top;
             aLV.FullRowSelect = true;
-            listViewItem28.StateImageIndex = 0;
-            listViewItem29.StateImageIndex = 0;
-            listViewItem30.StateImageIndex = 0;
-            listViewItem31.StateImageIndex = 0;
-            listViewItem32.StateImageIndex = 0;
-            listViewItem33.StateImageIndex = 0;
-            listViewItem34.StateImageIndex = 0;
-            listViewItem35.StateImageIndex = 0;
-            listViewItem36.StateImageIndex = 0;
-            aLV.Items.AddRange(new System.Windows.Forms.ListViewItem[] { listViewItem28, listViewItem29, listViewItem30, listViewItem31, listViewItem32, listViewItem33, listViewItem34, listViewItem35, listViewItem36 });
+            listViewItem1.StateImageIndex = 0;
+            listViewItem2.StateImageIndex = 0;
+            listViewItem3.StateImageIndex = 0;
+            listViewItem4.StateImageIndex = 0;
+            listViewItem5.StateImageIndex = 0;
+            listViewItem6.StateImageIndex = 0;
+            listViewItem7.StateImageIndex = 0;
+            listViewItem8.StateImageIndex = 0;
+            listViewItem9.StateImageIndex = 0;
+            aLV.Items.AddRange(new System.Windows.Forms.ListViewItem[] { listViewItem1, listViewItem2, listViewItem3, listViewItem4, listViewItem5, listViewItem6, listViewItem7, listViewItem8, listViewItem9 });
             aLV.Location = new System.Drawing.Point(10, 55);
             aLV.MultiSelect = false;
             aLV.Name = "aLV";
@@ -101,7 +101,7 @@
             // timerLabel
             // 
             timerLabel.Dock = System.Windows.Forms.DockStyle.Top;
-            timerLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            timerLabel.Font = new System.Drawing.Font("Segoe UI", 9F);
             timerLabel.Location = new System.Drawing.Point(10, 0);
             timerLabel.Name = "timerLabel";
             timerLabel.Padding = new System.Windows.Forms.Padding(0, 5, 0, 0);
@@ -139,27 +139,29 @@
             btnClose.Text = "Close";
             btnClose.UseVisualStyleBackColor = true;
             // 
-            // cbKeepActionsActive
+            // cbRepeatActionsDaily
             // 
-            cbKeepActionsActive.AutoSize = true;
-            cbKeepActionsActive.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            cbKeepActionsActive.Location = new System.Drawing.Point(16, 278);
-            cbKeepActionsActive.Name = "cbKeepActionsActive";
-            cbKeepActionsActive.Size = new System.Drawing.Size(248, 23);
-            cbKeepActionsActive.TabIndex = 7;
-            cbKeepActionsActive.Text = "Keep active when restarting the app";
-            cbKeepActionsActive.UseVisualStyleBackColor = true;
-            cbKeepActionsActive.CheckedChanged += CbKeepActionsActive_CheckedChanged;
+            cbRepeatActionsDaily.AutoSize = true;
+            cbRepeatActionsDaily.Font = new System.Drawing.Font("Segoe UI", 10F);
+            cbRepeatActionsDaily.Location = new System.Drawing.Point(16, 278);
+            cbRepeatActionsDaily.Name = "cbRepeatActionsDaily";
+            cbRepeatActionsDaily.Size = new System.Drawing.Size(154, 23);
+            cbRepeatActionsDaily.TabIndex = 7;
+            cbRepeatActionsDaily.Text = "Repeat all tasks daily";
+            cbRepeatActionsDaily.UseVisualStyleBackColor = true;
+            cbRepeatActionsDaily.CheckedChanged += CbRepeatActionsDaily_CheckedChanged;
             // 
             // lblRepeat
             // 
             lblRepeat.AutoSize = true;
-            lblRepeat.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            lblRepeat.Font = new System.Drawing.Font("Segoe UI", 9F);
+            lblRepeat.ForeColor = System.Drawing.Color.IndianRed;
             lblRepeat.Location = new System.Drawing.Point(10, 301);
             lblRepeat.Name = "lblRepeat";
             lblRepeat.Size = new System.Drawing.Size(255, 15);
             lblRepeat.TabIndex = 8;
-            lblRepeat.Text = "Repeats must be activated manually each time.";
+            lblRepeat.Text = "Caution: The computer is shut down every day!";
+            lblRepeat.Visible = false;
             // 
             // FrmSchedule
             // 
@@ -168,13 +170,13 @@
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             ClientSize = new System.Drawing.Size(275, 355);
             Controls.Add(lblRepeat);
-            Controls.Add(cbKeepActionsActive);
+            Controls.Add(cbRepeatActionsDaily);
             Controls.Add(btnClose);
             Controls.Add(btnDelete);
             Controls.Add(btnEdit);
             Controls.Add(aLV);
             Controls.Add(timerLabel);
-            Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            Font = new System.Drawing.Font("Segoe UI", 10F);
             FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             MinimizeBox = false;
@@ -184,6 +186,7 @@
             ShowInTaskbar = false;
             StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             Text = "Schedule";
+            Load += FrmSchedule_Load;
             ResumeLayout(false);
             PerformLayout();
         }
@@ -199,7 +202,7 @@
         private System.Windows.Forms.Button btnEdit;
         private System.Windows.Forms.Button btnDelete;
         private System.Windows.Forms.Button btnClose;
-        private System.Windows.Forms.CheckBox cbKeepActionsActive;
+        private System.Windows.Forms.CheckBox cbRepeatActionsDaily;
         private System.Windows.Forms.Label lblRepeat;
     }
 }

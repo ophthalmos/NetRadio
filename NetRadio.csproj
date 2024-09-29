@@ -14,8 +14,8 @@
     <StartupObject>NetRadio.Program</StartupObject>
     <Title>NetRadio</Title>
     <Description>NetRadio</Description>
-    <AssemblyVersion>2.5.5.1</AssemblyVersion>
-    <FileVersion>2.5.5.1</FileVersion>
+    <AssemblyVersion>2.5.6.0</AssemblyVersion>
+    <FileVersion>2.5.6.0</FileVersion>
     <Copyright>(c) 2024 by W. Happe, GPL v3</Copyright>
     <Version>2.5.5</Version>
     <GenerateResourceWarnOnBinaryFormatterUse>false</GenerateResourceWarnOnBinaryFormatterUse>
