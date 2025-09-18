@@ -1,17 +1,16 @@
 ﻿using System.Windows.Forms;
 
-namespace NetRadio
+namespace NetRadio.cls;
+
+public class NumericUpDown00 : NumericUpDown
 {
-    public class NumericUpDown00 : NumericUpDown
+    public override string Text
     {
-        public override string Text
+        get => base.Text;
+        set
         {
-            get { return base.Text; }
-            set
-            {
-                if (value.Length < 2) { value = "0" + value; }
-                base.Text = value;
-            }
+            if (value.Length < 2) { value = "0" + value; }
+            base.Text = value;
         }
     }
 }

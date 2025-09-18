@@ -1,4 +1,5 @@
 ﻿using System.Windows.Forms;
+using NetRadio.cls;
 
 namespace NetRadio
 {
@@ -31,8 +32,8 @@ namespace NetRadio
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmMain));
-            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            var resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmMain));
+            var dataGridViewCellStyle2 = new DataGridViewCellStyle();
             tcMain = new TabControl();
             tpPlayer = new TabPage();
             rbtn25 = new RadioButton();
@@ -320,37 +321,37 @@ namespace NetRadio
             // 
             // tpPlayer
             // 
-            tpPlayer.Controls.Add(rbtn25);
-            tpPlayer.Controls.Add(rbtn24);
-            tpPlayer.Controls.Add(rbtn23);
-            tpPlayer.Controls.Add(rbtn22);
-            tpPlayer.Controls.Add(rbtn21);
-            tpPlayer.Controls.Add(rbtn20);
-            tpPlayer.Controls.Add(rbtn19);
-            tpPlayer.Controls.Add(rbtn18);
-            tpPlayer.Controls.Add(rbtn17);
-            tpPlayer.Controls.Add(rbtn16);
-            tpPlayer.Controls.Add(rbtn15);
-            tpPlayer.Controls.Add(rbtn14);
-            tpPlayer.Controls.Add(rbtn13);
             tpPlayer.Controls.Add(btnRecord);
-            tpPlayer.Controls.Add(rbtn12);
-            tpPlayer.Controls.Add(rbtn11);
-            tpPlayer.Controls.Add(rbtn10);
-            tpPlayer.Controls.Add(rbtn09);
             tpPlayer.Controls.Add(pnlDisplay);
             tpPlayer.Controls.Add(btnReset);
             tpPlayer.Controls.Add(btnDecrease);
             tpPlayer.Controls.Add(btnIncrease);
             tpPlayer.Controls.Add(btnPlayStop);
-            tpPlayer.Controls.Add(rbtn08);
-            tpPlayer.Controls.Add(rbtn07);
-            tpPlayer.Controls.Add(rbtn06);
-            tpPlayer.Controls.Add(rbtn05);
-            tpPlayer.Controls.Add(rbtn04);
-            tpPlayer.Controls.Add(rbtn03);
-            tpPlayer.Controls.Add(rbtn02);
             tpPlayer.Controls.Add(rbtn01);
+            tpPlayer.Controls.Add(rbtn02);
+            tpPlayer.Controls.Add(rbtn03);
+            tpPlayer.Controls.Add(rbtn04);
+            tpPlayer.Controls.Add(rbtn05);
+            tpPlayer.Controls.Add(rbtn06);
+            tpPlayer.Controls.Add(rbtn07);
+            tpPlayer.Controls.Add(rbtn08);
+            tpPlayer.Controls.Add(rbtn09);
+            tpPlayer.Controls.Add(rbtn10);
+            tpPlayer.Controls.Add(rbtn11);
+            tpPlayer.Controls.Add(rbtn12);
+            tpPlayer.Controls.Add(rbtn13);
+            tpPlayer.Controls.Add(rbtn14);
+            tpPlayer.Controls.Add(rbtn15);
+            tpPlayer.Controls.Add(rbtn16);
+            tpPlayer.Controls.Add(rbtn17);
+            tpPlayer.Controls.Add(rbtn18);
+            tpPlayer.Controls.Add(rbtn19);
+            tpPlayer.Controls.Add(rbtn20);
+            tpPlayer.Controls.Add(rbtn21);
+            tpPlayer.Controls.Add(rbtn22);
+            tpPlayer.Controls.Add(rbtn23);
+            tpPlayer.Controls.Add(rbtn24);
+            tpPlayer.Controls.Add(rbtn25);
             tpPlayer.ImageIndex = 0;
             tpPlayer.Location = new System.Drawing.Point(4, 29);
             tpPlayer.Margin = new Padding(4, 3, 4, 3);
@@ -1136,14 +1137,14 @@ namespace NetRadio
             dgvStations.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvStations.BackgroundColor = System.Drawing.SystemColors.ControlLightLight;
             dgvStations.ClipboardCopyMode = DataGridViewClipboardCopyMode.Disable;
-            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.ControlDark;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI", 10F);
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.ControlDark;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = DataGridViewTriState.True;
-            dgvStations.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.ControlDark;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Segoe UI", 10F);
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.ControlDark;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.True;
+            dgvStations.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
             dgvStations.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             dgvStations.Columns.AddRange(new DataGridViewColumn[] { col1, col2 });
             dgvStations.ContextMenuStrip = contextMenuStations;
@@ -2373,7 +2374,7 @@ namespace NetRadio
             linkHomepage.Size = new System.Drawing.Size(197, 17);
             linkHomepage.TabIndex = 2;
             linkHomepage.TabStop = true;
-            linkHomepage.Text = "www.ophthalmostar.de/freeware";
+            linkHomepage.Text = "www.netradio.info/app";
             linkHomepage.LinkClicked += LinkHomepage_LinkClicked;
             // 
             // linkPayPal

@@ -1,18 +1,21 @@
 ﻿using System.Windows.Forms;
 
-namespace NetRadio
+namespace NetRadio.cls;
+
+public class VerticalProgressBar : ProgressBar
 {
-    public class VerticalProgressBar : ProgressBar
+    public VerticalProgressBar()
     {
-        public VerticalProgressBar() => NativeMethods.SetWindowTheme(Handle, string.Empty, string.Empty);
-        protected override CreateParams CreateParams
+        _ = NativeMethods.SetWindowTheme(Handle, string.Empty, string.Empty);
+    }
+
+    protected override CreateParams CreateParams
+    {
+        get
         {
-            get
-            {
-                CreateParams cp = base.CreateParams;
-                cp.Style |= 0x04;
-                return cp;
-            }
+            var cp = base.CreateParams;
+            cp.Style |= 0x04;
+            return cp;
         }
     }
 }
