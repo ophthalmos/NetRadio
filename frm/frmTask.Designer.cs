@@ -1,4 +1,6 @@
-﻿namespace NetRadio
+﻿using NetRadio.cls;
+
+namespace NetRadio
 {
     partial class FrmTask
     {

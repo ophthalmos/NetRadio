@@ -3,4 +3,4 @@ NetRadio plays internet radio streams and manages your favorite stations. The pr
 
 ![Screenshot](Screenshot.png)
 
-Further information and release downloads at [www.ophthalmostar.de/freeware](https://www.ophthalmostar.de/freeware/#netradio)
+Further information and release downloads at [www.netradio.info/app](https://www.netradio.info/app/)
