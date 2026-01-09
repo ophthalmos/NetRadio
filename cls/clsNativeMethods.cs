@@ -158,7 +158,7 @@ internal static class NativeMethods
     public static extern int GetWindowLong(nint hWnd, int nIndex);
 
     [DllImport("shell32.dll", CharSet = CharSet.Unicode, ExactSpelling = true, PreserveSig = false)]
-    internal static extern string SHGetKnownFolderPath([MarshalAs(UnmanagedType.LPStruct)] Guid rfid, uint dwFlags, nint hToken = default);
+    internal static extern void SHGetKnownFolderPath([MarshalAs(UnmanagedType.LPStruct)] Guid rfid, uint dwFlags, nint hToken, out string ppszPath); // 'out string' sorgt hier automatisch für das Freigeben des Speichers
 
     [DllImport("user32")]
     public static extern bool PostMessage(nint hwnd, uint msg, nint wparam, nint lparam);

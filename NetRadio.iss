@@ -32,6 +32,7 @@ Compression=lzma2/max
 SolidCompression=yes
 DirExistsWarning=no
 MinVersion=0,10.0
+SetupMutex=NetRadioSetupMutex
 
 [Files]
 Source: "bin\Release\net8.0-windows8.0\NetRadio.exe"; DestDir: "{app}"; Permissions: users-modify; Flags: ignoreversion
@@ -81,71 +82,6 @@ RemoveSettings=Do you want to remove all custom settings set for NetRadio?
 IsDonateHint=Support NetRadio - Thank you!
 
 [Code]
-var
-  requiresRestart: boolean;
-  NetRuntimeInstaller: string;
-
-const
-  SetupMutexName = 'NetRadioSetupMutex';
-
-function InitializeSetup(): Boolean; // only one instance of Inno Setup without prompting
-begin
-  Result := True;
-  if CheckForMutexes(SetupMutexName) then
-  begin
-    Result := False; // Mutex exists, setup is running already, silently aborting
-  end
-    else
-  begin
-    CreateMutex(SetupMutexName); 
-  end;
-end;
-
-procedure CurUninstallStepChanged (CurUninstallStep: TUninstallStep);
-var
-  mres : integer;
-begin
-  case CurUninstallStep of                   
-    usPostUninstall:
-      begin
-        mres := MsgBox(CustomMessage('RemoveSettings'), mbConfirmation, MB_YESNO or MB_DEFBUTTON2)
-        if mres = IDYES then
-          begin
-          DelTree(ExpandConstant('{userappdata}\{#MyAppName}'), True, True, True);
-          RegDeleteKeyIncludingSubkeys(HKEY_CURRENT_USER, 'Software\NetRadio');
-          end;
-      end;
-  end;
-end; 
-
-procedure DeinitializeSetup();
-var
-  FilePath: string;
-  BatchPath: string;
-  S: TArrayOfString;
-  ResultCode: Integer;
-begin
-  if ExpandConstant('{param:deleteSetup|false}') = 'true' then
-  begin
-    FilePath := ExpandConstant('{srcexe}');
-    begin
-      BatchPath := ExpandConstant('{%TEMP}\') + 'delete_' + ExtractFileName(ExpandConstant('{tmp}')) + '.bat';
-      SetArrayLength(S, 7);
-      S[0] := ':loop';
-      S[1] := 'del "' + FilePath + '"';
-      S[2] := 'if not exist "' + FilePath + '" goto end';
-      S[3] := 'goto loop';
-      S[4] := ':end';
-      S[5] := 'rd "' + ExpandConstant('{tmp}') + '"';
-      S[6] := 'del "' + BatchPath + '"';
-      if SaveStringsToFile(BatchPath, S, True) then
-      begin
-        Exec(BatchPath, '', '', SW_HIDE, ewNoWait, ResultCode)
-      end;
-    end;
-  end;
-end;
-
 procedure DonateImageOnClick(Sender: TObject);
 var
   ErrorCode: Integer;
@@ -160,10 +96,8 @@ var
   BevelTop: Integer;
 begin
   // WizardForm.LicenseAcceptedRadio.Checked := True;
-
   ImageFileName := ExpandConstant('{tmp}\isdonate.bmp');
   ExtractTemporaryFile(ExtractFileName(ImageFileName));
-
   DonateImage := TBitmapImage.Create(WizardForm);
   DonateImage.AutoSize := True;
   DonateImage.Bitmap.LoadFromFile(ImageFileName);

@@ -41,7 +41,6 @@ public partial class FrmMain : Form
     private byte[]? _data; // local recording buffer
     private FileStream? _fs = null;
     private bool _recording = false;
-    private readonly string _downloads = NativeMethods.SHGetKnownFolderPath(new Guid("374DE290-123F-4565-9164-39C4925E467B"), 0);
     private string? _downloadFileName;
     private string? _channelFilename;
     private TAG_INFO? _tagInfo;
@@ -454,7 +453,8 @@ public partial class FrmMain : Form
             {
                 if (_fs is null)
                 {
-                    _downloadFileName = _downloads + "\\" + appName + "_" + DateTime.Now.ToString(shortDateFormat) + ".mp3";
+                    NativeMethods.SHGetKnownFolderPath(new Guid("374DE290-123F-4565-9164-39C4925E467B"), 0, IntPtr.Zero, out var downloadPath);
+                    _downloadFileName = downloadPath + "\\" + appName + "_" + DateTime.Now.ToString(shortDateFormat) + ".mp3";
                     var info = Bass.BASS_ChannelGetInfo(_stream);
                     switch (info.ctype)
                     {
@@ -1418,7 +1418,8 @@ public partial class FrmMain : Form
             playPauseToolStripMenuItem.Image = Properties.Resources.pause;
             btnPlayStop.BackColor = SystemColors.ControlDark;
             miniPlayer.MpBtnPlay.BackColor = SystemColors.ControlDark;
-            if (lblD4.Text.Contains(_downloads)) // Recording fand gerade statt, lblD4 enthält DownloadDateinamen
+            NativeMethods.SHGetKnownFolderPath(new Guid("374DE290-123F-4565-9164-39C4925E467B"), 0, IntPtr.Zero, out var downloadPath);
+            if (lblD4.Text.Contains(downloadPath)) // Recording fand gerade statt, lblD4 enthält DownloadDateinamen
             {
                 lblD4.ForeColor = SystemColors.ControlText;
                 lblD4.Cursor = Cursors.Default;
@@ -3052,10 +3053,22 @@ public partial class FrmMain : Form
         {
             if (File.Exists(_downloadFileName))
             {
-                Process explorer = new();
-                explorer.StartInfo.FileName = "explorer.exe";
-                explorer.StartInfo.Arguments = "/e, /select,\"" + _downloadFileName + "\""; // /e:  Open in its default view.
-                explorer.Start();
+                var dopusrt = @"C:\Program Files\GPSoftware\Directory Opus\dopusrt.exe";
+                using Process process = new();
+                process.StartInfo.UseShellExecute = false;
+                if (File.Exists(dopusrt))
+                {
+                    process.StartInfo.FileName = dopusrt;
+                    process.StartInfo.Arguments = $"/cmd Go \"{_downloadFileName}\"";
+                    process.Start();
+                }
+                else
+                {
+                    process.StartInfo.FileName = "explorer.exe";
+                    process.StartInfo.UseShellExecute = true;
+                    process.StartInfo.Arguments = $"/select,\"{_downloadFileName}\"";
+                    process.Start();
+                }
             }
         }
         else if (e.Button == MouseButtons.Right)
@@ -3189,7 +3202,7 @@ public partial class FrmMain : Form
     private void TimerCloseFinally_Tick(object sender, EventArgs e)
     {
         timerCloseFinally.Stop();
-        try { Process.Start(localSetupFile, "/deleteSetup=true"); } // /SILENT
+        try { Process.Start(localSetupFile); } 
         catch (Exception ex) // when (ex is ArgumentNullException or InvalidOperationException or Win32Exception)
         {
             Utilities.ErrTaskDialog(this, ex);
@@ -3207,16 +3220,11 @@ public partial class FrmMain : Form
                 try
                 {
                     // Lokale Datei vorbereiten
-                    localSetupFile = Path.Combine(Path.GetTempPath(), appName + "Setup.exe");
-
-                    // UI vorbereiten
+                    NativeMethods.SHGetKnownFolderPath(new Guid("374DE290-123F-4565-9164-39C4925E467B"), 0, IntPtr.Zero, out var targetDir); // Downloads folder    
+                    if (!Directory.Exists(targetDir)) { targetDir = Path.GetTempPath(); }
+                    localSetupFile = Path.Combine(targetDir, appName + "Setup.exe");
                     progressBar.Visible = true;
-                    Progress<float> progress = new(p =>
-                    {
-                        // Thread-sicheres Update der UI
-                        progressBar.Value = (int)p;
-                    });
-
+                    Progress<float> progress = new(p => { progressBar.Value = (int)p; });
                     // FileStream in einem Block kapseln, damit er sicher geschlossen ist, 
                     // bevor wir versuchen, die Datei auszuführen.
                     // Das 'using' schließt die Datei am Ende der geschweiften Klammern automatisch.
