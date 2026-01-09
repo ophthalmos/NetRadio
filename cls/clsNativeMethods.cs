@@ -34,27 +34,22 @@ internal static class NativeMethods
     public const int SW_SHOWNOACTIVATE = 4; // similar to SW_SHOWNORMAL, except that the window is not activated.
     public const int HT_CAPTION = 0x2;
     public const int WM_COPYDATA = 0x004A;
-    //public const int SC_MINIMIZE = 0xF020;
     public const int WM_SYSCOMMAND = 0x112;
     public const int MF_SEPARATOR = 0x800;
     public const int MF_BYPOSITION = 0x400;
     public const int MF_STRING = 0x0;
     public const int IDM_CUSTOMITEM1 = 1000; //public const Int32 IDM_CUSTOMITEM2 = 1001;
-
     private static nint _hookIDKeyboard = nint.Zero;
     private const int WH_KEYBOARD_LL = 13;
-    internal static event KeyEventHandler KeyDown;
-    //internal static event KeyEventHandler KeyUp;
+    public static event KeyEventHandler? KeyDown;
 
     public static readonly uint WM_SHOWNETRADIO = RegisterWindowMessage("WM_SHOWNETRADIO");
     private delegate bool CallBackPtr(int hwnd, int lParam);
-    private static CallBackPtr callBackPtr;
+    private static CallBackPtr? callBackPtr;
     public static List<nint> enumedwindowPtrs = [];
     public static List<Rectangle> enumedwindowRects = [];
     private delegate bool EnumThreadDelegate(nint hWnd, nint lParam);
 
-    //public enum MessageFilterInfo : uint { None = 0, AlreadyAllowed = 1, AlreadyDisAllowed = 2, AllowedHigher = 3 }
-    //public enum ChangeWindowMessageFilterExAction : uint { Reset = 0, Allow = 1, DisAllow = 2 }
     private enum KeyStates
     {
         None = 0, Down = 1, Toggled = 2
@@ -106,9 +101,6 @@ internal static class NativeMethods
         return handles;
     }
 
-    //[DllImport("User32.dll")]
-    //public static extern bool GetAsyncKeyState(Keys ArrowKeys);
-
     [DllImport("user32.dll")]
     public static extern nint GetSystemMenu(nint hWnd, bool bRevert);
 
@@ -132,10 +124,6 @@ internal static class NativeMethods
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.StdCall)]
     internal static extern short GetKeyState(int nVirtKey);
-
-
-    //[DllImport("user32.dll", SetLastError = true)]
-    //public static extern bool ChangeWindowMessageFilterEx(IntPtr hWnd, uint msg, ChangeWindowMessageFilterExAction action, ref CHANGEFILTERSTRUCT changeInfo);
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     public static extern nint SendMessage(nint hWnd, uint Msg, nint wParam, nint lParam);
@@ -256,7 +244,7 @@ internal static class NativeMethods
     {
         if (nCode >= 0 && wParam == WM_KEYDOWN) // || wParam == WM_SYSKEYUP)) WM_SYSKEYUP is necessary to trap Alt-key combinations
         {
-            var kbStruct = (KBDLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(KBDLLHOOKSTRUCT));
+            var kbStruct = Marshal.PtrToStructure<KBDLLHOOKSTRUCT>(lParam);
             var keys = (Keys)kbStruct.vkCode;
             switch (keys)
             {
@@ -264,13 +252,16 @@ internal static class NativeMethods
                 case Keys.MediaNextTrack:
                 case Keys.MediaPreviousTrack:
                 case Keys.MediaStop:
-                    KeyDown(Application.OpenForms[0], new KeyEventArgs(keys));
+                    if (Application.OpenForms.Count > 0 && KeyDown != null)
+                    {
+                        KeyDown(Application.OpenForms[0], new KeyEventArgs(keys));
+                    }
                     return 1; // nur diese Anwendung verarbeitet MediaKeys
             }
         }
         else if (nCode >= 0 && wParam == WM_KEYUP)
         {
-            switch ((Keys)((KBDLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(KBDLLHOOKSTRUCT))).vkCode)
+            switch ((Keys)Marshal.PtrToStructure<KBDLLHOOKSTRUCT>(lParam).vkCode)
             {
                 case Keys.MediaPlayPause:
                 case Keys.MediaNextTrack:
@@ -286,13 +277,17 @@ internal static class NativeMethods
     {
         return _hookIDKeyboard = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardHookProc, nint.Zero, 0);
     }
-    internal static void UnregisterMediaKeys()
-    {
-        UnhookWindowsHookEx(_hookIDKeyboard);
-    }
+    internal static void UnregisterMediaKeys() => UnhookWindowsHookEx(_hookIDKeyboard);
 
     [DllImport("shell32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool IsUserAnAdmin(); // LogEvent
+
+    //internal static bool IsUserAdminManaged()
+    //{
+    //    using var identity = System.Security.Principal.WindowsIdentity.GetCurrent();
+    //    var principal = new System.Security.Principal.WindowsPrincipal(identity);
+    //    return principal.IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator);
+    //}
 
 }

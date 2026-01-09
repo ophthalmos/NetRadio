@@ -11,7 +11,7 @@ public class AutoEllipsisToolStripRenderer : ToolStripSystemRenderer
             base.OnRenderItemText(e);
             return;
         }
-        if ((e.Item as ToolStripStatusLabel).IsLink) { base.OnRenderItemText(e); }
+        if (((ToolStripStatusLabel)e.Item).IsLink) { base.OnRenderItemText(e); }
         else { TextRenderer.DrawText(e.Graphics, label.Text, label.Font, e.TextRectangle, label.ForeColor, TextFormatFlags.EndEllipsis); }
     }
 }

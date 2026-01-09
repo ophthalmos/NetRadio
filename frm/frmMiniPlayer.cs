@@ -3,7 +3,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Security.Permissions;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using NetRadio.cls;
@@ -20,7 +19,7 @@ public partial class MiniPlayer : Form
     }
     internal Button MpBtnAOT
     {
-        set => btnAOT = value; 
+        set => btnAOT = value;
         get => btnAOT;
     }
     internal ComboBox MpCmBxStations
@@ -40,89 +39,73 @@ public partial class MiniPlayer : Form
     }
     internal ToolTip MpToolTip
     {
-        set => toolTip = value; 
+        set => toolTip = value;
         get => toolTip;
     }
 
-    public event EventHandler FormHide;
-    public event EventHandler PlayPause;
-    public event EventHandler PlayerReset;
-    public event EventHandler VolumeProgress;
+    public event EventHandler? FormExit;
+    public event EventHandler? FormHide;
+    public event EventHandler? FormMove;
+    public event EventHandler? PlayPause;
+    public event EventHandler? PlayerReset;
+    public event EventHandler? VolumeProgress;
     //public event EventHandler<VolumeEventArgs> VolumeMouseWheelX; // file clsUtilities
-    public event MouseEventHandler VolumeMouseWheel; // file clsUtilities
-    public event EventHandler IncreaseVolume;
-    public event EventHandler DecreaseVolume;
-    public event EventHandler StationChanged;
-    public event EventHandler F4_ShowPlayer;
-    public event EventHandler F5_ShowHistory;
-    public event EventHandler F12_ShowSpectrum;
+    public event MouseEventHandler? VolumeMouseWheel; // file clsUtilities
+    public event EventHandler? IncreaseVolume;
+    public event EventHandler? DecreaseVolume;
+    public event EventHandler? StationChanged;
+    public event EventHandler? F4_ShowPlayer;
+    public event EventHandler? F5_ShowHistory;
+    public event EventHandler? F12_ShowSpectrum;
     private int levelLeft, levelRight;
-    private static MiniPlayer _this; // Objektverweis für statische Methode
+    private static MiniPlayer? _this; // Objektverweis für statische Methode
     private readonly Region _client;
     //private static string labelD1Text = string.Empty;
     private bool insideRestoreBtn = false;
     private bool shiftRestoreBtn = false;
     private bool rightMouseBtnDown = false;
+    //private const int CS_DROPSHADOW = 0x20000;
+
 
     public MiniPlayer()
     {
         InitializeComponent();
         DropShadow.ApplyShadows(this); // Changed from instance call to static call
         _this = this;
+        //UpdateAppearance();
         _client = Region.FromHrgn(NativeMethods.CreateRoundRectRgn(1, 1, Width - 1, Height - 1, 15, 15));
         Region = Region.FromHrgn(NativeMethods.CreateRoundRectRgn(0, 0, Width, Height, 15, 15)); // FormBorderStyle.None
-        //volProgressBar.MouseWheel += VolProgressBar_MouseWheel;
     }
 
-    protected virtual void OnFormHide(EventArgs e)
-    {
-        FormHide?.Invoke(this, e);
-    }
-    protected virtual void OnPlayPause(EventArgs e)
-    {
-        PlayPause?.Invoke(this, e);
-    }
-    protected virtual void OnPlayerReset(EventArgs e)
-    {
-        PlayerReset?.Invoke(this, e);
-    }
-    protected virtual void OnVolumeProgress(EventArgs e)
-    {
-        VolumeProgress?.Invoke(this, e);
-    }
+    //protected override CreateParams CreateParams
+    //{
+    //    get
+    //    {
+    //        CreateParams cp = base.CreateParams;
+    //        // Aktiviert den nativen Schatten des Betriebssystems
+    //        cp.ClassStyle |= CS_DROPSHADOW;
+    //        return cp;
+    //    }
+    //}
+
+    protected virtual void OnFormExit(EventArgs e) => FormExit?.Invoke(this, e);
+    protected virtual void OnFormHide(EventArgs e) => FormHide?.Invoke(this, e);
+    protected virtual void OnFormMove(EventArgs e) => FormMove?.Invoke(this, e);
+    protected virtual void OnPlayPause(EventArgs e) => PlayPause?.Invoke(this, e);
+    protected virtual void OnPlayerReset(EventArgs e) => PlayerReset?.Invoke(this, e);
+    protected virtual void OnVolumeProgress(EventArgs e) => VolumeProgress?.Invoke(this, e);
     //protected virtual void OnVolumeMouseWheelX(VolumeEventArgs e) { VolumeMouseWheelX?.Invoke(this, e); }
-    protected virtual void OnVolumeMouseWheel(MouseEventArgs e)
-    {
-        VolumeMouseWheel?.Invoke(this, e);
-    }
-    protected virtual void OnIncreaseVolume(EventArgs e)
-    {
-        IncreaseVolume?.Invoke(this, e);
-    }
-    protected virtual void OnDecreaseVolume(EventArgs e)
-    {
-        DecreaseVolume?.Invoke(this, e);
-    }
-    protected virtual void OnStationChanged(EventArgs e)
-    {
-        StationChanged?.Invoke(this, e);
-    }
-    protected virtual void OnF4_ShowPlayer(EventArgs e)
-    {
-        F4_ShowPlayer?.Invoke(this, e);
-    }
-    protected virtual void OnF5_ShowHistory(EventArgs e)
-    {
-        F5_ShowHistory?.Invoke(this, e);
-    }
-    protected virtual void OnF12_ShowSpectrum(EventArgs e)
-    {
-        F12_ShowSpectrum?.Invoke(this, e);
-    }
+    protected virtual void OnVolumeMouseWheel(MouseEventArgs e) => VolumeMouseWheel?.Invoke(this, e);
+    protected virtual void OnIncreaseVolume(EventArgs e) => IncreaseVolume?.Invoke(this, e);
+    protected virtual void OnDecreaseVolume(EventArgs e) => DecreaseVolume?.Invoke(this, e);
+    protected virtual void OnStationChanged(EventArgs e) => StationChanged?.Invoke(this, e);
+    protected virtual void OnF4ShowPlayer(EventArgs e) => F4_ShowPlayer?.Invoke(this, e);
+    protected virtual void OnF5ShowHistory(EventArgs e) => F5_ShowHistory?.Invoke(this, e);
+    protected virtual void OnF12ShowSpectrum(EventArgs e) => F12_ShowSpectrum?.Invoke(this, e);
 
     public static void DrawLevelMeter(int above, int below)
     {
-        if (above != _this.levelLeft && below != _this.levelRight)
+        if (above != _this!.levelLeft && below != _this.levelRight)
         {
             _this.levelLeft = above;
             _this.levelRight = below;
@@ -148,12 +131,12 @@ public partial class MiniPlayer : Form
     }
     public static void MpLblD2_Text(string text)
     {
-        _this.labelD2.Text = text;
+        _this!.labelD2.Text = text;
     }
 
     private void Panel_Paint(object sender, PaintEventArgs e)
     {
-        var p = sender as Panel;
+        if (sender is not Panel p) { return; }
         Color color1, color2;
         if (ActiveForm == this)
         {
@@ -165,8 +148,8 @@ public partial class MiniPlayer : Form
             color1 = Color.GhostWhite;
             color2 = Color.WhiteSmoke;
         }
-        LinearGradientBrush myBrush = new(p.PointToClient(p.Parent.PointToScreen(p.Location)), new Point(p.Width, p.Height), color1, color2);
-        e.Graphics.FillRectangle(myBrush, ClientRectangle);
+        using LinearGradientBrush myBrush = new(new Point(0, 0), new Point(p.Width, p.Height), color1, color2);
+        e.Graphics.FillRectangle(myBrush, e.ClipRectangle);
     }
 
     private void BtnRestore_Paint(object sender, PaintEventArgs e)
@@ -205,28 +188,23 @@ public partial class MiniPlayer : Form
 
     private void BtnRestore_Click(object sender, EventArgs e)
     {
-        if ((ModifierKeys & Keys.Shift) == Keys.Shift) { Application.Exit(); } //  || rightMouseBtnDown wird hier nicht erkannt
-        else { OnFormHide(null); }
+        if ((ModifierKeys & Keys.Shift) == Keys.Shift) { OnFormExit(e); } //  || rightMouseBtnDown wird hier nicht erkannt
+        else { OnFormHide(e); }
     }
 
     private void BtnPlayPause_Click(object sender, EventArgs e)
     {
-        OnPlayPause(null);
+        OnPlayPause(e);
     }
     private void BtnReload_Click(object sender, EventArgs e)
     {
-        OnPlayerReset(null);
+        OnPlayerReset(e);
     }
     private void CloseToolStripMenuItem_Click(object sender, EventArgs e)
     {
-        if ((ModifierKeys & Keys.Shift) == Keys.Shift) { Application.Exit(); }
-        else { OnFormHide(null); }
+        if ((ModifierKeys & Keys.Shift) == Keys.Shift) {OnFormExit(e); }
+        else { OnFormHide(e); }
     }
-
-    //private void SelectStationByPosition(int position)
-    //{
-    //    if (cmBxStations.Items.Count >= position) { cmBxStations.SelectedIndex = position - 1; }
-    //}
 
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
     {
@@ -237,10 +215,10 @@ public partial class MiniPlayer : Form
             case Keys.F4 | Keys.Control:
             case Keys.F4 | Keys.Control | Keys.Shift:
                 {
-                    if ((ModifierKeys & Keys.Shift) == Keys.Shift) { Application.Exit(); }
+                    if ((ModifierKeys & Keys.Shift) == Keys.Shift) { OnFormExit(EventArgs.Empty); }
                     else
                     {
-                        OnFormHide(null);
+                        OnFormHide(EventArgs.Empty);
                     }
                     return true;
                 }
@@ -263,24 +241,24 @@ public partial class MiniPlayer : Form
                 }
             case Keys.F4:
                 {
-                    OnF4_ShowPlayer(null);
+                    OnF4ShowPlayer(EventArgs.Empty);
                     return true;
                 }
             case Keys.F5:
                 {
-                    OnF5_ShowHistory(null);
+                    OnF5ShowHistory(EventArgs.Empty);
                     return true;
                 }
             case Keys.F12:
                 {
-                    OnF12_ShowSpectrum(null);
+                    OnF12ShowSpectrum(EventArgs.Empty);
                     return true;
                 }
             case Keys.Space:
                 {
                     if (ActiveControl != cmBxStations)
                     {
-                        OnPlayPause(null);
+                        OnPlayPause(EventArgs.Empty);
                         return true;
                     }
                     else { return false; }
@@ -290,7 +268,7 @@ public partial class MiniPlayer : Form
                 {
                     if (ActiveControl != cmBxStations)
                     {
-                        OnIncreaseVolume(null);
+                        OnIncreaseVolume(EventArgs.Empty);
                         toolTip.Show("Volume " + volProgressBar.Value.ToString() + "%", volProgressBar, 20, 7, 1000);
                         //toolTip.Show("Volume " + volProgressBar.Value.ToString() + "%", volProgressBar);
                         //timerVolTT.Start();
@@ -303,7 +281,7 @@ public partial class MiniPlayer : Form
                 {
                     if (ActiveControl != cmBxStations)
                     {
-                        OnDecreaseVolume(null);
+                        OnDecreaseVolume(EventArgs.Empty);
                         toolTip.Show("Volume " + volProgressBar.Value.ToString() + "%", volProgressBar, 20, 7, 1000);
                         //toolTip.Show("Volume " + volProgressBar.Value.ToString() + "%", volProgressBar);
                         //timerVolTT.Start();
@@ -315,7 +293,7 @@ public partial class MiniPlayer : Form
                 {
                     if (ActiveControl != cmBxStations)
                     {
-                        BtnAOT_Click(null, null);
+                        BtnAOT_Click(null!, EventArgs.Empty);
                         return true;
                     }
                     else { return false; }
@@ -324,7 +302,7 @@ public partial class MiniPlayer : Form
                 {
                     if (ActiveControl != cmBxStations)
                     {
-                        OnPlayerReset(null);
+                        OnPlayerReset(EventArgs.Empty);
                         return true;
                     }
                     else { return false; }
@@ -336,23 +314,23 @@ public partial class MiniPlayer : Form
                     return true;
                 }
             case Keys.NumPad1:
-            case Keys.D1: { if (cmBxStations.Items.Count >= 1) { cmBxStations.SelectedIndex = 0; OnStationChanged(null); return true; } return false; }
+            case Keys.D1: { if (cmBxStations.Items.Count >= 1) { cmBxStations.SelectedIndex = 0; OnStationChanged(EventArgs.Empty); return true; } return false; }
             case Keys.NumPad2:
-            case Keys.D2: { if (cmBxStations.Items.Count >= 2) { cmBxStations.SelectedIndex = 1; OnStationChanged(null); return true; } return false; }
+            case Keys.D2: { if (cmBxStations.Items.Count >= 2) { cmBxStations.SelectedIndex = 1; OnStationChanged(EventArgs.Empty); return true; } return false; }
             case Keys.NumPad3:
-            case Keys.D3: { if (cmBxStations.Items.Count >= 3) { cmBxStations.SelectedIndex = 2; OnStationChanged(null); return true; } return false; }
+            case Keys.D3: { if (cmBxStations.Items.Count >= 3) { cmBxStations.SelectedIndex = 2; OnStationChanged(EventArgs.Empty); return true; } return false; }
             case Keys.NumPad4:
-            case Keys.D4: { if (cmBxStations.Items.Count >= 4) { cmBxStations.SelectedIndex = 3; OnStationChanged(null); return true; } return false; }
+            case Keys.D4: { if (cmBxStations.Items.Count >= 4) { cmBxStations.SelectedIndex = 3; OnStationChanged(EventArgs.Empty); return true; } return false; }
             case Keys.NumPad5:
-            case Keys.D5: { if (cmBxStations.Items.Count >= 5) { cmBxStations.SelectedIndex = 4; OnStationChanged(null); return true; } return false; }
+            case Keys.D5: { if (cmBxStations.Items.Count >= 5) { cmBxStations.SelectedIndex = 4; OnStationChanged(EventArgs.Empty); return true; } return false; }
             case Keys.NumPad6:
-            case Keys.D6: { if (cmBxStations.Items.Count >= 6) { cmBxStations.SelectedIndex = 5; OnStationChanged(null); return true; } return false; }
+            case Keys.D6: { if (cmBxStations.Items.Count >= 6) { cmBxStations.SelectedIndex = 5; OnStationChanged(EventArgs.Empty); return true; } return false; }
             case Keys.NumPad7:
-            case Keys.D7: { if (cmBxStations.Items.Count >= 7) { cmBxStations.SelectedIndex = 6; OnStationChanged(null); return true; } return false; }
+            case Keys.D7: { if (cmBxStations.Items.Count >= 7) { cmBxStations.SelectedIndex = 6; OnStationChanged(EventArgs.Empty); return true; } return false; }
             case Keys.NumPad8:
-            case Keys.D8: { if (cmBxStations.Items.Count >= 8) { cmBxStations.SelectedIndex = 7; OnStationChanged(null); return true; } return false; }
+            case Keys.D8: { if (cmBxStations.Items.Count >= 8) { cmBxStations.SelectedIndex = 7; OnStationChanged(EventArgs.Empty); return true; } return false; }
             case Keys.NumPad9:
-            case Keys.D9: { if (cmBxStations.Items.Count >= 9) { cmBxStations.SelectedIndex = 8; OnStationChanged(null); return true; } return false; }
+            case Keys.D9: { if (cmBxStations.Items.Count >= 9) { cmBxStations.SelectedIndex = 8; OnStationChanged(EventArgs.Empty); return true; } return false; }
         }
         return base.ProcessCmdKey(ref msg, keyData);
     }
@@ -402,14 +380,14 @@ public partial class MiniPlayer : Form
 
     private void VolProgressBar_MouseDown(object sender, MouseEventArgs e)
     {
-        OnVolumeProgress(null);
+        OnVolumeProgress(EventArgs.Empty);
     }
 
     private void VolProgressBar_MouseMove(object sender, MouseEventArgs e)
     {
         if ((e.Button & MouseButtons.Left) == MouseButtons.Left)
         {
-            OnVolumeProgress(null);
+            OnVolumeProgress(EventArgs.Empty);
             if (toolTip.GetToolTip(volProgressBar) != volProgressBar.Value.ToString()) { toolTip.SetToolTip(volProgressBar, "Volume " + volProgressBar.Value.ToString() + "%"); }
         }
     }
@@ -446,26 +424,6 @@ public partial class MiniPlayer : Form
         else { toolTip.SetToolTip(labelD2, null); } // ToolTip zurücksetzen
     }
 
-    //private void ToolTip_Draw(object sender, DrawToolTipEventArgs e)
-    //{
-    //    e.DrawBackground();
-    //    e.DrawBorder();
-    //    e.DrawText();
-    //    System.Reflection.PropertyInfo h = toolTip.GetType().GetProperty("Handle", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-    //    IntPtr handle = (IntPtr)h.GetValue(toolTip); // ToolTip t = (ToolTip)sender;
-    //    Point location = Cursor.Position;
-    //    NativeMethods.MoveWindow(handle, location.X + 20, location.Y - 20, e.Bounds.Width, e.Bounds.Height, false);
-    //}
-
-    //private void TimerVolTT_Tick(object sender, EventArgs e)
-    //{
-    //    if (!NativeMethods.IsKeyDown(Keys.Oemplus) && !NativeMethods.IsKeyDown(Keys.Add) && !NativeMethods.IsKeyDown(Keys.Subtract) && !NativeMethods.IsKeyDown(Keys.OemMinus))
-    //    {
-    //        toolTip.Hide(volProgressBar);
-    //        timerVolTT.Stop();
-    //    }
-    //}
-
     private void GoogleToolStripMenuItem_Click(object sender, EventArgs e)
     {
         var search = string.Empty;
@@ -477,7 +435,7 @@ public partial class MiniPlayer : Form
                 ProcessStartInfo psi = new("https://www.google.com/search?q=" + System.Web.HttpUtility.HtmlEncode(Regex.Replace(search.ToLowerInvariant(), @"\s+", "+").Trim().Replace(".", ""))) { UseShellExecute = true };
                 Process.Start(psi);
             }
-            catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { MessageBox.Show(ex.Message, Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+            catch (Exception ex) when (ex is Win32Exception or InvalidOperationException) { Utilities.ErrTaskDialog(this, ex); }
         }
     }
 
@@ -486,20 +444,11 @@ public partial class MiniPlayer : Form
         if (!string.IsNullOrEmpty(labelD2.Text)) { Clipboard.SetText(labelD2.Text, TextDataFormat.UnicodeText); }
     }
 
-    private void PictureBoxLevel_Paint(object sender, PaintEventArgs e)
-    {
-        ControlPaint.DrawBorder(e.Graphics, pictureBoxLevel.DisplayRectangle, Color.FromArgb(190, 190, 190), ButtonBorderStyle.Solid);
-    }
+    private void PictureBoxLevel_Paint(object sender, PaintEventArgs e) => ControlPaint.DrawBorder(e.Graphics, pictureBoxLevel.DisplayRectangle, Color.FromArgb(190, 190, 190), ButtonBorderStyle.Solid);
 
-    private void MiniPlayer_MouseDoubleClick(object sender, MouseEventArgs e)
-    {
-        OnFormHide(null);
-    }
+    private void MiniPlayer_MouseDoubleClick(object sender, MouseEventArgs e) => OnFormHide(EventArgs.Empty);
 
-    private void Panel_MouseDoubleClick(object sender, MouseEventArgs e)
-    {
-        OnFormHide(null);
-    }
+    private void Panel_MouseDoubleClick(object sender, MouseEventArgs e) => OnFormHide(EventArgs.Empty);
 
     private void MiniPlayer_Activated(object sender, EventArgs e)
     {
@@ -509,40 +458,32 @@ public partial class MiniPlayer : Form
 
     private void MiniPlayer_Deactivate(object sender, EventArgs e)
     {
-        panelTitle.Invalidate(); btnRestore.Invalidate();
+        panelTitle.Invalidate();
+        btnRestore.Invalidate();
     }
 
     private void CmBxStations_TextChanged(object sender, EventArgs e)
     {
         if (cmBxStations.Focused)
         {
-            OnStationChanged(null);
+            OnStationChanged(EventArgs.Empty);
             btnPlayPause.Focus();
         }
     }
 
-    private void LabelD2_MouseDoubleClick(object sender, MouseEventArgs e)
-    {
-        OnFormHide(null);
-    }
+    private void LabelD2_MouseDoubleClick(object sender, MouseEventArgs e) => OnFormHide(EventArgs.Empty);
 
     private void MiniPlayer_FormClosing(object sender, FormClosingEventArgs e)
     {
         if (e.CloseReason == CloseReason.UserClosing)
         {
             e.Cancel = true;
-            OnFormHide(null);
+            OnFormHide(EventArgs.Empty);
         }
     }
 
-    private void BtnRestore_MouseEnter(object sender, EventArgs e)
-    {
-        insideRestoreBtn = true;
-    }
-    private void BtnRestore_MouseLeave(object sender, EventArgs e)
-    {
-        insideRestoreBtn = false;
-    }
+    private void BtnRestore_MouseEnter(object sender, EventArgs e) => insideRestoreBtn = true;
+    private void BtnRestore_MouseLeave(object sender, EventArgs e) => insideRestoreBtn = false;
     private void BtnRestore_MouseDown(object sender, MouseEventArgs e)
     {
         if ((e.Button == MouseButtons.Right) && !rightMouseBtnDown)
@@ -563,7 +504,7 @@ public partial class MiniPlayer : Form
                     rightMouseBtnDown = false;
                     Hide();
                 }
-                else { Application.Exit(); }
+                else { OnFormExit(e); }
             }
             else
             {
@@ -587,9 +528,9 @@ public partial class MiniPlayer : Form
         }
     }
 
-    private void PictureBoxLevel_DoubleClick(object sender, EventArgs e)
-    {
-        OnF12_ShowSpectrum(null);
-    }
+    private void PictureBoxLevel_DoubleClick(object sender, EventArgs e) => OnF12ShowSpectrum(e);
 
+    private void MiniPlayer_Move(object sender, EventArgs e) => OnFormMove(e);
+
+    private void ExitToolStripMenuItem_Click(object sender, EventArgs e) => OnFormExit(e);
 }

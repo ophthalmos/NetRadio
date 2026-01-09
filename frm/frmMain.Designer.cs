@@ -36,28 +36,7 @@ namespace NetRadio
             var dataGridViewCellStyle2 = new DataGridViewCellStyle();
             tcMain = new TabControl();
             tpPlayer = new TabPage();
-            rbtn25 = new RadioButton();
-            contextMenuPlayer = new ContextMenuStrip(components);
-            editStationToolStripMenuItem = new ToolStripMenuItem();
-            toolStripSeparator8 = new ToolStripSeparator();
-            searchNewStationToolStripMenuItem = new ToolStripMenuItem();
-            rbtn24 = new RadioButton();
-            rbtn23 = new RadioButton();
-            rbtn22 = new RadioButton();
-            rbtn21 = new RadioButton();
-            rbtn20 = new RadioButton();
-            rbtn19 = new RadioButton();
-            rbtn18 = new RadioButton();
-            rbtn17 = new RadioButton();
-            rbtn16 = new RadioButton();
-            rbtn15 = new RadioButton();
-            rbtn14 = new RadioButton();
-            rbtn13 = new RadioButton();
             btnRecord = new Button();
-            rbtn12 = new RadioButton();
-            rbtn11 = new RadioButton();
-            rbtn10 = new RadioButton();
-            rbtn09 = new RadioButton();
             pnlDisplay = new Panel();
             panelLevel = new Panel();
             pbLevel = new PictureBox();
@@ -72,14 +51,35 @@ namespace NetRadio
             btnDecrease = new Button();
             btnIncrease = new Button();
             btnPlayStop = new Button();
-            rbtn08 = new RadioButton();
-            rbtn07 = new RadioButton();
-            rbtn06 = new RadioButton();
-            rbtn05 = new RadioButton();
-            rbtn04 = new RadioButton();
-            rbtn03 = new RadioButton();
-            rbtn02 = new RadioButton();
             rbtn01 = new RadioButton();
+            contextMenuPlayer = new ContextMenuStrip(components);
+            editStationToolStripMenuItem = new ToolStripMenuItem();
+            toolStripSeparator8 = new ToolStripSeparator();
+            searchNewStationToolStripMenuItem = new ToolStripMenuItem();
+            rbtn02 = new RadioButton();
+            rbtn03 = new RadioButton();
+            rbtn04 = new RadioButton();
+            rbtn05 = new RadioButton();
+            rbtn06 = new RadioButton();
+            rbtn07 = new RadioButton();
+            rbtn08 = new RadioButton();
+            rbtn09 = new RadioButton();
+            rbtn10 = new RadioButton();
+            rbtn11 = new RadioButton();
+            rbtn12 = new RadioButton();
+            rbtn13 = new RadioButton();
+            rbtn14 = new RadioButton();
+            rbtn15 = new RadioButton();
+            rbtn16 = new RadioButton();
+            rbtn17 = new RadioButton();
+            rbtn18 = new RadioButton();
+            rbtn19 = new RadioButton();
+            rbtn20 = new RadioButton();
+            rbtn21 = new RadioButton();
+            rbtn22 = new RadioButton();
+            rbtn23 = new RadioButton();
+            rbtn24 = new RadioButton();
+            rbtn25 = new RadioButton();
             tpStations = new TabPage();
             btnSearch = new Button();
             btnDown = new Button();
@@ -177,6 +177,10 @@ namespace NetRadio
             label4 = new Label();
             label3 = new Label();
             tpInfo = new TabPage();
+            lblRadio42Version = new Label();
+            lbUn4SeenVersion = new Label();
+            linkLblRadio42 = new LinkLabel();
+            linkLblUn4Seen = new LinkLabel();
             btnUpdateSettings = new Button();
             imageList = new ImageList(components);
             linkLabeGNU = new LinkLabel();
@@ -256,16 +260,16 @@ namespace NetRadio
             timerPause = new Timer(components);
             timerCloseFinally = new Timer(components);
             saveFileDialog = new SaveFileDialog();
-            timer1 = new Timer(components);
             timerResume = new Timer(components);
             openFileDialog = new OpenFileDialog();
+            timerNotifyIcon = new Timer(components);
             tcMain.SuspendLayout();
             tpPlayer.SuspendLayout();
-            contextMenuPlayer.SuspendLayout();
             pnlDisplay.SuspendLayout();
             panelLevel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pbLevel).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pbVolIcon).BeginInit();
+            contextMenuPlayer.SuspendLayout();
             tpStations.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgvStations).BeginInit();
             contextMenuStations.SuspendLayout();
@@ -363,270 +367,6 @@ namespace NetRadio
             tpPlayer.UseVisualStyleBackColor = true;
             tpPlayer.MouseUp += TpPlayer_MouseUp;
             // 
-            // rbtn25
-            // 
-            rbtn25.Appearance = Appearance.Button;
-            rbtn25.ContextMenuStrip = contextMenuPlayer;
-            rbtn25.Font = new System.Drawing.Font("Segoe UI", 10F);
-            rbtn25.Location = new System.Drawing.Point(315, 308);
-            rbtn25.Margin = new Padding(0, 3, 0, 3);
-            rbtn25.Name = "rbtn25";
-            rbtn25.Size = new System.Drawing.Size(79, 29);
-            rbtn25.TabIndex = 25;
-            rbtn25.Tag = "25";
-            rbtn25.Text = "25";
-            rbtn25.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            toolTip.SetToolTip(rbtn25, "25");
-            rbtn25.UseVisualStyleBackColor = true;
-            rbtn25.CheckedChanged += RadioButton_CheckedChanged;
-            rbtn25.Paint += RadioButton_Paint;
-            // 
-            // contextMenuPlayer
-            // 
-            contextMenuPlayer.Items.AddRange(new ToolStripItem[] { editStationToolStripMenuItem, toolStripSeparator8, searchNewStationToolStripMenuItem });
-            contextMenuPlayer.Name = "contextMenuPlayer";
-            contextMenuPlayer.Size = new System.Drawing.Size(214, 54);
-            // 
-            // editStationToolStripMenuItem
-            // 
-            editStationToolStripMenuItem.Image = (System.Drawing.Image)resources.GetObject("editStationToolStripMenuItem.Image");
-            editStationToolStripMenuItem.Name = "editStationToolStripMenuItem";
-            editStationToolStripMenuItem.ShortcutKeyDisplayString = "F2";
-            editStationToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
-            editStationToolStripMenuItem.Text = "Edit station button";
-            editStationToolStripMenuItem.Click += EditStationToolStripMenuItem_Click;
-            // 
-            // toolStripSeparator8
-            // 
-            toolStripSeparator8.Name = "toolStripSeparator8";
-            toolStripSeparator8.Size = new System.Drawing.Size(210, 6);
-            // 
-            // searchNewStationToolStripMenuItem
-            // 
-            searchNewStationToolStripMenuItem.Image = Properties.Resources.epul;
-            searchNewStationToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
-            searchNewStationToolStripMenuItem.Name = "searchNewStationToolStripMenuItem";
-            searchNewStationToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+F";
-            searchNewStationToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
-            searchNewStationToolStripMenuItem.Text = "Search new station";
-            searchNewStationToolStripMenuItem.Click += SearchNewStationToolStripMenuItem_Click;
-            // 
-            // rbtn24
-            // 
-            rbtn24.Appearance = Appearance.Button;
-            rbtn24.ContextMenuStrip = contextMenuPlayer;
-            rbtn24.Font = new System.Drawing.Font("Segoe UI", 10F);
-            rbtn24.Location = new System.Drawing.Point(237, 308);
-            rbtn24.Margin = new Padding(0, 3, 0, 3);
-            rbtn24.Name = "rbtn24";
-            rbtn24.Size = new System.Drawing.Size(79, 29);
-            rbtn24.TabIndex = 24;
-            rbtn24.Tag = "24";
-            rbtn24.Text = "24";
-            rbtn24.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            toolTip.SetToolTip(rbtn24, "24");
-            rbtn24.UseVisualStyleBackColor = true;
-            rbtn24.CheckedChanged += RadioButton_CheckedChanged;
-            rbtn24.Paint += RadioButton_Paint;
-            // 
-            // rbtn23
-            // 
-            rbtn23.Appearance = Appearance.Button;
-            rbtn23.ContextMenuStrip = contextMenuPlayer;
-            rbtn23.Font = new System.Drawing.Font("Segoe UI", 10F);
-            rbtn23.Location = new System.Drawing.Point(159, 308);
-            rbtn23.Margin = new Padding(0, 3, 0, 3);
-            rbtn23.Name = "rbtn23";
-            rbtn23.Size = new System.Drawing.Size(79, 29);
-            rbtn23.TabIndex = 23;
-            rbtn23.Tag = "23";
-            rbtn23.Text = "23";
-            rbtn23.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            toolTip.SetToolTip(rbtn23, "23");
-            rbtn23.UseVisualStyleBackColor = true;
-            rbtn23.CheckedChanged += RadioButton_CheckedChanged;
-            rbtn23.Paint += RadioButton_Paint;
-            // 
-            // rbtn22
-            // 
-            rbtn22.Appearance = Appearance.Button;
-            rbtn22.ContextMenuStrip = contextMenuPlayer;
-            rbtn22.Font = new System.Drawing.Font("Segoe UI", 10F);
-            rbtn22.Location = new System.Drawing.Point(81, 308);
-            rbtn22.Margin = new Padding(0, 3, 0, 3);
-            rbtn22.Name = "rbtn22";
-            rbtn22.Size = new System.Drawing.Size(79, 29);
-            rbtn22.TabIndex = 22;
-            rbtn22.Tag = "22";
-            rbtn22.Text = "22";
-            rbtn22.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            toolTip.SetToolTip(rbtn22, "22");
-            rbtn22.UseVisualStyleBackColor = true;
-            rbtn22.CheckedChanged += RadioButton_CheckedChanged;
-            rbtn22.Paint += RadioButton_Paint;
-            // 
-            // rbtn21
-            // 
-            rbtn21.Appearance = Appearance.Button;
-            rbtn21.ContextMenuStrip = contextMenuPlayer;
-            rbtn21.Font = new System.Drawing.Font("Segoe UI", 10F);
-            rbtn21.Location = new System.Drawing.Point(3, 308);
-            rbtn21.Margin = new Padding(0, 3, 0, 3);
-            rbtn21.Name = "rbtn21";
-            rbtn21.Size = new System.Drawing.Size(79, 29);
-            rbtn21.TabIndex = 21;
-            rbtn21.Tag = "21";
-            rbtn21.Text = "21";
-            rbtn21.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            toolTip.SetToolTip(rbtn21, "21");
-            rbtn21.UseVisualStyleBackColor = true;
-            rbtn21.CheckedChanged += RadioButton_CheckedChanged;
-            rbtn21.Paint += RadioButton_Paint;
-            // 
-            // rbtn20
-            // 
-            rbtn20.Appearance = Appearance.Button;
-            rbtn20.ContextMenuStrip = contextMenuPlayer;
-            rbtn20.Font = new System.Drawing.Font("Segoe UI", 10F);
-            rbtn20.Location = new System.Drawing.Point(315, 275);
-            rbtn20.Margin = new Padding(0, 3, 0, 3);
-            rbtn20.Name = "rbtn20";
-            rbtn20.Size = new System.Drawing.Size(79, 29);
-            rbtn20.TabIndex = 20;
-            rbtn20.Tag = "20";
-            rbtn20.Text = "20";
-            rbtn20.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            toolTip.SetToolTip(rbtn20, "20");
-            rbtn20.UseVisualStyleBackColor = true;
-            rbtn20.CheckedChanged += RadioButton_CheckedChanged;
-            rbtn20.Paint += RadioButton_Paint;
-            // 
-            // rbtn19
-            // 
-            rbtn19.Appearance = Appearance.Button;
-            rbtn19.ContextMenuStrip = contextMenuPlayer;
-            rbtn19.Font = new System.Drawing.Font("Segoe UI", 10F);
-            rbtn19.Location = new System.Drawing.Point(237, 275);
-            rbtn19.Margin = new Padding(0, 3, 0, 3);
-            rbtn19.Name = "rbtn19";
-            rbtn19.Size = new System.Drawing.Size(79, 29);
-            rbtn19.TabIndex = 19;
-            rbtn19.Tag = "19";
-            rbtn19.Text = "19";
-            rbtn19.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            toolTip.SetToolTip(rbtn19, "19");
-            rbtn19.UseVisualStyleBackColor = true;
-            rbtn19.CheckedChanged += RadioButton_CheckedChanged;
-            rbtn19.Paint += RadioButton_Paint;
-            // 
-            // rbtn18
-            // 
-            rbtn18.Appearance = Appearance.Button;
-            rbtn18.ContextMenuStrip = contextMenuPlayer;
-            rbtn18.Font = new System.Drawing.Font("Segoe UI", 10F);
-            rbtn18.Location = new System.Drawing.Point(159, 275);
-            rbtn18.Margin = new Padding(0, 3, 0, 3);
-            rbtn18.Name = "rbtn18";
-            rbtn18.Size = new System.Drawing.Size(79, 29);
-            rbtn18.TabIndex = 18;
-            rbtn18.Tag = "18";
-            rbtn18.Text = "18";
-            rbtn18.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            toolTip.SetToolTip(rbtn18, "18");
-            rbtn18.UseVisualStyleBackColor = true;
-            rbtn18.CheckedChanged += RadioButton_CheckedChanged;
-            rbtn18.Paint += RadioButton_Paint;
-            // 
-            // rbtn17
-            // 
-            rbtn17.Appearance = Appearance.Button;
-            rbtn17.ContextMenuStrip = contextMenuPlayer;
-            rbtn17.Font = new System.Drawing.Font("Segoe UI", 10F);
-            rbtn17.Location = new System.Drawing.Point(81, 275);
-            rbtn17.Margin = new Padding(0, 3, 0, 3);
-            rbtn17.Name = "rbtn17";
-            rbtn17.Size = new System.Drawing.Size(79, 29);
-            rbtn17.TabIndex = 17;
-            rbtn17.Tag = "17";
-            rbtn17.Text = "17";
-            rbtn17.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            toolTip.SetToolTip(rbtn17, "17");
-            rbtn17.UseVisualStyleBackColor = true;
-            rbtn17.CheckedChanged += RadioButton_CheckedChanged;
-            rbtn17.Paint += RadioButton_Paint;
-            // 
-            // rbtn16
-            // 
-            rbtn16.Appearance = Appearance.Button;
-            rbtn16.ContextMenuStrip = contextMenuPlayer;
-            rbtn16.Font = new System.Drawing.Font("Segoe UI", 10F);
-            rbtn16.Location = new System.Drawing.Point(3, 275);
-            rbtn16.Margin = new Padding(0, 3, 0, 3);
-            rbtn16.Name = "rbtn16";
-            rbtn16.Size = new System.Drawing.Size(79, 29);
-            rbtn16.TabIndex = 16;
-            rbtn16.Tag = "16";
-            rbtn16.Text = "16";
-            rbtn16.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            toolTip.SetToolTip(rbtn16, "16");
-            rbtn16.UseVisualStyleBackColor = true;
-            rbtn16.CheckedChanged += RadioButton_CheckedChanged;
-            rbtn16.Paint += RadioButton_Paint;
-            // 
-            // rbtn15
-            // 
-            rbtn15.Appearance = Appearance.Button;
-            rbtn15.ContextMenuStrip = contextMenuPlayer;
-            rbtn15.Font = new System.Drawing.Font("Segoe UI", 10F);
-            rbtn15.Location = new System.Drawing.Point(315, 241);
-            rbtn15.Margin = new Padding(0, 3, 0, 3);
-            rbtn15.Name = "rbtn15";
-            rbtn15.Size = new System.Drawing.Size(79, 29);
-            rbtn15.TabIndex = 15;
-            rbtn15.Tag = "15";
-            rbtn15.Text = "15";
-            rbtn15.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            toolTip.SetToolTip(rbtn15, "15");
-            rbtn15.UseVisualStyleBackColor = true;
-            rbtn15.CheckedChanged += RadioButton_CheckedChanged;
-            rbtn15.Paint += RadioButton_Paint;
-            // 
-            // rbtn14
-            // 
-            rbtn14.Appearance = Appearance.Button;
-            rbtn14.ContextMenuStrip = contextMenuPlayer;
-            rbtn14.Font = new System.Drawing.Font("Segoe UI", 10F);
-            rbtn14.Location = new System.Drawing.Point(237, 241);
-            rbtn14.Margin = new Padding(0, 3, 0, 3);
-            rbtn14.Name = "rbtn14";
-            rbtn14.Size = new System.Drawing.Size(79, 29);
-            rbtn14.TabIndex = 14;
-            rbtn14.Tag = "14";
-            rbtn14.Text = "14";
-            rbtn14.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            toolTip.SetToolTip(rbtn14, "14");
-            rbtn14.UseVisualStyleBackColor = true;
-            rbtn14.CheckedChanged += RadioButton_CheckedChanged;
-            rbtn14.Paint += RadioButton_Paint;
-            // 
-            // rbtn13
-            // 
-            rbtn13.Appearance = Appearance.Button;
-            rbtn13.ContextMenuStrip = contextMenuPlayer;
-            rbtn13.Font = new System.Drawing.Font("Segoe UI", 10F);
-            rbtn13.Location = new System.Drawing.Point(159, 241);
-            rbtn13.Margin = new Padding(0, 3, 0, 3);
-            rbtn13.Name = "rbtn13";
-            rbtn13.Size = new System.Drawing.Size(79, 29);
-            rbtn13.TabIndex = 13;
-            rbtn13.Tag = "13";
-            rbtn13.Text = "13";
-            rbtn13.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            toolTip.SetToolTip(rbtn13, "13");
-            rbtn13.UseVisualStyleBackColor = true;
-            rbtn13.CheckedChanged += RadioButton_CheckedChanged;
-            rbtn13.Paint += RadioButton_Paint;
-            // 
             // btnRecord
             // 
             btnRecord.BackColor = System.Drawing.SystemColors.ControlDark;
@@ -644,78 +384,6 @@ namespace NetRadio
             toolTip.SetToolTip(btnRecord, "Record (Ins)");
             btnRecord.UseVisualStyleBackColor = false;
             btnRecord.Click += BtnRecord_Click;
-            // 
-            // rbtn12
-            // 
-            rbtn12.Appearance = Appearance.Button;
-            rbtn12.ContextMenuStrip = contextMenuPlayer;
-            rbtn12.Font = new System.Drawing.Font("Segoe UI", 10F);
-            rbtn12.Location = new System.Drawing.Point(81, 241);
-            rbtn12.Margin = new Padding(0, 3, 0, 3);
-            rbtn12.Name = "rbtn12";
-            rbtn12.Size = new System.Drawing.Size(79, 29);
-            rbtn12.TabIndex = 12;
-            rbtn12.Tag = "12";
-            rbtn12.Text = "12";
-            rbtn12.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            toolTip.SetToolTip(rbtn12, "12");
-            rbtn12.UseVisualStyleBackColor = true;
-            rbtn12.CheckedChanged += RadioButton_CheckedChanged;
-            rbtn12.Paint += RadioButton_Paint;
-            // 
-            // rbtn11
-            // 
-            rbtn11.Appearance = Appearance.Button;
-            rbtn11.ContextMenuStrip = contextMenuPlayer;
-            rbtn11.Font = new System.Drawing.Font("Segoe UI", 10F);
-            rbtn11.Location = new System.Drawing.Point(3, 241);
-            rbtn11.Margin = new Padding(0, 3, 0, 3);
-            rbtn11.Name = "rbtn11";
-            rbtn11.Size = new System.Drawing.Size(79, 29);
-            rbtn11.TabIndex = 11;
-            rbtn11.Tag = "11";
-            rbtn11.Text = "11";
-            rbtn11.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            toolTip.SetToolTip(rbtn11, "11");
-            rbtn11.UseVisualStyleBackColor = true;
-            rbtn11.CheckedChanged += RadioButton_CheckedChanged;
-            rbtn11.Paint += RadioButton_Paint;
-            // 
-            // rbtn10
-            // 
-            rbtn10.Appearance = Appearance.Button;
-            rbtn10.ContextMenuStrip = contextMenuPlayer;
-            rbtn10.Font = new System.Drawing.Font("Segoe UI", 10F);
-            rbtn10.Location = new System.Drawing.Point(315, 208);
-            rbtn10.Margin = new Padding(0, 3, 0, 3);
-            rbtn10.Name = "rbtn10";
-            rbtn10.Size = new System.Drawing.Size(79, 29);
-            rbtn10.TabIndex = 10;
-            rbtn10.Tag = "10";
-            rbtn10.Text = "10";
-            rbtn10.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            toolTip.SetToolTip(rbtn10, "10");
-            rbtn10.UseVisualStyleBackColor = true;
-            rbtn10.CheckedChanged += RadioButton_CheckedChanged;
-            rbtn10.Paint += RadioButton_Paint;
-            // 
-            // rbtn09
-            // 
-            rbtn09.Appearance = Appearance.Button;
-            rbtn09.ContextMenuStrip = contextMenuPlayer;
-            rbtn09.Font = new System.Drawing.Font("Segoe UI", 10F);
-            rbtn09.Location = new System.Drawing.Point(237, 208);
-            rbtn09.Margin = new Padding(0, 3, 0, 3);
-            rbtn09.Name = "rbtn09";
-            rbtn09.Size = new System.Drawing.Size(79, 29);
-            rbtn09.TabIndex = 9;
-            rbtn09.Tag = "9";
-            rbtn09.Text = "9";
-            rbtn09.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            toolTip.SetToolTip(rbtn09, "9");
-            rbtn09.UseVisualStyleBackColor = true;
-            rbtn09.CheckedChanged += RadioButton_CheckedChanged;
-            rbtn09.Paint += RadioButton_Paint;
             // 
             // pnlDisplay
             // 
@@ -924,113 +592,54 @@ namespace NetRadio
             btnPlayStop.UseVisualStyleBackColor = false;
             btnPlayStop.Click += BtnPlayStop_Click;
             // 
-            // rbtn08
+            // rbtn01
             // 
-            rbtn08.Appearance = Appearance.Button;
-            rbtn08.ContextMenuStrip = contextMenuPlayer;
-            rbtn08.Font = new System.Drawing.Font("Segoe UI", 10F);
-            rbtn08.Location = new System.Drawing.Point(159, 208);
-            rbtn08.Margin = new Padding(0, 3, 0, 3);
-            rbtn08.Name = "rbtn08";
-            rbtn08.Size = new System.Drawing.Size(79, 29);
-            rbtn08.TabIndex = 8;
-            rbtn08.Tag = "8";
-            rbtn08.Text = "8";
-            rbtn08.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            toolTip.SetToolTip(rbtn08, "8");
-            rbtn08.UseVisualStyleBackColor = true;
-            rbtn08.CheckedChanged += RadioButton_CheckedChanged;
-            rbtn08.Paint += RadioButton_Paint;
+            rbtn01.Appearance = Appearance.Button;
+            rbtn01.ContextMenuStrip = contextMenuPlayer;
+            rbtn01.Font = new System.Drawing.Font("Segoe UI", 10F);
+            rbtn01.ForeColor = System.Drawing.SystemColors.ControlText;
+            rbtn01.Location = new System.Drawing.Point(3, 174);
+            rbtn01.Margin = new Padding(0, 3, 0, 3);
+            rbtn01.Name = "rbtn01";
+            rbtn01.Size = new System.Drawing.Size(79, 29);
+            rbtn01.TabIndex = 1;
+            rbtn01.Tag = "1";
+            rbtn01.Text = "1";
+            rbtn01.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            toolTip.SetToolTip(rbtn01, "1");
+            rbtn01.UseVisualStyleBackColor = true;
+            rbtn01.CheckedChanged += RadioButton_CheckedChanged;
+            rbtn01.Paint += RadioButton_Paint;
             // 
-            // rbtn07
+            // contextMenuPlayer
             // 
-            rbtn07.Appearance = Appearance.Button;
-            rbtn07.ContextMenuStrip = contextMenuPlayer;
-            rbtn07.Font = new System.Drawing.Font("Segoe UI", 10F);
-            rbtn07.Location = new System.Drawing.Point(81, 208);
-            rbtn07.Margin = new Padding(0, 3, 0, 3);
-            rbtn07.Name = "rbtn07";
-            rbtn07.Size = new System.Drawing.Size(79, 29);
-            rbtn07.TabIndex = 7;
-            rbtn07.Tag = "7";
-            rbtn07.Text = "7";
-            rbtn07.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            toolTip.SetToolTip(rbtn07, "7");
-            rbtn07.UseVisualStyleBackColor = true;
-            rbtn07.CheckedChanged += RadioButton_CheckedChanged;
-            rbtn07.Paint += RadioButton_Paint;
+            contextMenuPlayer.Items.AddRange(new ToolStripItem[] { editStationToolStripMenuItem, toolStripSeparator8, searchNewStationToolStripMenuItem });
+            contextMenuPlayer.Name = "contextMenuPlayer";
+            contextMenuPlayer.Size = new System.Drawing.Size(214, 54);
             // 
-            // rbtn06
+            // editStationToolStripMenuItem
             // 
-            rbtn06.Appearance = Appearance.Button;
-            rbtn06.ContextMenuStrip = contextMenuPlayer;
-            rbtn06.Font = new System.Drawing.Font("Segoe UI", 10F);
-            rbtn06.Location = new System.Drawing.Point(3, 208);
-            rbtn06.Margin = new Padding(0, 3, 0, 3);
-            rbtn06.Name = "rbtn06";
-            rbtn06.Size = new System.Drawing.Size(79, 29);
-            rbtn06.TabIndex = 6;
-            rbtn06.Tag = "6";
-            rbtn06.Text = "6";
-            rbtn06.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            toolTip.SetToolTip(rbtn06, "6");
-            rbtn06.UseVisualStyleBackColor = true;
-            rbtn06.CheckedChanged += RadioButton_CheckedChanged;
-            rbtn06.Paint += RadioButton_Paint;
+            editStationToolStripMenuItem.Image = (System.Drawing.Image)resources.GetObject("editStationToolStripMenuItem.Image");
+            editStationToolStripMenuItem.Name = "editStationToolStripMenuItem";
+            editStationToolStripMenuItem.ShortcutKeyDisplayString = "F2";
+            editStationToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            editStationToolStripMenuItem.Text = "Edit station button";
+            editStationToolStripMenuItem.Click += EditStationToolStripMenuItem_Click;
             // 
-            // rbtn05
+            // toolStripSeparator8
             // 
-            rbtn05.Appearance = Appearance.Button;
-            rbtn05.ContextMenuStrip = contextMenuPlayer;
-            rbtn05.Font = new System.Drawing.Font("Segoe UI", 10F);
-            rbtn05.Location = new System.Drawing.Point(315, 174);
-            rbtn05.Margin = new Padding(0, 3, 0, 3);
-            rbtn05.Name = "rbtn05";
-            rbtn05.Size = new System.Drawing.Size(79, 29);
-            rbtn05.TabIndex = 5;
-            rbtn05.Tag = "5";
-            rbtn05.Text = "5";
-            rbtn05.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            toolTip.SetToolTip(rbtn05, "5");
-            rbtn05.UseVisualStyleBackColor = true;
-            rbtn05.CheckedChanged += RadioButton_CheckedChanged;
-            rbtn05.Paint += RadioButton_Paint;
+            toolStripSeparator8.Name = "toolStripSeparator8";
+            toolStripSeparator8.Size = new System.Drawing.Size(210, 6);
             // 
-            // rbtn04
+            // searchNewStationToolStripMenuItem
             // 
-            rbtn04.Appearance = Appearance.Button;
-            rbtn04.ContextMenuStrip = contextMenuPlayer;
-            rbtn04.Font = new System.Drawing.Font("Segoe UI", 10F);
-            rbtn04.Location = new System.Drawing.Point(237, 174);
-            rbtn04.Margin = new Padding(0, 3, 0, 3);
-            rbtn04.Name = "rbtn04";
-            rbtn04.Size = new System.Drawing.Size(79, 29);
-            rbtn04.TabIndex = 4;
-            rbtn04.Tag = "4";
-            rbtn04.Text = "4";
-            rbtn04.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            toolTip.SetToolTip(rbtn04, "4");
-            rbtn04.UseVisualStyleBackColor = true;
-            rbtn04.CheckedChanged += RadioButton_CheckedChanged;
-            rbtn04.Paint += RadioButton_Paint;
-            // 
-            // rbtn03
-            // 
-            rbtn03.Appearance = Appearance.Button;
-            rbtn03.ContextMenuStrip = contextMenuPlayer;
-            rbtn03.Font = new System.Drawing.Font("Segoe UI", 10F);
-            rbtn03.Location = new System.Drawing.Point(159, 174);
-            rbtn03.Margin = new Padding(0, 3, 0, 3);
-            rbtn03.Name = "rbtn03";
-            rbtn03.Size = new System.Drawing.Size(79, 29);
-            rbtn03.TabIndex = 3;
-            rbtn03.Tag = "3";
-            rbtn03.Text = "3";
-            rbtn03.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            toolTip.SetToolTip(rbtn03, "3");
-            rbtn03.UseVisualStyleBackColor = true;
-            rbtn03.CheckedChanged += RadioButton_CheckedChanged;
-            rbtn03.Paint += RadioButton_Paint;
+            searchNewStationToolStripMenuItem.Image = Properties.Resources.epul;
+            searchNewStationToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
+            searchNewStationToolStripMenuItem.Name = "searchNewStationToolStripMenuItem";
+            searchNewStationToolStripMenuItem.ShortcutKeyDisplayString = "Ctrl+F";
+            searchNewStationToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            searchNewStationToolStripMenuItem.Text = "Search new station";
+            searchNewStationToolStripMenuItem.Click += SearchNewStationToolStripMenuItem_Click;
             // 
             // rbtn02
             // 
@@ -1050,24 +659,419 @@ namespace NetRadio
             rbtn02.CheckedChanged += RadioButton_CheckedChanged;
             rbtn02.Paint += RadioButton_Paint;
             // 
-            // rbtn01
+            // rbtn03
             // 
-            rbtn01.Appearance = Appearance.Button;
-            rbtn01.ContextMenuStrip = contextMenuPlayer;
-            rbtn01.Font = new System.Drawing.Font("Segoe UI", 10F);
-            rbtn01.ForeColor = System.Drawing.SystemColors.ControlText;
-            rbtn01.Location = new System.Drawing.Point(3, 174);
-            rbtn01.Margin = new Padding(0, 3, 0, 3);
-            rbtn01.Name = "rbtn01";
-            rbtn01.Size = new System.Drawing.Size(79, 29);
-            rbtn01.TabIndex = 1;
-            rbtn01.Tag = "1";
-            rbtn01.Text = "1";
-            rbtn01.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            toolTip.SetToolTip(rbtn01, "1");
-            rbtn01.UseVisualStyleBackColor = true;
-            rbtn01.CheckedChanged += RadioButton_CheckedChanged;
-            rbtn01.Paint += RadioButton_Paint;
+            rbtn03.Appearance = Appearance.Button;
+            rbtn03.ContextMenuStrip = contextMenuPlayer;
+            rbtn03.Font = new System.Drawing.Font("Segoe UI", 10F);
+            rbtn03.Location = new System.Drawing.Point(159, 174);
+            rbtn03.Margin = new Padding(0, 3, 0, 3);
+            rbtn03.Name = "rbtn03";
+            rbtn03.Size = new System.Drawing.Size(79, 29);
+            rbtn03.TabIndex = 3;
+            rbtn03.Tag = "3";
+            rbtn03.Text = "3";
+            rbtn03.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            toolTip.SetToolTip(rbtn03, "3");
+            rbtn03.UseVisualStyleBackColor = true;
+            rbtn03.CheckedChanged += RadioButton_CheckedChanged;
+            rbtn03.Paint += RadioButton_Paint;
+            // 
+            // rbtn04
+            // 
+            rbtn04.Appearance = Appearance.Button;
+            rbtn04.ContextMenuStrip = contextMenuPlayer;
+            rbtn04.Font = new System.Drawing.Font("Segoe UI", 10F);
+            rbtn04.Location = new System.Drawing.Point(237, 174);
+            rbtn04.Margin = new Padding(0, 3, 0, 3);
+            rbtn04.Name = "rbtn04";
+            rbtn04.Size = new System.Drawing.Size(79, 29);
+            rbtn04.TabIndex = 4;
+            rbtn04.Tag = "4";
+            rbtn04.Text = "4";
+            rbtn04.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            toolTip.SetToolTip(rbtn04, "4");
+            rbtn04.UseVisualStyleBackColor = true;
+            rbtn04.CheckedChanged += RadioButton_CheckedChanged;
+            rbtn04.Paint += RadioButton_Paint;
+            // 
+            // rbtn05
+            // 
+            rbtn05.Appearance = Appearance.Button;
+            rbtn05.ContextMenuStrip = contextMenuPlayer;
+            rbtn05.Font = new System.Drawing.Font("Segoe UI", 10F);
+            rbtn05.Location = new System.Drawing.Point(315, 174);
+            rbtn05.Margin = new Padding(0, 3, 0, 3);
+            rbtn05.Name = "rbtn05";
+            rbtn05.Size = new System.Drawing.Size(79, 29);
+            rbtn05.TabIndex = 5;
+            rbtn05.Tag = "5";
+            rbtn05.Text = "5";
+            rbtn05.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            toolTip.SetToolTip(rbtn05, "5");
+            rbtn05.UseVisualStyleBackColor = true;
+            rbtn05.CheckedChanged += RadioButton_CheckedChanged;
+            rbtn05.Paint += RadioButton_Paint;
+            // 
+            // rbtn06
+            // 
+            rbtn06.Appearance = Appearance.Button;
+            rbtn06.ContextMenuStrip = contextMenuPlayer;
+            rbtn06.Font = new System.Drawing.Font("Segoe UI", 10F);
+            rbtn06.Location = new System.Drawing.Point(3, 208);
+            rbtn06.Margin = new Padding(0, 3, 0, 3);
+            rbtn06.Name = "rbtn06";
+            rbtn06.Size = new System.Drawing.Size(79, 29);
+            rbtn06.TabIndex = 6;
+            rbtn06.Tag = "6";
+            rbtn06.Text = "6";
+            rbtn06.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            toolTip.SetToolTip(rbtn06, "6");
+            rbtn06.UseVisualStyleBackColor = true;
+            rbtn06.CheckedChanged += RadioButton_CheckedChanged;
+            rbtn06.Paint += RadioButton_Paint;
+            // 
+            // rbtn07
+            // 
+            rbtn07.Appearance = Appearance.Button;
+            rbtn07.ContextMenuStrip = contextMenuPlayer;
+            rbtn07.Font = new System.Drawing.Font("Segoe UI", 10F);
+            rbtn07.Location = new System.Drawing.Point(81, 208);
+            rbtn07.Margin = new Padding(0, 3, 0, 3);
+            rbtn07.Name = "rbtn07";
+            rbtn07.Size = new System.Drawing.Size(79, 29);
+            rbtn07.TabIndex = 7;
+            rbtn07.Tag = "7";
+            rbtn07.Text = "7";
+            rbtn07.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            toolTip.SetToolTip(rbtn07, "7");
+            rbtn07.UseVisualStyleBackColor = true;
+            rbtn07.CheckedChanged += RadioButton_CheckedChanged;
+            rbtn07.Paint += RadioButton_Paint;
+            // 
+            // rbtn08
+            // 
+            rbtn08.Appearance = Appearance.Button;
+            rbtn08.ContextMenuStrip = contextMenuPlayer;
+            rbtn08.Font = new System.Drawing.Font("Segoe UI", 10F);
+            rbtn08.Location = new System.Drawing.Point(159, 208);
+            rbtn08.Margin = new Padding(0, 3, 0, 3);
+            rbtn08.Name = "rbtn08";
+            rbtn08.Size = new System.Drawing.Size(79, 29);
+            rbtn08.TabIndex = 8;
+            rbtn08.Tag = "8";
+            rbtn08.Text = "8";
+            rbtn08.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            toolTip.SetToolTip(rbtn08, "8");
+            rbtn08.UseVisualStyleBackColor = true;
+            rbtn08.CheckedChanged += RadioButton_CheckedChanged;
+            rbtn08.Paint += RadioButton_Paint;
+            // 
+            // rbtn09
+            // 
+            rbtn09.Appearance = Appearance.Button;
+            rbtn09.ContextMenuStrip = contextMenuPlayer;
+            rbtn09.Font = new System.Drawing.Font("Segoe UI", 10F);
+            rbtn09.Location = new System.Drawing.Point(237, 208);
+            rbtn09.Margin = new Padding(0, 3, 0, 3);
+            rbtn09.Name = "rbtn09";
+            rbtn09.Size = new System.Drawing.Size(79, 29);
+            rbtn09.TabIndex = 9;
+            rbtn09.Tag = "9";
+            rbtn09.Text = "9";
+            rbtn09.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            toolTip.SetToolTip(rbtn09, "9");
+            rbtn09.UseVisualStyleBackColor = true;
+            rbtn09.CheckedChanged += RadioButton_CheckedChanged;
+            rbtn09.Paint += RadioButton_Paint;
+            // 
+            // rbtn10
+            // 
+            rbtn10.Appearance = Appearance.Button;
+            rbtn10.ContextMenuStrip = contextMenuPlayer;
+            rbtn10.Font = new System.Drawing.Font("Segoe UI", 10F);
+            rbtn10.Location = new System.Drawing.Point(315, 208);
+            rbtn10.Margin = new Padding(0, 3, 0, 3);
+            rbtn10.Name = "rbtn10";
+            rbtn10.Size = new System.Drawing.Size(79, 29);
+            rbtn10.TabIndex = 10;
+            rbtn10.Tag = "10";
+            rbtn10.Text = "10";
+            rbtn10.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            toolTip.SetToolTip(rbtn10, "10");
+            rbtn10.UseVisualStyleBackColor = true;
+            rbtn10.CheckedChanged += RadioButton_CheckedChanged;
+            rbtn10.Paint += RadioButton_Paint;
+            // 
+            // rbtn11
+            // 
+            rbtn11.Appearance = Appearance.Button;
+            rbtn11.ContextMenuStrip = contextMenuPlayer;
+            rbtn11.Font = new System.Drawing.Font("Segoe UI", 10F);
+            rbtn11.Location = new System.Drawing.Point(3, 241);
+            rbtn11.Margin = new Padding(0, 3, 0, 3);
+            rbtn11.Name = "rbtn11";
+            rbtn11.Size = new System.Drawing.Size(79, 29);
+            rbtn11.TabIndex = 11;
+            rbtn11.Tag = "11";
+            rbtn11.Text = "11";
+            rbtn11.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            toolTip.SetToolTip(rbtn11, "11");
+            rbtn11.UseVisualStyleBackColor = true;
+            rbtn11.CheckedChanged += RadioButton_CheckedChanged;
+            rbtn11.Paint += RadioButton_Paint;
+            // 
+            // rbtn12
+            // 
+            rbtn12.Appearance = Appearance.Button;
+            rbtn12.ContextMenuStrip = contextMenuPlayer;
+            rbtn12.Font = new System.Drawing.Font("Segoe UI", 10F);
+            rbtn12.Location = new System.Drawing.Point(81, 241);
+            rbtn12.Margin = new Padding(0, 3, 0, 3);
+            rbtn12.Name = "rbtn12";
+            rbtn12.Size = new System.Drawing.Size(79, 29);
+            rbtn12.TabIndex = 12;
+            rbtn12.Tag = "12";
+            rbtn12.Text = "12";
+            rbtn12.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            toolTip.SetToolTip(rbtn12, "12");
+            rbtn12.UseVisualStyleBackColor = true;
+            rbtn12.CheckedChanged += RadioButton_CheckedChanged;
+            rbtn12.Paint += RadioButton_Paint;
+            // 
+            // rbtn13
+            // 
+            rbtn13.Appearance = Appearance.Button;
+            rbtn13.ContextMenuStrip = contextMenuPlayer;
+            rbtn13.Font = new System.Drawing.Font("Segoe UI", 10F);
+            rbtn13.Location = new System.Drawing.Point(159, 241);
+            rbtn13.Margin = new Padding(0, 3, 0, 3);
+            rbtn13.Name = "rbtn13";
+            rbtn13.Size = new System.Drawing.Size(79, 29);
+            rbtn13.TabIndex = 13;
+            rbtn13.Tag = "13";
+            rbtn13.Text = "13";
+            rbtn13.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            toolTip.SetToolTip(rbtn13, "13");
+            rbtn13.UseVisualStyleBackColor = true;
+            rbtn13.CheckedChanged += RadioButton_CheckedChanged;
+            rbtn13.Paint += RadioButton_Paint;
+            // 
+            // rbtn14
+            // 
+            rbtn14.Appearance = Appearance.Button;
+            rbtn14.ContextMenuStrip = contextMenuPlayer;
+            rbtn14.Font = new System.Drawing.Font("Segoe UI", 10F);
+            rbtn14.Location = new System.Drawing.Point(237, 241);
+            rbtn14.Margin = new Padding(0, 3, 0, 3);
+            rbtn14.Name = "rbtn14";
+            rbtn14.Size = new System.Drawing.Size(79, 29);
+            rbtn14.TabIndex = 14;
+            rbtn14.Tag = "14";
+            rbtn14.Text = "14";
+            rbtn14.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            toolTip.SetToolTip(rbtn14, "14");
+            rbtn14.UseVisualStyleBackColor = true;
+            rbtn14.CheckedChanged += RadioButton_CheckedChanged;
+            rbtn14.Paint += RadioButton_Paint;
+            // 
+            // rbtn15
+            // 
+            rbtn15.Appearance = Appearance.Button;
+            rbtn15.ContextMenuStrip = contextMenuPlayer;
+            rbtn15.Font = new System.Drawing.Font("Segoe UI", 10F);
+            rbtn15.Location = new System.Drawing.Point(315, 241);
+            rbtn15.Margin = new Padding(0, 3, 0, 3);
+            rbtn15.Name = "rbtn15";
+            rbtn15.Size = new System.Drawing.Size(79, 29);
+            rbtn15.TabIndex = 15;
+            rbtn15.Tag = "15";
+            rbtn15.Text = "15";
+            rbtn15.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            toolTip.SetToolTip(rbtn15, "15");
+            rbtn15.UseVisualStyleBackColor = true;
+            rbtn15.CheckedChanged += RadioButton_CheckedChanged;
+            rbtn15.Paint += RadioButton_Paint;
+            // 
+            // rbtn16
+            // 
+            rbtn16.Appearance = Appearance.Button;
+            rbtn16.ContextMenuStrip = contextMenuPlayer;
+            rbtn16.Font = new System.Drawing.Font("Segoe UI", 10F);
+            rbtn16.Location = new System.Drawing.Point(3, 275);
+            rbtn16.Margin = new Padding(0, 3, 0, 3);
+            rbtn16.Name = "rbtn16";
+            rbtn16.Size = new System.Drawing.Size(79, 29);
+            rbtn16.TabIndex = 16;
+            rbtn16.Tag = "16";
+            rbtn16.Text = "16";
+            rbtn16.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            toolTip.SetToolTip(rbtn16, "16");
+            rbtn16.UseVisualStyleBackColor = true;
+            rbtn16.CheckedChanged += RadioButton_CheckedChanged;
+            rbtn16.Paint += RadioButton_Paint;
+            // 
+            // rbtn17
+            // 
+            rbtn17.Appearance = Appearance.Button;
+            rbtn17.ContextMenuStrip = contextMenuPlayer;
+            rbtn17.Font = new System.Drawing.Font("Segoe UI", 10F);
+            rbtn17.Location = new System.Drawing.Point(81, 275);
+            rbtn17.Margin = new Padding(0, 3, 0, 3);
+            rbtn17.Name = "rbtn17";
+            rbtn17.Size = new System.Drawing.Size(79, 29);
+            rbtn17.TabIndex = 17;
+            rbtn17.Tag = "17";
+            rbtn17.Text = "17";
+            rbtn17.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            toolTip.SetToolTip(rbtn17, "17");
+            rbtn17.UseVisualStyleBackColor = true;
+            rbtn17.CheckedChanged += RadioButton_CheckedChanged;
+            rbtn17.Paint += RadioButton_Paint;
+            // 
+            // rbtn18
+            // 
+            rbtn18.Appearance = Appearance.Button;
+            rbtn18.ContextMenuStrip = contextMenuPlayer;
+            rbtn18.Font = new System.Drawing.Font("Segoe UI", 10F);
+            rbtn18.Location = new System.Drawing.Point(159, 275);
+            rbtn18.Margin = new Padding(0, 3, 0, 3);
+            rbtn18.Name = "rbtn18";
+            rbtn18.Size = new System.Drawing.Size(79, 29);
+            rbtn18.TabIndex = 18;
+            rbtn18.Tag = "18";
+            rbtn18.Text = "18";
+            rbtn18.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            toolTip.SetToolTip(rbtn18, "18");
+            rbtn18.UseVisualStyleBackColor = true;
+            rbtn18.CheckedChanged += RadioButton_CheckedChanged;
+            rbtn18.Paint += RadioButton_Paint;
+            // 
+            // rbtn19
+            // 
+            rbtn19.Appearance = Appearance.Button;
+            rbtn19.ContextMenuStrip = contextMenuPlayer;
+            rbtn19.Font = new System.Drawing.Font("Segoe UI", 10F);
+            rbtn19.Location = new System.Drawing.Point(237, 275);
+            rbtn19.Margin = new Padding(0, 3, 0, 3);
+            rbtn19.Name = "rbtn19";
+            rbtn19.Size = new System.Drawing.Size(79, 29);
+            rbtn19.TabIndex = 19;
+            rbtn19.Tag = "19";
+            rbtn19.Text = "19";
+            rbtn19.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            toolTip.SetToolTip(rbtn19, "19");
+            rbtn19.UseVisualStyleBackColor = true;
+            rbtn19.CheckedChanged += RadioButton_CheckedChanged;
+            rbtn19.Paint += RadioButton_Paint;
+            // 
+            // rbtn20
+            // 
+            rbtn20.Appearance = Appearance.Button;
+            rbtn20.ContextMenuStrip = contextMenuPlayer;
+            rbtn20.Font = new System.Drawing.Font("Segoe UI", 10F);
+            rbtn20.Location = new System.Drawing.Point(315, 275);
+            rbtn20.Margin = new Padding(0, 3, 0, 3);
+            rbtn20.Name = "rbtn20";
+            rbtn20.Size = new System.Drawing.Size(79, 29);
+            rbtn20.TabIndex = 20;
+            rbtn20.Tag = "20";
+            rbtn20.Text = "20";
+            rbtn20.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            toolTip.SetToolTip(rbtn20, "20");
+            rbtn20.UseVisualStyleBackColor = true;
+            rbtn20.CheckedChanged += RadioButton_CheckedChanged;
+            rbtn20.Paint += RadioButton_Paint;
+            // 
+            // rbtn21
+            // 
+            rbtn21.Appearance = Appearance.Button;
+            rbtn21.ContextMenuStrip = contextMenuPlayer;
+            rbtn21.Font = new System.Drawing.Font("Segoe UI", 10F);
+            rbtn21.Location = new System.Drawing.Point(3, 308);
+            rbtn21.Margin = new Padding(0, 3, 0, 3);
+            rbtn21.Name = "rbtn21";
+            rbtn21.Size = new System.Drawing.Size(79, 29);
+            rbtn21.TabIndex = 21;
+            rbtn21.Tag = "21";
+            rbtn21.Text = "21";
+            rbtn21.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            toolTip.SetToolTip(rbtn21, "21");
+            rbtn21.UseVisualStyleBackColor = true;
+            rbtn21.CheckedChanged += RadioButton_CheckedChanged;
+            rbtn21.Paint += RadioButton_Paint;
+            // 
+            // rbtn22
+            // 
+            rbtn22.Appearance = Appearance.Button;
+            rbtn22.ContextMenuStrip = contextMenuPlayer;
+            rbtn22.Font = new System.Drawing.Font("Segoe UI", 10F);
+            rbtn22.Location = new System.Drawing.Point(81, 308);
+            rbtn22.Margin = new Padding(0, 3, 0, 3);
+            rbtn22.Name = "rbtn22";
+            rbtn22.Size = new System.Drawing.Size(79, 29);
+            rbtn22.TabIndex = 22;
+            rbtn22.Tag = "22";
+            rbtn22.Text = "22";
+            rbtn22.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            toolTip.SetToolTip(rbtn22, "22");
+            rbtn22.UseVisualStyleBackColor = true;
+            rbtn22.CheckedChanged += RadioButton_CheckedChanged;
+            rbtn22.Paint += RadioButton_Paint;
+            // 
+            // rbtn23
+            // 
+            rbtn23.Appearance = Appearance.Button;
+            rbtn23.ContextMenuStrip = contextMenuPlayer;
+            rbtn23.Font = new System.Drawing.Font("Segoe UI", 10F);
+            rbtn23.Location = new System.Drawing.Point(159, 308);
+            rbtn23.Margin = new Padding(0, 3, 0, 3);
+            rbtn23.Name = "rbtn23";
+            rbtn23.Size = new System.Drawing.Size(79, 29);
+            rbtn23.TabIndex = 23;
+            rbtn23.Tag = "23";
+            rbtn23.Text = "23";
+            rbtn23.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            toolTip.SetToolTip(rbtn23, "23");
+            rbtn23.UseVisualStyleBackColor = true;
+            rbtn23.CheckedChanged += RadioButton_CheckedChanged;
+            rbtn23.Paint += RadioButton_Paint;
+            // 
+            // rbtn24
+            // 
+            rbtn24.Appearance = Appearance.Button;
+            rbtn24.ContextMenuStrip = contextMenuPlayer;
+            rbtn24.Font = new System.Drawing.Font("Segoe UI", 10F);
+            rbtn24.Location = new System.Drawing.Point(237, 308);
+            rbtn24.Margin = new Padding(0, 3, 0, 3);
+            rbtn24.Name = "rbtn24";
+            rbtn24.Size = new System.Drawing.Size(79, 29);
+            rbtn24.TabIndex = 24;
+            rbtn24.Tag = "24";
+            rbtn24.Text = "24";
+            rbtn24.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            toolTip.SetToolTip(rbtn24, "24");
+            rbtn24.UseVisualStyleBackColor = true;
+            rbtn24.CheckedChanged += RadioButton_CheckedChanged;
+            rbtn24.Paint += RadioButton_Paint;
+            // 
+            // rbtn25
+            // 
+            rbtn25.Appearance = Appearance.Button;
+            rbtn25.ContextMenuStrip = contextMenuPlayer;
+            rbtn25.Font = new System.Drawing.Font("Segoe UI", 10F);
+            rbtn25.Location = new System.Drawing.Point(315, 308);
+            rbtn25.Margin = new Padding(0, 3, 0, 3);
+            rbtn25.Name = "rbtn25";
+            rbtn25.Size = new System.Drawing.Size(79, 29);
+            rbtn25.TabIndex = 25;
+            rbtn25.Tag = "25";
+            rbtn25.Text = "25";
+            rbtn25.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            toolTip.SetToolTip(rbtn25, "25");
+            rbtn25.UseVisualStyleBackColor = true;
+            rbtn25.CheckedChanged += RadioButton_CheckedChanged;
+            rbtn25.Paint += RadioButton_Paint;
             // 
             // tpStations
             // 
@@ -2143,6 +2147,10 @@ namespace NetRadio
             // 
             // tpInfo
             // 
+            tpInfo.Controls.Add(lblRadio42Version);
+            tpInfo.Controls.Add(lbUn4SeenVersion);
+            tpInfo.Controls.Add(linkLblRadio42);
+            tpInfo.Controls.Add(linkLblUn4Seen);
             tpInfo.Controls.Add(btnUpdateSettings);
             tpInfo.Controls.Add(linkLabeGNU);
             tpInfo.Controls.Add(label10);
@@ -2170,6 +2178,52 @@ namespace NetRadio
             tpInfo.TabIndex = 2;
             tpInfo.ToolTipText = "Information (F11)";
             tpInfo.UseVisualStyleBackColor = true;
+            // 
+            // lblRadio42Version
+            // 
+            lblRadio42Version.AutoSize = true;
+            lblRadio42Version.BackColor = System.Drawing.Color.White;
+            lblRadio42Version.Font = new System.Drawing.Font("Segoe UI", 9.5F);
+            lblRadio42Version.Location = new System.Drawing.Point(289, 274);
+            lblRadio42Version.Name = "lblRadio42Version";
+            lblRadio42Version.Size = new System.Drawing.Size(0, 17);
+            lblRadio42Version.TabIndex = 25;
+            // 
+            // lbUn4SeenVersion
+            // 
+            lbUn4SeenVersion.AutoSize = true;
+            lbUn4SeenVersion.BackColor = System.Drawing.Color.White;
+            lbUn4SeenVersion.Font = new System.Drawing.Font("Segoe UI", 9.5F);
+            lbUn4SeenVersion.Location = new System.Drawing.Point(298, 257);
+            lbUn4SeenVersion.Name = "lbUn4SeenVersion";
+            lbUn4SeenVersion.Size = new System.Drawing.Size(0, 17);
+            lbUn4SeenVersion.TabIndex = 24;
+            // 
+            // linkLblRadio42
+            // 
+            linkLblRadio42.AutoSize = true;
+            linkLblRadio42.BackColor = System.Drawing.Color.White;
+            linkLblRadio42.Font = new System.Drawing.Font("Segoe UI", 9.5F);
+            linkLblRadio42.Location = new System.Drawing.Point(145, 274);
+            linkLblRadio42.Name = "linkLblRadio42";
+            linkLblRadio42.Size = new System.Drawing.Size(143, 17);
+            linkLblRadio42.TabIndex = 23;
+            linkLblRadio42.TabStop = true;
+            linkLblRadio42.Text = "www.radio42.com/bass";
+            linkLblRadio42.LinkClicked += LinkLblRadio42_LinkClicked;
+            // 
+            // linkLblUn4Seen
+            // 
+            linkLblUn4Seen.AutoSize = true;
+            linkLblUn4Seen.BackColor = System.Drawing.Color.White;
+            linkLblUn4Seen.Font = new System.Drawing.Font("Segoe UI", 9.5F);
+            linkLblUn4Seen.Location = new System.Drawing.Point(183, 257);
+            linkLblUn4Seen.Name = "linkLblUn4Seen";
+            linkLblUn4Seen.Size = new System.Drawing.Size(114, 17);
+            linkLblUn4Seen.TabIndex = 22;
+            linkLblUn4Seen.TabStop = true;
+            linkLblUn4Seen.Text = "www.un4seen.com";
+            linkLblUn4Seen.LinkClicked += LinkLblUn4Seen_LinkClicked;
             // 
             // btnUpdateSettings
             // 
@@ -2331,7 +2385,7 @@ namespace NetRadio
             lblCredits.Name = "lblCredits";
             lblCredits.Size = new System.Drawing.Size(388, 72);
             lblCredits.TabIndex = 10;
-            lblCredits.Text = "Acknowledgments\r\nNetRadio uses libraries for streaming and audio playback:\r\nbass.dll © 1999-2022, Un4seen Developments Ltd.\r\nbass.net.dll © 2005-2023 by radio42, Hamburg, Germany";
+            lblCredits.Text = "Acknowledgments\r\nNetRadio uses libraries for streaming and audio playback:\r\nbass.dll © Un4seen Dev. Ltd.,\r\nbass.net.dll © radio42,";
             // 
             // lblHorizontalLine
             // 
@@ -2371,7 +2425,7 @@ namespace NetRadio
             linkHomepage.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             linkHomepage.Location = new System.Drawing.Point(144, 152);
             linkHomepage.Name = "linkHomepage";
-            linkHomepage.Size = new System.Drawing.Size(197, 17);
+            linkHomepage.Size = new System.Drawing.Size(140, 17);
             linkHomepage.TabIndex = 2;
             linkHomepage.TabStop = true;
             linkHomepage.Text = "www.netradio.info/app";
@@ -2901,6 +2955,7 @@ namespace NetRadio
             notifyIcon.Text = "NetRadio";
             notifyIcon.Visible = true;
             notifyIcon.MouseClick += NotifyIcon_MouseClick;
+            notifyIcon.MouseDoubleClick += NotifyIcon_MouseDoubleClick;
             // 
             // contextMenuTrayIcon
             // 
@@ -2980,10 +3035,6 @@ namespace NetRadio
             saveFileDialog.InitialDirectory = "Environment.SpecialFolder.MyDocuments";
             saveFileDialog.RestoreDirectory = true;
             // 
-            // timer1
-            // 
-            timer1.Interval = 1500;
-            // 
             // timerResume
             // 
             timerResume.Interval = 1000;
@@ -2994,6 +3045,10 @@ namespace NetRadio
             openFileDialog.DefaultExt = "xml";
             openFileDialog.Filter = "CSV Files|*.csv";
             // 
+            // timerNotifyIcon
+            // 
+            timerNotifyIcon.Tick += TimerNotifyIcon_Tick;
+            // 
             // FrmMain
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -3001,6 +3056,7 @@ namespace NetRadio
             ClientSize = new System.Drawing.Size(403, 396);
             Controls.Add(statusStrip);
             Controls.Add(tcMain);
+            DoubleBuffered = true;
             FormBorderStyle = FormBorderStyle.FixedSingle;
             HelpButton = true;
             Icon = (System.Drawing.Icon)resources.GetObject("$this.Icon");
@@ -3024,11 +3080,11 @@ namespace NetRadio
             Move += FrmMain_Move;
             tcMain.ResumeLayout(false);
             tpPlayer.ResumeLayout(false);
-            contextMenuPlayer.ResumeLayout(false);
             pnlDisplay.ResumeLayout(false);
             panelLevel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)pbLevel).EndInit();
             ((System.ComponentModel.ISupportInitialize)pbVolIcon).EndInit();
+            contextMenuPlayer.ResumeLayout(false);
             tpStations.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)dgvStations).EndInit();
             contextMenuStations.ResumeLayout(false);
@@ -3278,7 +3334,6 @@ namespace NetRadio
         private GroupBox gbAutoRecord;
         private Button btnActions;
         private CheckBox cbActions;
-        private Timer timer1;
         private Timer timerResume;
         private Label label10;
         private Label label9;
@@ -3300,6 +3355,11 @@ namespace NetRadio
         private Button delAllHistoriesBtn;
         private OpenFileDialog openFileDialog;
         private GroupBox gbxModeSettings;
+        private LinkLabel linkLblRadio42;
+        private LinkLabel linkLblUn4Seen;
+        private Label lblRadio42Version;
+        private Label lbUn4SeenVersion;
+        private Timer timerNotifyIcon;
     }
 }
 

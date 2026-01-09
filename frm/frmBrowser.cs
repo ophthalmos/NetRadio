@@ -1,220 +1,311 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
-using System.Net; // WebClient
+using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Net.NetworkInformation;
-using System.Net.Sockets;
-using System.Reflection; // Assembly
-using System.Security;
-using System.Text.RegularExpressions;
+using System.Text.Json.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Xml;
-using NetRadio.cls; // XmlTextReader
+using System.Xml.Linq;
+using NetRadio.cls;
 
 namespace NetRadio;
 
 public partial class FrmBrowser : Form
 {
-    private string radioStation, radioURL;
-    private readonly List<string[]> stationList = [];
-    internal string SelectedStation => radioStation;
-    internal string SelectedURL => radioURL;
+    // Typisierte Klasse für die Server-Antwort (Json)
+    public class RadioServer
+    {
+        [JsonPropertyName("name")]
+        public string? Name
+        {
+            get; set;
+        }
+    }
 
-    private readonly Version curVersion = Assembly.GetExecutingAssembly().GetName().Version;
+    // Typisiertes Objekt für die interne Liste (statt string[])
+    // Erleichtert den Zugriff in PropertiesToolStripMenuItem_Click erheblich.
+    private record StationItem(
+        string Name,
+        string Url,
+        string Homepage,
+        string Favicon,
+        string CountryCode,
+        string Language,
+        string Votes,
+        string Codec,
+        string Bitrate
+    );
+
+    private string? radioStation, radioURL;
+    internal string? SelectedStation => radioStation;
+    internal string? SelectedURL => radioURL;
+
+    private readonly Version? curVersion;
     private bool resizing = false;
+    private readonly string _searchText;
 
-    public FrmBrowser(string seachText, Point point)
+    // Typisierte Liste
+    private readonly List<StationItem> stationList = [];
+
+    public FrmBrowser(string searchText, Point point, Version version)
     {
         InitializeComponent();
         Text = "Search results";
-        var success = false;
+        _searchText = searchText;
+        Location = point;
+        curVersion = version;
+    }
 
-        using FrmWait f2 = new(new Point(point.X, point.Y));
-        f2.Show(); // Please wait...
+    private async void FrmBrowser_Load(object sender, EventArgs e)
+    {
+        await LoadStationsAsync();
+        Top += 25;
+        Left += 50;
+        toolStripStatusLabel.Text = $"{listView.Items.Count} {(listView.Items.Count < 2 ? "item" : "items")} found. Press <Alt+Enter> or <F4> for details.";
+    }
+
+    private async Task LoadStationsAsync()
+    {
+        using FrmWait f2 = new(new Point(Location.X, Location.Y));
+        f2.Show();
         f2.Update();
-        const string baseUrl = @"all.api.radio-browser.info";
-        var searchUrl = @"de1.api.radio-browser.info";
+
         try
         {
-            var ips = Dns.GetHostAddresses(baseUrl);
-            var lastRoundTripTime = long.MaxValue;
-            var tempUrl = string.Empty;
-            foreach (var ipAddress in ips)
+            // 1. Liste potenzieller Server erstellen
+            // Zuerst den per Ping ermittelten "besten", dann harte Fallbacks als Reserve.
+            var bestServer = await SelectBestServerAsync();
+
+            List<string> serverQueue = [];
+            if (!string.IsNullOrEmpty(bestServer)) { serverQueue.Add(bestServer); }
+
+            // Fallbacks hinzufügen (Deutschland, Österreich, Niederlande sind meist stabil)
+            serverQueue.Add("de1.api.radio-browser.info");
+            serverQueue.Add("at1.api.radio-browser.info");
+            serverQueue.Add("nl1.api.radio-browser.info");
+
+            // Duplikate entfernen (falls bestServer == fallback ist)
+            var distinctServers = serverQueue.Distinct().ToList();
+
+            List<StationItem>? stations = null;
+            Exception? lastException = null;
+
+            // 2. Retry-Schleife: Versuche Server nacheinander
+            foreach (var server in distinctServers)
             {
-                tempUrl = Dns.GetHostEntry(ipAddress.ToString()).HostName;
-                if (!string.IsNullOrEmpty(tempUrl))
+                try
+                {
+                    f2.LabelText = $"Connecting to: {server}";
+
+                    // URL bauen
+                    var searchUrl = $"https://{server}/xml/stations/search?name={Uri.EscapeDataString(_searchText)}";
+
+                    var httpClient = NetHttpClient.Instance;
+
+                    // Timeout für diesen Versuch etwas kürzer setzen, damit wir nicht ewig warten, 
+                    // falls ein Server hängt (optional, über CancellationTokenSource möglich).
+                    // Hier nutzen wir einfach den Standard-Call.
+
+                    using (var response = await httpClient.GetAsync(searchUrl))
+                    {
+                        response.EnsureSuccessStatusCode(); // Hier krachte es vorher (502)
+
+                        await using var stream = await response.Content.ReadAsStreamAsync();
+                        var xdoc = await XDocument.LoadAsync(stream, LoadOptions.None, CancellationToken.None);
+
+                        stations = [.. xdoc.Descendants("station")
+                            .Select(s => new StationItem(
+                                Name: (string?)s.Attribute("name") ?? string.Empty,
+                                Url: (string?)s.Attribute("url") ?? string.Empty,
+                                Homepage: (string?)s.Attribute("homepage") ?? string.Empty,
+                                Favicon: (string?)s.Attribute("favicon") ?? string.Empty,
+                                CountryCode: (string?)s.Attribute("countrycode") ?? string.Empty,
+                                Language: (string?)s.Attribute("language") ?? string.Empty,
+                                Votes: (string?)s.Attribute("votes") ?? string.Empty,
+                                Codec: (string?)s.Attribute("codec") ?? string.Empty,
+                                Bitrate: (string?)s.Attribute("bitrate") ?? string.Empty
+                            ))
+                            .Where(s => !string.IsNullOrEmpty(s.Name))];
+                    }
+
+                    // Wenn wir hier ankommen, war es erfolgreich -> Schleife abbrechen
+                    lastException = null;
+                    break;
+                }
+                catch (HttpRequestException ex)
+                {
+                    // 502, 503, 404 etc. -> Wir merken uns den Fehler und versuchen den nächsten Server
+                    lastException = ex;
+                    continue;
+                }
+                catch (Exception ex)
+                {
+                    // Andere Fehler (XML Parse Error etc.) -> Auch hier Retry versuchen
+                    lastException = ex;
+                    continue;
+                }
+            }
+
+            // 3. Ergebnis prüfen
+            if (stations == null || stations.Count == 0)
+            {
+                f2.Hide();
+                if (lastException != null)
+                {
+                    // Wenn alle Server fehlschlugen, zeigen wir den letzten Fehler an
+                    Utilities.ErrTaskDialog(this, lastException);
+                }
+                else { Utilities.MsgTaskDialog(this, "No results found!", $"No stations matching '{_searchText}' were found.", TaskDialogIcon.ShieldWarningYellowBar); }
+
+                DialogResult = DialogResult.Abort;
+                Close();
+                return;
+            }
+
+            // 4. UI Update (nur wenn wir Daten haben)
+            listView.BeginUpdate();
+            stationList.Clear();
+
+            foreach (var station in stations)
+            {
+                var item = new ListViewItem(station.Name);
+                item.SubItems.Add(station.Url);
+                listView.Items.Add(item);
+                stationList.Add(station);
+            }
+
+            Utilities.ResizeColumns(listView, false);
+            if (listView.Items.Count > 0)
+            {
+                listView.Items[0].Selected = true;
+            }
+            listView.EndUpdate();
+
+        }
+        catch (Exception ex)
+        {
+            // Fangnetz für völlig unerwartete Fehler außerhalb der Schleife
+            f2.Hide();
+            Utilities.ErrTaskDialog(this, ex);
+            DialogResult = DialogResult.Abort;
+            Close();
+        }
+        finally
+        {
+            f2.Hide();
+        }
+    }
+
+    private static async Task<string?> SelectBestServerAsync()
+    {
+        try
+        {
+            var httpClient = NetHttpClient.Instance;
+
+            // JSON der Serverliste abrufen
+            // GetFromJsonAsync ist eine praktische Abkürzung in .NET
+            var servers = await httpClient.GetFromJsonAsync<List<RadioServer>>("https://all.api.radio-browser.info/json/servers");
+
+            if (servers == null || servers.Count == 0) { return null; }
+
+            // Pings parallel ausführen
+            var pingTasks = servers
+                .Where(s => !string.IsNullOrEmpty(s.Name))
+                .Select(async server =>
                 {
                     try
                     {
-                        var reply = new Ping().Send(tempUrl);
-                        if (reply.Status == IPStatus.Success && reply.RoundtripTime < lastRoundTripTime)
+                        using var ping = new Ping();
+                        // SendPingAsync ist der moderne Weg
+                        var reply = await ping.SendPingAsync(server.Name!, 2000);
+
+                        if (reply.Status == IPStatus.Success)
                         {
-                            lastRoundTripTime = reply.RoundtripTime;
-                            searchUrl = tempUrl;
+                            return new { ServerName = server.Name, Latency = reply.RoundtripTime };
                         }
                     }
-                    catch (Exception ex) when (ex is InvalidOperationException || ex is PingException) { continue; }
-                }
-            }
-            f2.LabelText = searchUrl; // MessageBox.Show(searchUrl);
+                    catch (PingException) { /* Ignore unreachable hosts */ }
+                    return null;
+                });
+
+            var results = await Task.WhenAll(pingTasks);
+
+            // Den schnellsten Server finden (MinBy ignoriert null nicht automatisch, daher Filter davor)
+            var bestResult = results.Where(r => r != null).MinBy(r => r!.Latency);
+
+            return bestResult?.ServerName;
         }
-        catch (Exception ex) when (ex is SocketException || ex is InvalidOperationException || ex is ArgumentException)
+        catch (Exception) // catch-all für Netzwerk/Json Fehler ist hier okay, da Fallback greift
         {
-            f2.Hide();
-            MessageBox.Show(ex.Message, Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return;
+            return null;
         }
-        var httpClient = FrmMain.MainHttpClient;
-        httpClient ??= new HttpClient();
-
-        try
-        {
-            httpClient.DefaultRequestHeaders.TryAddWithoutValidation("user-agent", Application.ProductName + "/" + new Regex(@"^\d+\.\d+").Match(curVersion.ToString()).Value);
-            var responseTask = httpClient.GetAsync(@"https://" + searchUrl + "/xml/stations/search?name=" + Regex.Replace(seachText, @"\s+", " "));
-            responseTask.Wait();
-            using var result = responseTask.Result;
-            if (result.IsSuccessStatusCode)
-            {
-                using var readTask = result.Content.ReadAsStreamAsync();
-                readTask.Wait();
-                using var stream = readTask.Result;
-
-                if (stream != null)
-                { //stream.ReadTimeout = 3000; // erzeugt Fehlermeldung: "Timeouts are not supported on this stream"
-                    using XmlTextReader xtReader = new(stream);
-                    xtReader.WhitespaceHandling = WhitespaceHandling.None; // Return no Whitespace and no SignificantWhitespace nodes.
-                    try
-                    {
-                        var radioName = string.Empty; // = "prog" + i.ToString();
-                        while (xtReader.Read())
-                        {
-                            if (xtReader.NodeType == XmlNodeType.Element && xtReader.LocalName == "station")
-                            {
-                                xtReader.MoveToAttribute("name");
-                                radioName = xtReader.Value;
-                                if (radioName.Length > 0)
-                                {
-                                    success = true;
-                                    var array = new string[9];
-                                    array[0] = radioName;
-
-                                    xtReader.MoveToAttribute("url");
-                                    ListViewItem item = new(radioName);
-                                    item.SubItems.Add(xtReader.Value); listView.Items.Add(item);
-                                    array[1] = xtReader.Value;
-
-                                    xtReader.MoveToAttribute("homepage"); // string, URL (HTTP/HTTPS)
-                                    array[2] = xtReader.Value;
-
-                                    xtReader.MoveToAttribute("favicon"); // string, URL (HTTP/HTTPS)
-                                    array[3] = xtReader.Value;
-
-                                    xtReader.MoveToAttribute("countrycode"); // Do NOT use the "country" fields anymore! Use "countrycode" instead, which is standardized.
-                                    array[4] = xtReader.Value;
-
-                                    xtReader.MoveToAttribute("language");
-                                    array[5] = xtReader.Value;
-
-                                    xtReader.MoveToAttribute("votes"); // number, integer
-                                    array[6] = xtReader.Value.ToString();
-
-                                    xtReader.MoveToAttribute("codec");
-                                    array[7] = xtReader.Value;
-
-                                    xtReader.MoveToAttribute("bitrate"); // number, integer, bps
-                                    array[8] = xtReader.Value.ToString();
-                                    stationList.Add(array);
-                                }
-                            }
-                        }
-                        Utilities.ResizeColumns(listView, false);
-                    }
-                    catch (XmlException ex)
-                    {
-                        f2.Hide();
-                        MessageBox.Show(ex.Message, Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        DialogResult = DialogResult.Abort;
-                        Load += (s, e) => Close();
-                        return;
-                    }
-                }
-            }
-        }
-        catch (Exception ex) when (ex is InvalidOperationException || ex is WebException || ex is SecurityException || ex is ArgumentException)
-        {
-            f2.Hide();
-            var dialogResult = MessageBox.Show(ex.Message + "\n\nWould you rather do a simple Google search?", Application.ProductName, MessageBoxButtons.YesNo);
-            if (dialogResult == DialogResult.Yes)
-            {
-                try { Process.Start("https://www.google.com/search?q=" + Regex.Replace(seachText + " stream url", @"[^a-zA-Z0-9äöüÄÖÜßé'-]+", " ").Trim().Replace(" ", "+")); } // [^...] Matches any single character that is not in the class.  
-                catch (InvalidOperationException ioe) { if (ioe != null) { radioStation = string.Empty; } } // Fake-Code wg. Codeüberprüfung
-            }
-            DialogResult = DialogResult.Abort;
-            Load += (s, e) => Close();
-            return;
-        }
-        if (!success)
-        {
-            f2.Hide();
-            MessageBox.Show("No results found!", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Information);
-            DialogResult = DialogResult.Abort;
-            Load += (s, e) => Close();
-            return;
-        }
-        else { listView.Items[0].Selected = true; }
     }
 
     private void ListView_KeyDown(object sender, KeyEventArgs e)
     {
-        //int selected = listView.FocusedItem.Index; // gets the index of the CURRENT ListViewItem (Not the one you see highlighted after arrow key movement)
-
-        if (e.KeyCode == Keys.F2 && listView.SelectedItems.Count > 0) { listView.SelectedItems[0].BeginEdit(); }
-        else if (e.KeyCode == Keys.Escape) { DialogResult = DialogResult.Abort; }
-        else if (e.KeyCode == Keys.F4) { PropertiesToolStripMenuItem_Click(null, null); }
-        else if (e.Alt && e.KeyCode == Keys.Enter) // (e.KeyCode == Keys.Enter && e.Modifiers == Keys.Alt)
+        if (e.KeyCode == Keys.F2 && listView.SelectedItems.Count > 0)
+        {
+            listView.SelectedItems[0].BeginEdit();
+        }
+        else if (e.KeyCode == Keys.Escape)
+        {
+            DialogResult = DialogResult.Abort;
+        }
+        else if (e.KeyCode == Keys.F4)
+        {
+            PropertiesToolStripMenuItem_Click(null!, null!);
+        }
+        else if (e.Alt && e.KeyCode == Keys.Enter)
         {
             e.SuppressKeyPress = true;
-            e.Handled = true; // Stop the character from being entered into the control 
-            timer.Enabled = true; // Workaround to supress beep!
+            e.Handled = true;
+            timer.Enabled = true;
         }
-        else if (e.KeyCode == Keys.Enter) { SaveAndLeave(); } // nach Alt-Enter!
-        else if (e.Control && e.KeyCode == Keys.F) { DialogResult = DialogResult.Yes; } // erneut frmSearch anzeigen
+        else if (e.KeyCode == Keys.Enter)
+        {
+            SaveAndLeave();
+        }
+        else if (e.Control && e.KeyCode == Keys.F)
+        {
+            DialogResult = DialogResult.Yes;
+        }
     }
 
     private void Timer_Tick(object sender, EventArgs e)
     {
         timer.Enabled = false;
-        PropertiesToolStripMenuItem_Click(null, null);
+        PropertiesToolStripMenuItem_Click(null!, null!);
     }
 
     private void SaveAndLeave()
     {
-        if (listView.SelectedItems != null)
+        if (listView.SelectedItems.Count > 0)
         {
+            radioStation = listView.SelectedItems[0].Text; // Name ist Text (SubItem 0)
             radioStation = listView.SelectedItems[0].SubItems[0].Text;
             radioURL = listView.SelectedItems[0].SubItems[1].Text;
         }
         DialogResult = DialogResult.OK;
     }
 
-    private void ListView_DoubleClick(object sender, EventArgs e) { SaveAndLeave(); }
-
-    private void BtnAccept_Click(object sender, EventArgs e) { SaveAndLeave(); }
-
-    private void FrmBrowser_Load(object sender, EventArgs e)
+    private void ListView_DoubleClick(object sender, EventArgs e)
     {
-        Top += 25;
-        Left += 50;
-        toolStripStatusLabel.Text = listView.Items.Count.ToString() + (listView.Items.Count < 2 ? " item " : " items ") + "found. Press <Alt+Enter> or <F4> for details."; // Double-click to accept an entry.";
-    } //Double-click list entry to copy to station list.
-
-    private void FrmBrowser_Resize(object sender, EventArgs e)
-    {// Spaltenbreite automatisch anpassen, wenn die Größe des Hauptfensters verändert wird.
-        Utilities.ResizeColumns(listView, true);
+        SaveAndLeave();
     }
 
+    private void BtnAccept_Click(object sender, EventArgs e)
+    {
+        SaveAndLeave();
+    }
+
+    private void FrmBrowser_Resize(object sender, EventArgs e)
+    {
+        Utilities.ResizeColumns(listView, true);
+    }
 
     private void EditToolStripMenuItem_Click(object sender, EventArgs e)
     {
@@ -225,39 +316,54 @@ public partial class FrmBrowser : Form
     {
         if (listView.SelectedItems.Count > 0)
         {
-            var i = listView.Items.IndexOf(listView.SelectedItems[0]);
-            var key = stationList[i]; //.ElementAt(i);
-            var name = key[0]; //.ElementAt(0);
-            var url = key[1]; //.ElementAt(1);
-            var homepage = key[2]; //.ElementAt(2);
-            var favicon = key[3]; //.ElementAt(3);
-            var country = key[4]; //.ElementAt(4);
-            var language = key[5]; //.ElementAt(5);
-            var votes = key[6]; //.ElementAt(6);
-            var codec = key[7]; //.ElementAt(7);
-            var bitrate = key[8]; //.ElementAt(8);
-            using Form frmStationInfo = new FrmStationInfo(i + 1, listView.Items.Count, name, url, homepage, favicon, country, language, votes, codec, bitrate);
+            var index = listView.SelectedIndices[0];
+
+            // HIER IST DER VORTEIL DES RECORDS:
+            // Kein index-basiertes Raten mehr (key[0], key[1]...), sondern klare Namen:
+            var station = stationList[index];
+
+            using Form frmStationInfo = new FrmStationInfo(
+                index + 1,
+                listView.Items.Count,
+                station.Name,
+                station.Url,
+                station.Homepage,
+                station.Favicon,
+                station.CountryCode,
+                station.Language,
+                station.Votes,
+                station.Codec,
+                station.Bitrate
+            );
+
             var result = frmStationInfo.ShowDialog();
+
+            // Logik für "Next/Previous" Navigation im Info-Fenster
             if (result == DialogResult.Yes || result == DialogResult.No)
             {
-                var selectedIndex = listView.SelectedIndices[0];
+                var newIndex = index;
                 var nextItem = false;
-                if (result == DialogResult.Yes)
+
+                if (result == DialogResult.Yes) // Next
                 {
-                    selectedIndex++;
-                    if (selectedIndex < listView.Items.Count) { nextItem = true; }
+                    newIndex++;
+                    if (newIndex < listView.Items.Count) { nextItem = true; }
                 }
-                else if (result == DialogResult.No)
+                else if (result == DialogResult.No) // Previous
                 {
-                    selectedIndex--;
-                    if (selectedIndex >= 0) { nextItem = true; }
+                    newIndex--;
+                    if (newIndex >= 0) { nextItem = true; }
                 }
+
                 if (nextItem)
                 {
-                    listView.Items[selectedIndex].Selected = true;
-                    listView.Items[selectedIndex].Focused = true;
-                    listView.Items[selectedIndex].EnsureVisible();
-                    PropertiesToolStripMenuItem_Click(null, null);
+                    listView.Items[index].Selected = false; // Alten deselektieren
+                    listView.Items[newIndex].Selected = true;
+                    listView.Items[newIndex].Focused = true;
+                    listView.Items[newIndex].EnsureVisible();
+
+                    // Rekursiver Aufruf für das neue Item
+                    PropertiesToolStripMenuItem_Click(null!, null!);
                 }
             }
         }
@@ -273,53 +379,50 @@ public partial class FrmBrowser : Form
         DialogResult = DialogResult.Abort;
     }
 
-    private void BtnDetail_Click(object sender, EventArgs e) { PropertiesToolStripMenuItem_Click(null, null); }
+    private void BtnDetail_Click(object sender, EventArgs e)
+    {
+        PropertiesToolStripMenuItem_Click(null!, null!);
+    }
 
-    private void BtnEdit_Click(object sender, EventArgs e) { EditToolStripMenuItem_Click(null, null); }
+    private void BtnEdit_Click(object sender, EventArgs e)
+    {
+        EditToolStripMenuItem_Click(null!, null!);
+    }
 
     private void ListView_SelectedIndexChanged(object sender, EventArgs e)
     {
-        if (listView.SelectedItems.Count > 0)
-        {
-            btnEdit.Enabled = true;
-            btnAccept.Enabled = true;
-            btnDetail.Enabled = true;
-        }
-        else
-        {
-            btnEdit.Enabled = false;
-            btnAccept.Enabled = false;
-            btnDetail.Enabled = false;
-        }
+        var hasSelection = listView.SelectedItems.Count > 0;
+        btnEdit.Enabled = hasSelection;
+        btnAccept.Enabled = hasSelection;
+        btnDetail.Enabled = hasSelection;
     }
 
     private void ContextMenuStrip_Opening(object sender, System.ComponentModel.CancelEventArgs e)
     {
-        if (listView.SelectedItems.Count > 0)
-        {
-            editToolStripMenuItem.Enabled = true;
-            acceptToolStripMenuItem.Enabled = true;
-            propertiesToolStripMenuItem.Enabled = true;
-        }
-        else
-        {
-            editToolStripMenuItem.Enabled = false;
-            acceptToolStripMenuItem.Enabled = false;
-            propertiesToolStripMenuItem.Enabled = false;
-        }
+        var hasSelection = listView.SelectedItems.Count > 0;
+        editToolStripMenuItem.Enabled = hasSelection;
+        acceptToolStripMenuItem.Enabled = hasSelection;
+        propertiesToolStripMenuItem.Enabled = hasSelection;
     }
 
     private void ListView_ColumnWidthChanged(object sender, ColumnWidthChangedEventArgs e)
     {
-        if (!resizing) // Don't allow overlapping of SizeChanged calls
+        if (!resizing)
         {
-            resizing = true; // Set the resizing flag
+            resizing = true;
             var vScrollWidth = 0;
-            if (NativeMethods.VerticalScrollbarVisible(listView)) { vScrollWidth = SystemInformation.VerticalScrollBarWidth; }
-            listView.Columns[0].Width = 200;
-            listView.Columns[1].Width = listView.Width - 200 - vScrollWidth - 4;
-            resizing = false; // Clear the resizing flag
+            if (NativeMethods.VerticalScrollbarVisible(listView))
+            {
+                vScrollWidth = SystemInformation.VerticalScrollBarWidth;
+            }
+
+            // Sichere Prüfung auf Spaltenanzahl
+            if (listView.Columns.Count >= 2)
+            {
+                listView.Columns[0].Width = 200;
+                listView.Columns[1].Width = listView.Width - 200 - vScrollWidth - 4;
+            }
+            resizing = false;
         }
     }
-
 }

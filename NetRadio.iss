@@ -1,5 +1,5 @@
 #define MyAppName "NetRadio"
-#define MyAppVersion "2.5.8"
+#define MyAppVersion "2.5.10"
 
 [Setup]
 AppName={#MyAppName}
@@ -10,7 +10,7 @@ ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
 PrivilegesRequired=admin
 AppPublisher=Wilhelm Happe
-VersionInfoCopyright=(C) 2024, W. Happe
+VersionInfoCopyright=(C) 2026, W. Happe
 AppPublisherURL=https://www.netradio.info/
 AppSupportURL=https://www.netradio.info/
 AppUpdatesURL=https://www.netradio.info/
@@ -21,7 +21,7 @@ DisableReadyPage=yes
 CloseApplications=yes
 WizardStyle=modern
 WizardSizePercent=100
-SetupIconFile=NetRadio.ico
+SetupIconFile=img\NetRadio.ico
 UninstallDisplayIcon={app}\NetRadio.exe
 DefaultGroupName=NetRadio
 AppId=NetRadio
@@ -69,8 +69,7 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 
 [Run]
 Filename: "{app}\{#MyAppName}.exe"; Description: "Launch {#MyAppName}"; Flags: postinstall nowait skipifsilent runasoriginaluser
-Filename: "{app}\{#MyAppName}.pdf"; Description: "View Frequently Asked Questions (PDF)"; Flags: postinstall shellexec runasoriginaluser 
-; unchecked
+Filename: "{app}\{#MyAppName}.pdf"; Description: "View Frequently Asked Questions (PDF)"; Flags: postinstall shellexec runasoriginaluser
 
 [Messages]
 BeveledLabel=
@@ -151,7 +150,7 @@ procedure DonateImageOnClick(Sender: TObject);
 var
   ErrorCode: Integer;
 begin
-  ShellExecAsOriginalUser('open', 'https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=DK9WYLVBN7K4Y', '', '', SW_SHOWNORMAL, ewNoWait, ErrorCode);
+  ShellExecAsOriginalUser('open', 'https://www.paypal.com/donate/?hosted_button_id=3HRQZCUW37BQ6', '', '', SW_SHOWNORMAL, ewNoWait, ErrorCode);
 end;
 
 procedure InitializeWizard;
@@ -160,7 +159,7 @@ var
   DonateImage: TBitmapImage;
   BevelTop: Integer;
 begin
-  WizardForm.LicenseAcceptedRadio.Checked := True;
+  // WizardForm.LicenseAcceptedRadio.Checked := True;
 
   ImageFileName := ExpandConstant('{tmp}\isdonate.bmp');
   ExtractTemporaryFile(ExtractFileName(ImageFileName));

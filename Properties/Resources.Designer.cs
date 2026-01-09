@@ -171,6 +171,26 @@ namespace NetRadio.Properties {
         }
         
         /// <summary>
+        ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Icon ähnlich wie (Symbol).
+        /// </summary>
+        internal static System.Drawing.Icon NetRadio {
+            get {
+                object obj = ResourceManager.GetObject("NetRadio", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Icon ähnlich wie (Symbol).
+        /// </summary>
+        internal static System.Drawing.Icon NetRadiX {
+            get {
+                object obj = ResourceManager.GetObject("NetRadiX", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap pause {
@@ -236,6 +256,16 @@ namespace NetRadio.Properties {
         internal static System.Drawing.Bitmap progress {
             get {
                 object obj = ResourceManager.GetObject("progress", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap question32 {
+            get {
+                object obj = ResourceManager.GetObject("question32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

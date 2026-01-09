@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows.Forms;
+using NetRadio.cls;
 
 namespace NetRadio;
 
@@ -46,7 +47,7 @@ public partial class FrmStationInfo : Form
             ProcessStartInfo psi = new(linkLblHomepage.Text) { UseShellExecute = true };
             Process.Start(psi);
         }
-        catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { MessageBox.Show(ex.Message, Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+        catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { Utilities.ErrTaskDialog(this, ex); }
     }
 
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
