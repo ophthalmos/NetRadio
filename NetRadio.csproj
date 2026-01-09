@@ -3,22 +3,22 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows8.0</TargetFramework>
-    <Nullable>disable</Nullable>
+    <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>disable</ImplicitUsings>
     <PlatformTarget>x64</PlatformTarget>
     <Platforms>AnyCPU;x64</Platforms>
-    <ApplicationIcon>NetRadio.ico</ApplicationIcon>
-    <IsPublishable>False</IsPublishable>
+    <ApplicationIcon>img\NetRadio.ico</ApplicationIcon>
+    <IsPublishable>True</IsPublishable>
     <NeutralLanguage>en</NeutralLanguage>
     <StartupObject>NetRadio.Program</StartupObject>
     <Title>NetRadio</Title>
     <Description>NetRadio</Description>
-    <AssemblyVersion>2.5.8</AssemblyVersion>
-    <FileVersion>2.5.8</FileVersion>
+    <AssemblyVersion>2.5.10</AssemblyVersion>
+    <FileVersion>2.5.10</FileVersion>
     <SourceRevisionId>build$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss"))</SourceRevisionId>
-    <Copyright>(c) 2025 by W. Happe, GPL v3</Copyright>
-    <Version>2.5.8</Version>
+    <Copyright>(c) 2026 by W. Happe, GPL v3</Copyright>
+    <Version>2.5.10</Version>
     <GenerateResourceWarnOnBinaryFormatterUse>false</GenerateResourceWarnOnBinaryFormatterUse>
     <SupportedOSPlatformVersion>8.0</SupportedOSPlatformVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -62,7 +62,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="NetRadio.ico" />
+    <Content Include="img\NetRadio.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -121,7 +121,11 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="if $(ConfigurationName) == ReleaseXXX (&#xD;&#xA;E:\Code\CodeSigning\signtool.exe sign /f E:\Code\CodeSigning\WHappe.pfx /p htYdOR5QZMkbK /fd sha256 /tr http://timestamp.comodoca.com/?td=sha256 /td sha256 /as /v $(TargetPath)&#xD;&#xA;)" />
+    <Exec Command="xcopy &quot;$(TargetPath)&quot; &quot;C:\Program Files\$(AssemblyName)\&quot; /y&#xD;&#xA;xcopy &quot;$(TargetDir)\*.exe&quot; &quot;C:\Program Files\$(AssemblyName)\&quot; /y" />
+  </Target>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="powershell -Command &quot;if (Get-Process -Name '$(AssemblyName)' -ErrorAction SilentlyContinue) { Stop-Process -Name '$(AssemblyName)' -Force }&quot;" />
   </Target>
 
 </Project>

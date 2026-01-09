@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows.Forms;
+using NetRadio.cls;
 
 namespace NetRadio;
 
@@ -29,7 +30,7 @@ public partial class FrmSearch : Form
             ProcessStartInfo psi = new("https://www.radio-browser.info/") { UseShellExecute = true };
             Process.Start(psi);
         }
-        catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { MessageBox.Show(ex.Message, Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+        catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { Utilities.ErrTaskDialog(this, ex); }
     }
 
     //protected override void OnHandleCreated(EventArgs e)

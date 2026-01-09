@@ -28,232 +28,236 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.panelBackground = new System.Windows.Forms.Panel();
-            this.tbxURL = new System.Windows.Forms.TextBox();
-            this.linkLblHomepage = new System.Windows.Forms.LinkLabel();
-            this.lblName = new System.Windows.Forms.Label();
-            this.lblBitrate = new System.Windows.Forms.Label();
-            this.lblCodec = new System.Windows.Forms.Label();
-            this.lblVotes = new System.Windows.Forms.Label();
-            this.lblLanguage = new System.Windows.Forms.Label();
-            this.lblCountry = new System.Windows.Forms.Label();
-            this.pictureBox = new System.Windows.Forms.PictureBox();
-            this.defBitrate = new System.Windows.Forms.Label();
-            this.defCodec = new System.Windows.Forms.Label();
-            this.defVotes = new System.Windows.Forms.Label();
-            this.defLanguage = new System.Windows.Forms.Label();
-            this.defCountry = new System.Windows.Forms.Label();
-            this.btnClose = new System.Windows.Forms.Button();
-            this.btnNext = new System.Windows.Forms.Button();
-            this.btnPrevious = new System.Windows.Forms.Button();
-            this.panelBackground.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
-            this.SuspendLayout();
+            components = new System.ComponentModel.Container();
+            panelBackground = new System.Windows.Forms.Panel();
+            tbxURL = new System.Windows.Forms.TextBox();
+            linkLblHomepage = new System.Windows.Forms.LinkLabel();
+            lblName = new System.Windows.Forms.Label();
+            lblBitrate = new System.Windows.Forms.Label();
+            lblCodec = new System.Windows.Forms.Label();
+            lblVotes = new System.Windows.Forms.Label();
+            lblLanguage = new System.Windows.Forms.Label();
+            lblCountry = new System.Windows.Forms.Label();
+            pictureBox = new System.Windows.Forms.PictureBox();
+            defBitrate = new System.Windows.Forms.Label();
+            defCodec = new System.Windows.Forms.Label();
+            defVotes = new System.Windows.Forms.Label();
+            defLanguage = new System.Windows.Forms.Label();
+            defCountry = new System.Windows.Forms.Label();
+            btnClose = new System.Windows.Forms.Button();
+            btnNext = new System.Windows.Forms.Button();
+            btnPrevious = new System.Windows.Forms.Button();
+            toolTip = new System.Windows.Forms.ToolTip(components);
+            panelBackground.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)pictureBox).BeginInit();
+            SuspendLayout();
             // 
             // panelBackground
             // 
-            this.panelBackground.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            this.panelBackground.Controls.Add(this.tbxURL);
-            this.panelBackground.Controls.Add(this.linkLblHomepage);
-            this.panelBackground.Controls.Add(this.lblName);
-            this.panelBackground.Controls.Add(this.lblBitrate);
-            this.panelBackground.Controls.Add(this.lblCodec);
-            this.panelBackground.Controls.Add(this.lblVotes);
-            this.panelBackground.Controls.Add(this.lblLanguage);
-            this.panelBackground.Controls.Add(this.lblCountry);
-            this.panelBackground.Controls.Add(this.pictureBox);
-            this.panelBackground.Controls.Add(this.defBitrate);
-            this.panelBackground.Controls.Add(this.defCodec);
-            this.panelBackground.Controls.Add(this.defVotes);
-            this.panelBackground.Controls.Add(this.defLanguage);
-            this.panelBackground.Controls.Add(this.defCountry);
-            this.panelBackground.Dock = System.Windows.Forms.DockStyle.Top;
-            this.panelBackground.Location = new System.Drawing.Point(0, 0);
-            this.panelBackground.Name = "panelBackground";
-            this.panelBackground.Size = new System.Drawing.Size(363, 225);
-            this.panelBackground.TabIndex = 1;
+            panelBackground.BackColor = System.Drawing.SystemColors.ControlLightLight;
+            panelBackground.Controls.Add(tbxURL);
+            panelBackground.Controls.Add(linkLblHomepage);
+            panelBackground.Controls.Add(lblName);
+            panelBackground.Controls.Add(lblBitrate);
+            panelBackground.Controls.Add(lblCodec);
+            panelBackground.Controls.Add(lblVotes);
+            panelBackground.Controls.Add(lblLanguage);
+            panelBackground.Controls.Add(lblCountry);
+            panelBackground.Controls.Add(pictureBox);
+            panelBackground.Controls.Add(defBitrate);
+            panelBackground.Controls.Add(defCodec);
+            panelBackground.Controls.Add(defVotes);
+            panelBackground.Controls.Add(defLanguage);
+            panelBackground.Controls.Add(defCountry);
+            panelBackground.Dock = System.Windows.Forms.DockStyle.Top;
+            panelBackground.Location = new System.Drawing.Point(0, 0);
+            panelBackground.Name = "panelBackground";
+            panelBackground.Size = new System.Drawing.Size(363, 225);
+            panelBackground.TabIndex = 1;
             // 
             // tbxURL
             // 
-            this.tbxURL.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            this.tbxURL.Location = new System.Drawing.Point(15, 41);
-            this.tbxURL.Name = "tbxURL";
-            this.tbxURL.ReadOnly = true;
-            this.tbxURL.ShortcutsEnabled = false;
-            this.tbxURL.Size = new System.Drawing.Size(341, 24);
-            this.tbxURL.TabIndex = 13;
-            this.tbxURL.WordWrap = false;
+            tbxURL.BackColor = System.Drawing.SystemColors.ControlLightLight;
+            tbxURL.Location = new System.Drawing.Point(15, 41);
+            tbxURL.Name = "tbxURL";
+            tbxURL.ReadOnly = true;
+            tbxURL.ShortcutsEnabled = false;
+            tbxURL.Size = new System.Drawing.Size(341, 24);
+            tbxURL.TabIndex = 13;
+            tbxURL.WordWrap = false;
             // 
             // linkLblHomepage
             // 
-            this.linkLblHomepage.Location = new System.Drawing.Point(12, 195);
-            this.linkLblHomepage.Name = "linkLblHomepage";
-            this.linkLblHomepage.Size = new System.Drawing.Size(344, 19);
-            this.linkLblHomepage.TabIndex = 12;
-            this.linkLblHomepage.TabStop = true;
-            this.linkLblHomepage.Text = "Homepage";
-            this.linkLblHomepage.MouseClick += new System.Windows.Forms.MouseEventHandler(this.LinkLblHomepage_MouseClick);
+            linkLblHomepage.Location = new System.Drawing.Point(12, 195);
+            linkLblHomepage.Name = "linkLblHomepage";
+            linkLblHomepage.Size = new System.Drawing.Size(344, 19);
+            linkLblHomepage.TabIndex = 12;
+            linkLblHomepage.TabStop = true;
+            linkLblHomepage.Text = "Homepage";
+            linkLblHomepage.MouseClick += LinkLblHomepage_MouseClick;
             // 
             // lblName
             // 
-            this.lblName.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            this.lblName.Location = new System.Drawing.Point(12, 17);
-            this.lblName.Name = "lblName";
-            this.lblName.Size = new System.Drawing.Size(339, 15);
-            this.lblName.TabIndex = 11;
-            this.lblName.Text = "Name";
+            lblName.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
+            lblName.Location = new System.Drawing.Point(12, 17);
+            lblName.Name = "lblName";
+            lblName.Size = new System.Drawing.Size(339, 15);
+            lblName.TabIndex = 11;
+            lblName.Text = "Name";
             // 
             // lblBitrate
             // 
-            this.lblBitrate.Location = new System.Drawing.Point(100, 170);
-            this.lblBitrate.Name = "lblBitrate";
-            this.lblBitrate.Size = new System.Drawing.Size(120, 15);
-            this.lblBitrate.TabIndex = 10;
-            this.lblBitrate.Text = "label1";
+            lblBitrate.Location = new System.Drawing.Point(100, 170);
+            lblBitrate.Name = "lblBitrate";
+            lblBitrate.Size = new System.Drawing.Size(120, 15);
+            lblBitrate.TabIndex = 10;
+            lblBitrate.Text = "label1";
             // 
             // lblCodec
             // 
-            this.lblCodec.Location = new System.Drawing.Point(100, 145);
-            this.lblCodec.Name = "lblCodec";
-            this.lblCodec.Size = new System.Drawing.Size(120, 15);
-            this.lblCodec.TabIndex = 9;
-            this.lblCodec.Text = "label1";
+            lblCodec.Location = new System.Drawing.Point(100, 145);
+            lblCodec.Name = "lblCodec";
+            lblCodec.Size = new System.Drawing.Size(120, 15);
+            lblCodec.TabIndex = 9;
+            lblCodec.Text = "label1";
             // 
             // lblVotes
             // 
-            this.lblVotes.Location = new System.Drawing.Point(100, 120);
-            this.lblVotes.Name = "lblVotes";
-            this.lblVotes.Size = new System.Drawing.Size(120, 15);
-            this.lblVotes.TabIndex = 8;
-            this.lblVotes.Text = "label1";
+            lblVotes.Location = new System.Drawing.Point(100, 120);
+            lblVotes.Name = "lblVotes";
+            lblVotes.Size = new System.Drawing.Size(120, 15);
+            lblVotes.TabIndex = 8;
+            lblVotes.Text = "label1";
             // 
             // lblLanguage
             // 
-            this.lblLanguage.Location = new System.Drawing.Point(100, 95);
-            this.lblLanguage.Name = "lblLanguage";
-            this.lblLanguage.Size = new System.Drawing.Size(120, 15);
-            this.lblLanguage.TabIndex = 7;
-            this.lblLanguage.Text = "label1";
+            lblLanguage.Location = new System.Drawing.Point(100, 95);
+            lblLanguage.Name = "lblLanguage";
+            lblLanguage.Size = new System.Drawing.Size(120, 15);
+            lblLanguage.TabIndex = 7;
+            lblLanguage.Text = "label1";
             // 
             // lblCountry
             // 
-            this.lblCountry.Location = new System.Drawing.Point(100, 70);
-            this.lblCountry.Name = "lblCountry";
-            this.lblCountry.Size = new System.Drawing.Size(120, 15);
-            this.lblCountry.TabIndex = 6;
-            this.lblCountry.Text = "label1";
+            lblCountry.Location = new System.Drawing.Point(100, 70);
+            lblCountry.Name = "lblCountry";
+            lblCountry.Size = new System.Drawing.Size(120, 15);
+            lblCountry.TabIndex = 6;
+            lblCountry.Text = "label1";
             // 
             // pictureBox
             // 
-            this.pictureBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pictureBox.InitialImage = global::NetRadio.Properties.Resources.epul;
-            this.pictureBox.Location = new System.Drawing.Point(231, 67);
-            this.pictureBox.Name = "pictureBox";
-            this.pictureBox.Size = new System.Drawing.Size(125, 125);
-            this.pictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
-            this.pictureBox.TabIndex = 5;
-            this.pictureBox.TabStop = false;
+            pictureBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            pictureBox.InitialImage = Properties.Resources.epul;
+            pictureBox.Location = new System.Drawing.Point(231, 67);
+            pictureBox.Name = "pictureBox";
+            pictureBox.Size = new System.Drawing.Size(125, 125);
+            pictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
+            pictureBox.TabIndex = 5;
+            pictureBox.TabStop = false;
             // 
             // defBitrate
             // 
-            this.defBitrate.AutoSize = true;
-            this.defBitrate.Location = new System.Drawing.Point(12, 170);
-            this.defBitrate.Name = "defBitrate";
-            this.defBitrate.Size = new System.Drawing.Size(48, 17);
-            this.defBitrate.TabIndex = 4;
-            this.defBitrate.Text = "Bitrate:";
+            defBitrate.AutoSize = true;
+            defBitrate.Location = new System.Drawing.Point(12, 170);
+            defBitrate.Name = "defBitrate";
+            defBitrate.Size = new System.Drawing.Size(48, 17);
+            defBitrate.TabIndex = 4;
+            defBitrate.Text = "Bitrate:";
             // 
             // defCodec
             // 
-            this.defCodec.AutoSize = true;
-            this.defCodec.Location = new System.Drawing.Point(12, 145);
-            this.defCodec.Name = "defCodec";
-            this.defCodec.Size = new System.Drawing.Size(48, 17);
-            this.defCodec.TabIndex = 3;
-            this.defCodec.Text = "Codec:";
+            defCodec.AutoSize = true;
+            defCodec.Location = new System.Drawing.Point(12, 145);
+            defCodec.Name = "defCodec";
+            defCodec.Size = new System.Drawing.Size(48, 17);
+            defCodec.TabIndex = 3;
+            defCodec.Text = "Codec:";
             // 
             // defVotes
             // 
-            this.defVotes.AutoSize = true;
-            this.defVotes.Location = new System.Drawing.Point(12, 120);
-            this.defVotes.Name = "defVotes";
-            this.defVotes.Size = new System.Drawing.Size(43, 17);
-            this.defVotes.TabIndex = 2;
-            this.defVotes.Text = "Votes:";
+            defVotes.AutoSize = true;
+            defVotes.Location = new System.Drawing.Point(12, 120);
+            defVotes.Name = "defVotes";
+            defVotes.Size = new System.Drawing.Size(43, 17);
+            defVotes.TabIndex = 2;
+            defVotes.Text = "Votes:";
             // 
             // defLanguage
             // 
-            this.defLanguage.AutoSize = true;
-            this.defLanguage.Location = new System.Drawing.Point(12, 95);
-            this.defLanguage.Name = "defLanguage";
-            this.defLanguage.Size = new System.Drawing.Size(68, 17);
-            this.defLanguage.TabIndex = 1;
-            this.defLanguage.Text = "Language:";
+            defLanguage.AutoSize = true;
+            defLanguage.Location = new System.Drawing.Point(12, 95);
+            defLanguage.Name = "defLanguage";
+            defLanguage.Size = new System.Drawing.Size(68, 17);
+            defLanguage.TabIndex = 1;
+            defLanguage.Text = "Language:";
             // 
             // defCountry
             // 
-            this.defCountry.AutoSize = true;
-            this.defCountry.Location = new System.Drawing.Point(12, 70);
-            this.defCountry.Name = "defCountry";
-            this.defCountry.Size = new System.Drawing.Size(56, 17);
-            this.defCountry.TabIndex = 0;
-            this.defCountry.Text = "Country:";
+            defCountry.AutoSize = true;
+            defCountry.Location = new System.Drawing.Point(12, 70);
+            defCountry.Name = "defCountry";
+            defCountry.Size = new System.Drawing.Size(56, 17);
+            defCountry.TabIndex = 0;
+            defCountry.Text = "Country:";
             // 
             // btnClose
             // 
-            this.btnClose.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnClose.Location = new System.Drawing.Point(242, 231);
-            this.btnClose.Name = "btnClose";
-            this.btnClose.Size = new System.Drawing.Size(114, 25);
-            this.btnClose.TabIndex = 2;
-            this.btnClose.Text = "Close (Esc/Enter)";
-            this.btnClose.UseVisualStyleBackColor = true;
+            btnClose.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            btnClose.Location = new System.Drawing.Point(242, 231);
+            btnClose.Name = "btnClose";
+            btnClose.Size = new System.Drawing.Size(114, 25);
+            btnClose.TabIndex = 2;
+            btnClose.Text = "Close (Esc/Enter)";
+            btnClose.UseVisualStyleBackColor = true;
             // 
             // btnNext
             // 
-            this.btnNext.DialogResult = System.Windows.Forms.DialogResult.Yes;
-            this.btnNext.Location = new System.Drawing.Point(135, 231);
-            this.btnNext.Name = "btnNext";
-            this.btnNext.Size = new System.Drawing.Size(101, 25);
-            this.btnNext.TabIndex = 4;
-            this.btnNext.Text = "Next (F4/PgDn)";
-            this.btnNext.UseVisualStyleBackColor = true;
+            btnNext.DialogResult = System.Windows.Forms.DialogResult.Yes;
+            btnNext.Location = new System.Drawing.Point(135, 231);
+            btnNext.Name = "btnNext";
+            btnNext.Size = new System.Drawing.Size(101, 25);
+            btnNext.TabIndex = 4;
+            btnNext.Text = "&Next (PgDn)";
+            toolTip.SetToolTip(btnNext, "F4");
+            btnNext.UseVisualStyleBackColor = true;
             // 
             // btnPrevious
             // 
-            this.btnPrevious.DialogResult = System.Windows.Forms.DialogResult.No;
-            this.btnPrevious.Location = new System.Drawing.Point(5, 231);
-            this.btnPrevious.Name = "btnPrevious";
-            this.btnPrevious.Size = new System.Drawing.Size(124, 25);
-            this.btnPrevious.TabIndex = 5;
-            this.btnPrevious.Text = "Previous (F3/PgUp)";
-            this.btnPrevious.UseVisualStyleBackColor = true;
+            btnPrevious.DialogResult = System.Windows.Forms.DialogResult.No;
+            btnPrevious.Location = new System.Drawing.Point(5, 231);
+            btnPrevious.Name = "btnPrevious";
+            btnPrevious.Size = new System.Drawing.Size(124, 25);
+            btnPrevious.TabIndex = 5;
+            btnPrevious.Text = "&Previous (PgUp)";
+            toolTip.SetToolTip(btnPrevious, "F3");
+            btnPrevious.UseVisualStyleBackColor = true;
             // 
             // FrmStationInfo
             // 
-            this.AcceptButton = this.btnClose;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.CancelButton = this.btnClose;
-            this.ClientSize = new System.Drawing.Size(363, 266);
-            this.Controls.Add(this.btnPrevious);
-            this.Controls.Add(this.btnNext);
-            this.Controls.Add(this.btnClose);
-            this.Controls.Add(this.panelBackground);
-            this.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
-            this.Name = "FrmStationInfo";
-            this.ShowIcon = false;
-            this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "frmStationInfo";
-            this.TopMost = true;
-            this.panelBackground.ResumeLayout(false);
-            this.panelBackground.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).EndInit();
-            this.ResumeLayout(false);
+            AcceptButton = btnClose;
+            AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
+            AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            CancelButton = btnClose;
+            ClientSize = new System.Drawing.Size(363, 266);
+            Controls.Add(btnPrevious);
+            Controls.Add(btnNext);
+            Controls.Add(btnClose);
+            Controls.Add(panelBackground);
+            Font = new System.Drawing.Font("Segoe UI", 9.5F);
+            FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            MaximizeBox = false;
+            MinimizeBox = false;
+            Name = "FrmStationInfo";
+            ShowIcon = false;
+            ShowInTaskbar = false;
+            StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
+            Text = "frmStationInfo";
+            TopMost = true;
+            panelBackground.ResumeLayout(false);
+            panelBackground.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)pictureBox).EndInit();
+            ResumeLayout(false);
 
         }
 
@@ -277,5 +281,6 @@
         private System.Windows.Forms.Button btnPrevious;
         private System.Windows.Forms.LinkLabel linkLblHomepage;
         private System.Windows.Forms.TextBox tbxURL;
+        private System.Windows.Forms.ToolTip toolTip;
     }
 }

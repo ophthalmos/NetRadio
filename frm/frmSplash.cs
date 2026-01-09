@@ -6,19 +6,25 @@ namespace NetRadio;
 
 public partial class SplashForm : Form
 {
-    public event EventHandler SplashActivated;
-    protected virtual void OnFSplashActivated(EventArgs e) { SplashActivated?.Invoke(this, e); }
+    public event EventHandler? SplashActivated;
 
-    public SplashForm()
+    private readonly Form _ownerForm;
+
+    public SplashForm(Form ownerForm)
     {
         InitializeComponent();
-        var parentForm = Application.OpenForms[0];
-        Location = new Point(PointToScreen(new Point(parentForm.Left, parentForm.Top)).X + 51, PointToScreen(new Point(parentForm.Left, parentForm.Top)).Y + 22);
+        _ownerForm = ownerForm; // Speichern der Referenz
+        Location = new Point(_ownerForm.Left + 51, _ownerForm.Top + 22);
     }
 
     private void SplashForm_Activated(object sender, EventArgs e)
     {
-        Application.OpenForms[0].Activate();
-        OnFSplashActivated(null);
+        _ownerForm.Activate();
+        OnFSplashActivated(EventArgs.Empty);
+    }
+
+    protected virtual void OnFSplashActivated(EventArgs e)
+    {
+        SplashActivated?.Invoke(this, e);
     }
 }

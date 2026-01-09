@@ -1,15 +1,17 @@
-﻿using Microsoft.Win32; // Registry
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
+using Microsoft.Win32; // Registry
 using Un4seen.Bass;
 
 namespace NetRadio.cls;
@@ -20,16 +22,149 @@ internal class Utilities // internal is standard
 
     public static readonly List<string> TaskNames = ["Start playing", "Stop playing", "Start recording", "Stop recording", "Put PC to sleep", "Hibernate PC", "Shut down PC"];
 
-    internal static void ErrorMsgTaskDlg(nint hwnd, string message, string caption, TaskDialogIcon taskDialogIcon = null)
+    internal static void MsgTaskDialog(IWin32Window? owner, string heading, string message = "", TaskDialogIcon? icon = null)
     {
-        taskDialogIcon ??= TaskDialogIcon.Error;
-        TaskDialog.ShowDialog(hwnd, new TaskDialogPage() { Caption = caption, SizeToContent = true, Text = message, Icon = taskDialogIcon, AllowCancel = true, Buttons = { TaskDialogButton.OK } });
+        icon ??= TaskDialogIcon.Error;
+        TaskDialogPage page = new() { Caption = Application.ProductName, Heading = heading, SizeToContent = true, Text = message, Icon = icon, AllowCancel = true, Buttons = { TaskDialogButton.OK } };
+        if (owner != null) { TaskDialog.ShowDialog(owner, page); }
+        else { TaskDialog.ShowDialog(page); }
     }
 
-    //public static void TaskDialogMessage(string text, string heading, string caption, TaskDialogIcon icon)
-    //{
-    //    TaskDialog.ShowDialog(Form.ActiveForm, new TaskDialogPage() { Text = text, Heading = heading, Caption = caption, Buttons = { TaskDialogButton.OK, }, Icon = icon});
-    //}
+    internal static void MsgTaskDialogTimeout(IWin32Window? owner, string heading, string text, int seconds, TaskDialogIcon? icon = null)
+    {
+        icon ??= TaskDialogIcon.Information;
+        var btnOK = TaskDialogButton.OK;
+        TaskDialogPage page = new()
+        {
+            Caption = Application.ProductName,
+            Heading = heading,
+            Text = $"{text}\n\n(Closing in {seconds} s)", // Initialer Text
+            Icon = icon,
+            Buttons = { btnOK },
+            DefaultButton = btnOK,
+            SizeToContent = true
+        };
+        using System.Windows.Forms.Timer timer = new() { Interval = 1000 };
+        var remainingSeconds = seconds;
+        page.Created += (s, e) => { timer.Start(); };
+        page.Destroyed += (s, e) => { timer.Stop(); };
+        timer.Tick += (s, e) =>
+        {
+            remainingSeconds--;
+            if (remainingSeconds <= 0)
+            {
+                timer.Stop();
+                if (page.BoundDialog != null) { btnOK.PerformClick(); }
+            }
+            else { page.Text = $"{text}\n\n(Closing in {remainingSeconds} s)"; }
+        };
+        if (owner == null) { TaskDialog.ShowDialog(page); }
+        else { TaskDialog.ShowDialog(owner, page); }
+    }
+
+    internal static bool IsActionCancelled(IWin32Window? owner, string heading, string text, int seconds, TaskDialogIcon? icon = null)
+    {
+        icon ??= TaskDialogIcon.Information;
+        var btnOK = TaskDialogButton.OK;
+        var btnCancel = TaskDialogButton.Cancel;
+        TaskDialogPage page = new()
+        {
+            Caption = Application.ProductName,
+            Heading = heading,
+            Text = $"{text}\n\n(Auto-confirm in {seconds} s)",
+            Icon = icon, // Hier wird das Icon gesetzt
+            Buttons = { btnOK, btnCancel },
+            DefaultButton = btnCancel,
+            SizeToContent = true
+        };
+        using System.Windows.Forms.Timer timer = new() { Interval = 1000 };
+        var remaining = seconds;
+        page.Created += (s, e) => timer.Start();
+        page.Destroyed += (s, e) => timer.Stop();
+        timer.Tick += (s, e) =>
+        {
+            remaining--;
+            if (remaining <= 0)
+            {
+                timer.Stop();
+                if (page.BoundDialog != null) { btnOK.PerformClick(); }
+            }
+            else { page.Text = $"{text}\n\n(Auto-confirm in {remaining} s)"; }
+        };
+        var result = owner != null ? TaskDialog.ShowDialog(owner, page) : TaskDialog.ShowDialog(page);
+        return result == btnCancel;
+    }
+
+    public static void ErrTaskDialog(IWin32Window? owner, Exception error, TaskDialogIcon? icon = null)
+    {
+        icon ??= TaskDialogIcon.Error;
+        TaskDialogButton copyButton = new("Copy Details");
+        TaskDialogPage page = new()
+        {
+            Caption = Application.ProductName,
+            Heading = error.GetType().ToString(),
+            Text = error.Message,
+            Icon = icon,
+            Buttons = { TaskDialogButton.OK, copyButton },
+            Expander = new TaskDialogExpander()
+            {
+                Text = $"--- StackTrace ---\n{error}\n\n--- System ---\nOS: {Environment.OSVersion}\nRuntime: {RuntimeInformation.FrameworkDescription}",
+                CollapsedButtonText = "Show technical details",
+                ExpandedButtonText = "Hide details",
+                Position = TaskDialogExpanderPosition.AfterFootnote
+            }
+        };
+        copyButton.Click += (s, e) => { Clipboard.SetText(page.Expander.Text); };
+        if (owner is null) { TaskDialog.ShowDialog(page); }
+        else { TaskDialog.ShowDialog(owner, page); }
+    }
+
+    internal static (bool IsYes, bool IsNo, bool IsCancelled) YesNo_TaskDialog(IWin32Window? owner, string heading, string text, string yes = "", string no = "", bool defBtn = true)
+    {
+        var yesButton = string.IsNullOrEmpty(yes) ? TaskDialogButton.Yes : new TaskDialogButton(yes);
+        var noButton = string.IsNullOrEmpty(no) ? TaskDialogButton.No : new TaskDialogButton(no);
+        var page = new TaskDialogPage
+        {
+            Caption = Application.ProductName,
+            Heading = heading,
+            Text = text,
+            Icon = new TaskDialogIcon(Properties.Resources.question32),
+            Buttons = { yesButton, noButton },
+            DefaultButton = defBtn ? yesButton : noButton,
+            AllowCancel = true,
+            SizeToContent = true
+        };
+        var result = owner is not null ? TaskDialog.ShowDialog(owner, page) : TaskDialog.ShowDialog(page);
+        var isYes = result == yesButton;
+        var isNo = result == noButton;
+        var isCancelled = result == TaskDialogButton.Cancel || (!isYes && !isNo);
+        return (isYes, isNo, isCancelled);
+    }
+
+    public static void StartFile(IWin32Window? iWin, string filePath)
+    {
+        try
+        {
+            ProcessStartInfo psi = new(filePath) { UseShellExecute = true }; // for non-executables
+            Process.Start(psi);
+        }
+        catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { ErrTaskDialog(iWin, ex); }
+    }
+
+
+    public static void StartLink(IWin32Window? iWin, string url)
+    {
+        try
+        {
+            if (Uri.IsWellFormedUriString(url, UriKind.Absolute))
+            {
+                ProcessStartInfo psi = new(url) { UseShellExecute = true };
+                Process.Start(psi);
+            }
+            else { MsgTaskDialog(iWin ?? null, "Ungültiger Link!", "'" + url + "' ist keine gültige URL.", TaskDialogIcon.ShieldWarningYellowBar); }
+        }
+        catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { ErrTaskDialog(iWin, ex); }
+    }
 
     public static bool PingGoogleSuccess(int timeout)
     { // InternetGetConnectedState: This code only checks if the network cable is plugged in
@@ -39,10 +174,13 @@ internal class Utilities // internal is standard
 
     public static void SetClipboardUnicodeText(string text)
     {
-        Thread thread = new(() => Clipboard.SetText(text, TextDataFormat.UnicodeText));
-        thread.SetApartmentState(ApartmentState.STA); //Set the thread to STA
-        thread.Start();
-        thread.Join();
+        if (string.IsNullOrEmpty(text)) { return; }
+        try { Clipboard.SetText(text, TextDataFormat.UnicodeText); }
+        catch (ExternalException)
+        {
+            Thread.Sleep(100);
+            Clipboard.SetText(text, TextDataFormat.UnicodeText);
+        }
     }
 
     public static StringFormat GetStringFormat(HorizontalAlignment ha)
@@ -56,8 +194,9 @@ internal class Utilities // internal is standard
         return new StringFormat() { Alignment = align, LineAlignment = StringAlignment.Center };
     }
 
-    public static string StationLong(string caption, bool button = false)
+    public static string StationLong(string? caption, bool button = false)
     {
+        if (string.IsNullOrEmpty(caption)) { return string.Empty; }
         caption = Regex.Replace(caption, @"[\[{].*\||[\[{](.*)[]}]", "$1");
         caption = caption.Replace("[", string.Empty).Replace("]", string.Empty);
         caption = caption.Replace("{", string.Empty).Replace("}", string.Empty);
@@ -65,8 +204,9 @@ internal class Utilities // internal is standard
         return Regex.Replace(caption, @"\s+", " "); // doppelte Leerzeichen entfernen
     }
 
-    public static string StationShort(string s, bool button = false)
+    public static string StationShort(string? s, bool button = false)
     {
+        if (string.IsNullOrEmpty(s)) { return string.Empty; }
         s = Regex.Replace(s, @"[\[{]([^\]|}]*)\|.*[]}]", "$1"); // innerhalb geschweifter Klammern wird Part1 genommen
         s = Regex.Replace(s, @"[\[{][^\]|}]*[]}]", string.Empty); // Text innerhalb eckiger Klammern wird entfernt, Zwischebereich darf keine schließende Klammer enthalten [^\]]*; [ muss maskiert werden, ] nicht
         s = Regex.Replace(s, @"\s+", " "); // doppelte Leerzeichen entfernen
@@ -159,7 +299,7 @@ internal class Utilities // internal is standard
         var key = Registry.CurrentUser.OpenSubKey(runLocation);
         if (key == null) { return false; }
 
-        var value = (string)key.GetValue(appName);
+        var value = (string?)key.GetValue(appName);
         if (value == null) { return false; }
         else if (Debugger.IsAttached) { return true; } // run by Visual Studio
         else { return value == assemblyLocation; }
@@ -169,7 +309,7 @@ internal class Utilities // internal is standard
     {
         var key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\NetRadio_is1");
         if (key == null) { return false; }
-        var value = (string)key.GetValue("UninstallString");
+        var value = (string?)key.GetValue("UninstallString");
         if (value == null) { return false; }
         else if (Debugger.IsAttached) { return true; } // run by Visual Studio
         else { return assemblyLocation.Equals(RemoveFromEnd(value.Trim('"'), "\\unins000.exe")); } // "C:\Program Files\NetRadio\unins000.exe"

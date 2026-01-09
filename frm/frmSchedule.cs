@@ -109,7 +109,7 @@ public partial class FrmSchedule : Form
         if (aLV.SelectedItems.Count > 0)
         {
             aLV.SelectedItems[0].Checked = false;
-            BtnEdit_Click(null, null);
+            BtnEdit_Click(null!, EventArgs.Empty);
         }
     }
 

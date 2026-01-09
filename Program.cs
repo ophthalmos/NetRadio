@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading; // Mutex
@@ -17,7 +18,7 @@ internal static class Program
     [STAThread]
     private static void Main()
     {
-        using Mutex singleMutex = new(true, "{8F4J0AC4-WH29-57GD-A8CF-72F04E6BDE8F}", out bool isNewInstance);
+        using Mutex singleMutex = new(true, "{8F4J0AC4-WH29-57GD-A8CF-72F04E6BDE8F}", out var isNewInstance);
         if (isNewInstance)
         {
             Application.EnableVisualStyles();
@@ -28,12 +29,14 @@ internal static class Program
                 if (File.Exists(dllPath))
                 {
                     BassNet.Registration("happe.kiel@web.de", "2X313517322323");
-                    if (Utils.HighWord(Bass.BASS_GetVersion()) != Bass.BASSVERSION) { MessageBox.Show("Wrong Bass Version!", "NetRadio", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                    if (Utils.HighWord(Bass.BASS_GetVersion()) < Bass.BASSVERSION) {Utilities.MsgTaskDialog(null, "Wrong Bass Version!"); }
                     Application.Run(new FrmMain());
                 }
-                else { MessageBox.Show("Missing \"" + dllPath + "\"!", "NetRadio", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                else { Utilities.MsgTaskDialog(null, dllPath, "The required BASS library file is missing from the application folder." + Environment.NewLine + "Please reinstall NetRadio to fix this issue.", TaskDialogIcon.Error); }
             }
-            catch (ArgumentException ex) { MessageBox.Show(ex.Message + Environment.NewLine + "NetRadio will exit for security reasons.", "NetRadio", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            catch (ArgumentException ex) { Utilities.ErrTaskDialog(null, ex); }
+            catch (DllNotFoundException ex) { Utilities.ErrTaskDialog(null, ex); }
+            catch (BadImageFormatException ex) { Utilities.ErrTaskDialog(null, ex); }   
         }
         else
         {
@@ -52,11 +55,19 @@ internal static class Program
                     };
                     ptrCopyData = Marshal.AllocCoTaskMem(Marshal.SizeOf(copyData)); // Allocate memory for the data and copy
                     Marshal.StructureToPtr(copyData, ptrCopyData, false);
-                    foreach (var handle in NativeMethods.EnumerateWinHandles(Process.GetProcessesByName(Assembly.GetEntryAssembly().GetName().Name)
-                        .Where(p => p.Id != Environment.ProcessId).FirstOrDefault().Id)) // process.MainWindowHandle funktioniert nicht wenn Hidden
-                    { //(Assembly.GetCallingAssembly().GetName().Name + " " + new Regex(@"^\d+\.\d+").Match(_curVersion.ToString()).Value).Length = 12
-                        if (NativeMethods.GetWindowTextLength(handle) == 12) { NativeMethods.SendMessage(handle, NativeMethods.WM_COPYDATA, IntPtr.Zero, ptrCopyData); }
-                    } //Prüfung auf != IntPtr.Zero bringt nichts
+
+                    var entryAssembly = Assembly.GetEntryAssembly();
+                    if (entryAssembly != null)
+                    {
+                        var otherProcess = Process.GetProcessesByName(entryAssembly.GetName().Name).FirstOrDefault(p => p.Id != Environment.ProcessId);
+                        if (otherProcess != null)
+                        {
+                            foreach (var handle in NativeMethods.EnumerateWinHandles(otherProcess.Id))
+                            {
+                                if (NativeMethods.GetWindowTextLength(handle) == 12) { NativeMethods.SendMessage(handle, NativeMethods.WM_COPYDATA, IntPtr.Zero, ptrCopyData); }
+                            }
+                        }
+                    }
                 }
                 catch { } //{ MessageBox.Show(ex.ToString(), Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error); }
                 finally

@@ -31,7 +31,7 @@ namespace NetRadio
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MiniPlayer));
+            var resources = new System.ComponentModel.ComponentResourceManager(typeof(MiniPlayer));
             panelTitle = new System.Windows.Forms.Panel();
             btnRestore = new System.Windows.Forms.Button();
             imageList = new System.Windows.Forms.ImageList(components);
@@ -51,6 +51,7 @@ namespace NetRadio
             timerVolTT = new System.Windows.Forms.Timer(components);
             panelDown = new System.Windows.Forms.Panel();
             panelControls = new System.Windows.Forms.Panel();
+            exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             panelTitle.SuspendLayout();
             contextMenuDisplay.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBoxLevel).BeginInit();
@@ -78,7 +79,7 @@ namespace NetRadio
             btnRestore.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Maroon;
             btnRestore.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Crimson;
             btnRestore.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnRestore.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            btnRestore.Font = new System.Drawing.Font("Segoe UI", 9F);
             btnRestore.ForeColor = System.Drawing.SystemColors.HighlightText;
             btnRestore.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
             btnRestore.ImageIndex = 0;
@@ -113,7 +114,7 @@ namespace NetRadio
             labelD2.AutoEllipsis = true;
             labelD2.BackColor = System.Drawing.Color.Transparent;
             labelD2.ContextMenuStrip = contextMenuDisplay;
-            labelD2.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            labelD2.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             labelD2.Location = new System.Drawing.Point(7, 7);
             labelD2.MaximumSize = new System.Drawing.Size(223, 15);
             labelD2.Name = "labelD2";
@@ -126,9 +127,9 @@ namespace NetRadio
             // 
             // contextMenuDisplay
             // 
-            contextMenuDisplay.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { googleToolStripMenuItem, copyToClipboardToolStripMenuItem, toolStripSeparator1, closeToolStripMenuItem });
+            contextMenuDisplay.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { googleToolStripMenuItem, copyToClipboardToolStripMenuItem, toolStripSeparator1, closeToolStripMenuItem, exitToolStripMenuItem });
             contextMenuDisplay.Name = "contextMenuDisplay";
-            contextMenuDisplay.Size = new System.Drawing.Size(243, 76);
+            contextMenuDisplay.Size = new System.Drawing.Size(243, 120);
             // 
             // googleToolStripMenuItem
             // 
@@ -199,7 +200,7 @@ namespace NetRadio
             btnPlayPause.FlatAppearance.MouseDownBackColor = System.Drawing.Color.DimGray;
             btnPlayPause.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Gray;
             btnPlayPause.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnPlayPause.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            btnPlayPause.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             btnPlayPause.ForeColor = System.Drawing.SystemColors.ControlLightLight;
             btnPlayPause.Image = Properties.Resources.play_white;
             btnPlayPause.Location = new System.Drawing.Point(1, 3);
@@ -231,7 +232,7 @@ namespace NetRadio
             btnAOT.FlatAppearance.MouseDownBackColor = System.Drawing.Color.DimGray;
             btnAOT.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Sienna;
             btnAOT.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnAOT.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            btnAOT.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             btnAOT.ForeColor = System.Drawing.SystemColors.ControlLightLight;
             btnAOT.Image = Properties.Resources.pinpush;
             btnAOT.Location = new System.Drawing.Point(211, 3);
@@ -249,7 +250,7 @@ namespace NetRadio
             btnReload.FlatAppearance.MouseDownBackColor = System.Drawing.Color.DimGray;
             btnReload.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Gray;
             btnReload.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnReload.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            btnReload.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             btnReload.ForeColor = System.Drawing.SystemColors.ControlLightLight;
             btnReload.Image = Properties.Resources.replay_white;
             btnReload.Location = new System.Drawing.Point(26, 3);
@@ -284,6 +285,15 @@ namespace NetRadio
             panelControls.TabIndex = 32;
             panelControls.MouseDown += MiniPlayer_MouseDown;
             // 
+            // exitToolStripMenuItem
+            // 
+            exitToolStripMenuItem.Image = Properties.Resources.exit;
+            exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+            exitToolStripMenuItem.ShortcutKeyDisplayString = "Shift+Esc";
+            exitToolStripMenuItem.Size = new System.Drawing.Size(242, 22);
+            exitToolStripMenuItem.Text = "Exit";
+            exitToolStripMenuItem.Click += ExitToolStripMenuItem_Click;
+            // 
             // MiniPlayer
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -307,6 +317,7 @@ namespace NetRadio
             Shown += MiniPlayer_Shown;
             MouseDoubleClick += MiniPlayer_MouseDoubleClick;
             MouseDown += MiniPlayer_MouseDown;
+            Move += MiniPlayer_Move;
             panelTitle.ResumeLayout(false);
             contextMenuDisplay.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)pictureBoxLevel).EndInit();
@@ -335,5 +346,6 @@ namespace NetRadio
         private System.Windows.Forms.ToolStripMenuItem closeToolStripMenuItem;
         private System.Windows.Forms.Button btnReload;
         private System.Windows.Forms.ImageList imageList;
+        private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
     }
 }
