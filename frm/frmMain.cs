@@ -14,6 +14,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
@@ -27,7 +28,42 @@ namespace NetRadio;
 
 public partial class FrmMain : Form
 {
-    //internal static HttpClient? MainHttpClient => httpClient;
+    [GeneratedRegex(@"^\d+\.\d+")]
+    private static partial Regex VersionRegex();
+
+    [GeneratedRegex("^[A-Z0-9]$")]
+    private static partial Regex HotkeyRegex();
+
+    [GeneratedRegex("^[A-Z]+$")]
+    private static partial Regex HotkeyLettersRegex();
+
+    [GeneratedRegex(@"^[/-][1-9][0-5]?$")]
+    private static partial Regex CmdStationRegex();
+
+    [GeneratedRegex(@"^[/-](m|mini)$", RegexOptions.IgnoreCase)]
+    private static partial Regex CmdMiniRegex();
+
+    [GeneratedRegex(@"^[/-](t|tray)$", RegexOptions.IgnoreCase)]
+    private static partial Regex CmdTrayRegex();
+
+    [GeneratedRegex(@".*(http:\/\/[\S]+).*", RegexOptions.Singleline)]
+    private static partial Regex HttpUrlRegex();
+
+    [GeneratedRegex(@".*(https:\/\/[\S]+).*", RegexOptions.Singleline)]
+    private static partial Regex HttpsUrlRegex();
+
+    [GeneratedRegex("([0-9])(kHz|bit)")]
+    private static partial Regex AudioFormatSpacingRegex();
+
+    [GeneratedRegex("[0-9]+Hz")]
+    private static partial Regex HzRegex();
+
+    [GeneratedRegex(@"\d{2}:\d{2}:\d{2}$")]
+    private static partial Regex TimeTrailingRegex();
+
+    [GeneratedRegex(@"^-, ")]
+    private static partial Regex LeadingDashCommaRegex();
+
     internal static bool MainClose2Tray => close2Tray;
 
     private readonly string _myUserAgent = "NetRadio";
@@ -97,7 +133,7 @@ public partial class FrmMain : Form
     private readonly string findNewStations = "Press <Ctrl+F> to find new radio stations.";
     private bool helpRequested = true;
     private readonly MiniPlayer miniPlayer = new();
-    private readonly string[] strArrHistory = new string[3];
+    //private readonly string[] strArrHistory = new string[3];
     private readonly string[] lvSortOrderArray = new string[3];
     private ListViewItem? lvItemHistory;
     private readonly CListViewItemComparer lviComparer = new();      // Sortierer für die ListView
@@ -111,15 +147,15 @@ public partial class FrmMain : Form
     private bool _playWakeFromSleep = false;
     private long accumulatedTicks;
     private readonly DataTable? tableActions = new();
-    private static readonly Timer timerAction1 = new();
-    private static readonly Timer timerAction2 = new();
-    private static readonly Timer timerAction3 = new();
-    private static readonly Timer timerAction4 = new();
-    private static readonly Timer timerAction5 = new();
-    private static readonly Timer timerAction6 = new();
-    private static readonly Timer timerAction7 = new();
-    private static readonly Timer timerAction8 = new();
-    private static readonly Timer timerAction9 = new();
+    private static readonly System.Windows.Forms.Timer timerAction1 = new();
+    private static readonly System.Windows.Forms.Timer timerAction2 = new();
+    private static readonly System.Windows.Forms.Timer timerAction3 = new();
+    private static readonly System.Windows.Forms.Timer timerAction4 = new();
+    private static readonly System.Windows.Forms.Timer timerAction5 = new();
+    private static readonly System.Windows.Forms.Timer timerAction6 = new();
+    private static readonly System.Windows.Forms.Timer timerAction7 = new();
+    private static readonly System.Windows.Forms.Timer timerAction8 = new();
+    private static readonly System.Windows.Forms.Timer timerAction9 = new();
     private SplashForm? frmSplash = null;
     private int updateIndex = 0; // täglich
     private int startMode = 0; // Main window
@@ -135,6 +171,7 @@ public partial class FrmMain : Form
     private readonly string? miniPosX;
     private readonly string? miniPosY;
     private bool doubleClickOccurred = false; // NotifyIcon
+    private CancellationTokenSource? _startPlayingCts;
 
     public FrmMain()
     {
@@ -156,15 +193,15 @@ public partial class FrmMain : Form
         var cores = Environment.ProcessorCount;
         LogEvent("ProcessorCount: " + cores);
         Bass.BASS_SetConfigPtr(BASSConfig.BASS_CONFIG_NET_AGENT, _myUserAgentPtr);
-        Bass.BASS_SetConfig(BASSConfig.BASS_CONFIG_NET_BUFFER, 4000); // The buffer length in milliseconds (default 5000)
-        Bass.BASS_SetConfig(BASSConfig.BASS_CONFIG_NET_PREBUF, 80); // Percentage of the download buffer length(BASS_CONFIG_NET_BUFFER) should be filled before starting playback. The default is 75 %
+        Bass.BASS_SetConfig(BASSConfig.BASS_CONFIG_NET_BUFFER, 2000); // The buffer length in milliseconds (default 5000)
+        Bass.BASS_SetConfig(BASSConfig.BASS_CONFIG_NET_PREBUF, 50); // Percentage of the download buffer length(BASS_CONFIG_NET_BUFFER) should be filled before starting playback. The default is 75 %
         Bass.BASS_SetConfig(BASSConfig.BASS_CONFIG_BUFFER, 2000); // The playback buffer length for HSTREAM and HMUSIC channels (default 500), maximum is 5000 milliseconds
         Bass.BASS_SetConfig(BASSConfig.BASS_CONFIG_UPDATEPERIOD, 50); // The update period of HSTREAM and HMUSIC channel playback buffers (default 100)
         Bass.BASS_SetConfig(BASSConfig.BASS_CONFIG_UPDATETHREADS, cores >= 4 ? 2 : 1); // The number of threads to use for updating playback buffers. Default is to use a single thread.
-        Bass.BASS_SetConfig(BASSConfig.BASS_CONFIG_NET_TIMEOUT, 4000); // The default timeout is 5000 milliseconds 
+        Bass.BASS_SetConfig(BASSConfig.BASS_CONFIG_NET_TIMEOUT, 3000); // The default timeout is 5000 milliseconds 
         Bass.BASS_SetConfig(BASSConfig.BASS_CONFIG_NET_PLAYLIST, 1); // When enabled, BASS will process PLS, M3U, WPL and ASX playlists, going through each entry until it finds a URL that it can play. By default, playlist procesing is disabled.
-        Bass.BASS_SetConfig(BASSConfig.BASS_CONFIG_DEV_DEFAULT, true); // enable "Default" device
-        Bass.BASS_SetConfig(BASSConfig.BASS_CONFIG_HLS_DOWNLOAD_TAGS, true); // stream's DOWNLOADPROC callback function will receive any ID3v2 tags that the stream contains
+        Bass.BASS_SetConfig(BASSConfig.BASS_CONFIG_DEV_DEFAULT, 1); // enable "Default" device
+        Bass.BASS_SetConfig(BASSConfig.BASS_CONFIG_HLS_DOWNLOAD_TAGS, 1); // stream's DOWNLOADPROC callback function will receive any ID3v2 tags that the stream contains
 
         if (Bass.BASS_Init(-1, 48000, BASSInit.BASS_DEVICE_DEFAULT, Handle)) // BASS_DEVICE_DEFAULT	0 = 16 bit, stereo, no 3D, no Latency calc, no Speaker Assignments
         {   //  The sample format specified in the freq and flags parameters has no effect on the output - the device's native sample format is automatically used.
@@ -198,7 +235,7 @@ public partial class FrmMain : Form
         }
 
         Bass.BASS_ChannelGetAttribute(_stream, BASSAttribute.BASS_ATTRIB_VOL, ref channelVolume);
-        Text = Assembly.GetCallingAssembly().GetName().Name + " " + new Regex(@"^\d+\.\d+").Match(strVersion).Value;
+        Text = $"{Assembly.GetCallingAssembly().GetName().Name} {VersionRegex().Match(strVersion).Value}";
         lblUpdate.Text = "Current version: " + strVersion;
         for (var j = 0; j < stationSum * 4; j++) { dgvStations.Rows.Add("", ""); } // dgvStations.Rows.Add(stationSum); ist wahrscheinlich schlechter, weil Cell.Value = null entsteht
 
@@ -248,7 +285,7 @@ public partial class FrmMain : Form
                         else { cbHotkey.Checked = lblHotkey.Enabled = cmbxHotkey.Enabled = false; }
                         xtr.MoveToAttribute("Letter");
                         if (string.IsNullOrEmpty(xtr.Value)) { lblHotkey.Enabled = cmbxHotkey.Enabled = cbHotkey.Checked = false; }
-                        else { if (cbHotkey.Checked && new Regex("^[A-Z0-9]$").IsMatch(xtr.Value)) { cmbxHotkey.Text = hkLetter = xtr.Value; } } // You won't be able to register a hotkey before the window is created
+                        else if (cbHotkey.Checked && HotkeyRegex().IsMatch(xtr.Value)) { cmbxHotkey.Text = hkLetter = xtr.Value; } // You won't be able to register a hotkey before the window is created
                     }
                     else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "Output")
                     {
@@ -393,25 +430,28 @@ public partial class FrmMain : Form
         {
             for (var i = 0; i < args.Length; i++) // Kommandozeilenargumente werden vor Autostart-Einstellungen benutzt
             {
-                if (Regex.IsMatch(args[i], @"^[/-][1-9][0-5]?$") && int.TryParse(args[i][1..], out var intStation))
+                if (CmdStationRegex().IsMatch(args[i]) && int.TryParse(args[i][1..], out var intStation))
                 {
                     var btnName = "rbtn" + intStation.ToString("D2"); // Math.Abs nicht nötig wg. [1..]
                     var controls = tcMain.TabPages[0].Controls.Find(btnName, true);
-                    if (controls.Length == 1 && controls[0] is RadioButton button) { autoStartRadioButton = button; } // foundBtn.Checked = true;
+
+                    if (controls.Length == 1 && controls[0] is RadioButton button)
+                    {
+                        autoStartRadioButton = button; // foundBtn.Checked = true;
+                    }
                 }
-                else if (Regex.IsMatch(args[i], @"^[/-](m|mini)$", RegexOptions.IgnoreCase))
+                else if (CmdMiniRegex().IsMatch(args[i]))
                 {
                     startMiniCmd = true; // siehe frmMain_Shown-Event
                     Opacity = 0; // sonst wird GUI kurz angezeigt - unschön
                 }
-                else if (Regex.IsMatch(args[i], @"^[/-](t|tray)$", RegexOptions.IgnoreCase))
+                else if (CmdTrayRegex().IsMatch(args[i]))
                 {
                     startTrayCmd = true; // siehe frmMain_Shown-Event
                     Opacity = 0; // sonst wird GUI kurz angezeigt - unschön
                 }
             }
         }
-
         if (startMode == 1 && !startTrayCmd && !startMiniCmd) // Miniplayer
         {
             startMiniCmd = true; // siehe frmMain_Shown-Event
@@ -442,74 +482,95 @@ public partial class FrmMain : Form
 
     private void MyDownloadProc(IntPtr buffer, int length, IntPtr user)
     {
-        if (buffer != IntPtr.Zero && length == 0)
+        if (buffer == IntPtr.Zero)
         {
-            var txt = Marshal.PtrToStringAnsi(buffer);
-            Invoke(new UpdateMessageDelegate(UpdateMessageDisplay), [txt]);
+            // Stream-Ende oder Abbruch
+            if (_recording)
+            {
+                BeginInvoke(() => RecordingStop());
+            }
+            return;
         }
-        else if (buffer != IntPtr.Zero && _recording)
+
+        if (length == 0)
+        {
+            var txt = Marshal.PtrToStringUTF8(buffer) ?? string.Empty;  // PtrToStringUTF8
+            // Moderner Lambda-Aufruf statt explizitem Delegate-Typ
+            BeginInvoke(() => UpdateMessageDisplay(txt));
+            return;
+        }
+
+        if (_recording)
         {
             try
             {
                 if (_fs is null)
                 {
-                    NativeMethods.SHGetKnownFolderPath(new Guid("374DE290-123F-4565-9164-39C4925E467B"), 0, IntPtr.Zero, out var downloadPath);
-                    _downloadFileName = downloadPath + "\\" + appName + "_" + DateTime.Now.ToString(shortDateFormat) + ".mp3";
+                    // Pfad sicher ermitteln
+                    var downloadPath = NativeMethods.GetKnownFolderPath(new Guid("374DE290-123F-4565-9164-39C4925E467B"));
+
+                    var timestamp = DateTime.Now.ToString(shortDateFormat);
+                    _downloadFileName = Path.Combine(downloadPath, $"{appName}_{timestamp}.mp3");
+
                     var info = Bass.BASS_ChannelGetInfo(_stream);
                     switch (info.ctype)
                     {
                         case BASSChannelType.BASS_CTYPE_STREAM_FLAC_OGG:
                         case BASSChannelType.BASS_CTYPE_STREAM_OPUS:
                         case BASSChannelType.BASS_CTYPE_STREAM_OGG:
-                            _recording = false; // downloadFileName = Path.ChangeExtension(downloadFileName, ".opus");
-                            BeginInvoke((System.Windows.Forms.MethodInvoker)delegate () { RecordingStop(false); }); //uint uiFlags = /*MB_OK*/ 0x00000000 | /*MB_SETFOREGROUND*/  0x00010000 | /*MB_APPLMODAL*/ 0x00001000 | /*MB_ICONEXCLAMATION*/ 0x00000030;
-                            Utilities.MsgTaskDialogTimeout(this, "Format not supported", "Recording is only available for MP3 and AAC streams.", 3, TaskDialogIcon.Information);
+                            _recording = false;
+                            BeginInvoke(() =>
+                            {
+                                RecordingStop(false);
+                                Utilities.MsgTaskDialogTimeout(this, "Format not supported", "Recording is only available for MP3 and AAC streams.", 3, TaskDialogIcon.Information);
+                            });
                             return;
-                        //if (NativeMethods.MessageBoxTimeout(NativeMethods.GetForegroundWindow(), $"Recording is only available for MP3 and AAC streams.", $"NetRadio", 0x00000000 | 0x00010000 | 0x00000000 | 0x00000040, 0, 3000) > 0) { return; }
-                        //else { break; }
+
                         case BASSChannelType.BASS_CTYPE_STREAM_MF:
-                            if (Marshal.PtrToStructure<WAVEFORMATEX>(Bass.BASS_ChannelGetTags(_stream, BASSTag.BASS_TAG_WAVEFORMAT))?.wFormatTag == WAVEFormatTag.MPEG_HEAAC) { _downloadFileName = Path.ChangeExtension(_downloadFileName, ".aac"); } // High-Efficiency Advanced Audio Coding (HE-AAC) 
-                            else { _downloadFileName = Path.ChangeExtension(_downloadFileName, ".mp3"); }
-                            break;
-                        default:
-                            _downloadFileName = Path.ChangeExtension(_downloadFileName, ".mp3");
+                            var tags = Bass.BASS_ChannelGetTags(_stream, BASSTag.BASS_TAG_WAVEFORMAT);
+                            if (tags != IntPtr.Zero && Marshal.PtrToStructure<WAVEFORMATEX>(tags)?.wFormatTag == WAVEFormatTag.MPEG_HEAAC)
+                            {
+                                _downloadFileName = Path.ChangeExtension(_downloadFileName, ".aac");
+                            }
                             break;
                     }
-                    _fs = new FileStream(_downloadFileName, FileMode.CreateNew);
+
+                    _fs = new FileStream(_downloadFileName, FileMode.CreateNew, FileAccess.Write, FileShare.Read);
                     _downlaodSize = 0;
                 }
-                if (buffer == IntPtr.Zero)
+
+                // Puffer-Management
+                if (_data == null || _data.Length < length)
                 {
-                    BeginInvoke((System.Windows.Forms.MethodInvoker)delegate () { RecordingStop(); }); // setzt _fs auf null; this code runs on the UI thread!
+                    _data = new byte[length + 1024]; // Kleiner Puffer-Vorrat
                 }
-                else
+
+                Marshal.Copy(buffer, _data, 0, length);
+                _fs.Write(_data, 0, length);
+                _downlaodSize += length;
+
+                // GUI-Update drosseln
+                recIncrement++;
+                if (recIncrement % 5 == 0) // Nur jedes 5. Mal spart CPU-Last
                 {
-                    if ((_data == null) || (_data.Length < length)) { _data = new byte[length + 1]; }
-                    Marshal.Copy(buffer, _data, 0, length); // Speicher in Buffer kopieren
-                    _fs.Write(_data, 0, length); // In Datei schreiben
-                    _downlaodSize += length;
-                    recIncrement++;
-                    if (recIncrement % 2 == 0) // Anzeige nur jedes 2te mal aktualisieren
-                    {
-                        BeginInvoke((System.Windows.Forms.MethodInvoker)delegate () { lblD4.Text = "Downloading " + Utilities.GetFileSize(_downlaodSize); });
-                    }
+                    var sizeText = Utilities.GetFileSize(_downlaodSize);
+                    BeginInvoke(() => lblD4.Text = $"Downloading {sizeText}");
                 }
             }
             catch (IOException ex)
             {
                 _recording = false;
-                BeginInvoke((System.Windows.Forms.MethodInvoker)delegate ()// this code runs on the UI thread!
+                BeginInvoke(() =>
                 {
-                    RecordingStop(); // setzt _fs auf null; 
-                    Utilities.ErrTaskDialog(this, ex); // "An error occurred. Recording has stopped."
+                    RecordingStop();
+                    Utilities.ErrTaskDialog(this, ex);
                 });
             }
         }
     }
-
-    private void TimerResume_Tick(object sender, EventArgs e)
+    private async void TimerResume_Tick(object sender, EventArgs e)
     {
-        if (!string.IsNullOrEmpty(_channelFilename) && Utilities.PingGoogleSuccess(timerResume.Interval))  //_stream != 0 && 
+        if (!string.IsNullOrEmpty(_channelFilename) && await Utilities.PingGoogleSuccessAsync(timerResume.Interval))  //_stream != 0 && 
         {
             timerResume.Enabled = false;
             StartPlaying(_channelFilename, _currentButtonNum);
@@ -616,12 +677,12 @@ public partial class FrmMain : Form
 
     private void MetaSync(int handle, int channel, int data, IntPtr user) // BASS_SYNC_META is triggered on meta changes of SHOUTcast streams
     {
-        if (data != 0) { Invoke(new UpdateStatusDelegate(UpdateStatusDisplay), [Marshal.PtrToStringAnsi(new IntPtr(data))]); }
+        if (data != 0) { BeginInvoke(new UpdateStatusDelegate(UpdateStatusDisplay), [Marshal.PtrToStringAnsi(new IntPtr(data))]); }
         else
         {
             try
             {
-                if (_tagInfo != null && _tagInfo.UpdateFromMETA(Bass.BASS_ChannelGetTags(channel, BASSTag.BASS_TAG_META | BASSTag.BASS_TAG_ID3V2), TAGINFOEncoding.Utf8OrLatin1, true)) { Invoke(new UpdateTagDelegate(UpdateTagDisplay)); }
+                if (_tagInfo != null && _tagInfo.UpdateFromMETA(Bass.BASS_ChannelGetTags(channel, BASSTag.BASS_TAG_META | BASSTag.BASS_TAG_ID3V2), TAGINFOEncoding.Utf8OrLatin1, true)) { BeginInvoke(new UpdateTagDelegate(UpdateTagDisplay)); }
             }
             catch (ArgumentOutOfRangeException) { } // Wenn Text mehr als 64 Zeichen hat
         }
@@ -708,12 +769,13 @@ public partial class FrmMain : Form
     private void AddToHistory(string songTitle)
     {
         if (string.IsNullOrEmpty(songTitle)) { return; }
+        var strArrHistory = new string[3]; // Lokale Instanzierung
         strArrHistory[0] = DateTime.Now.ToString("HH:mm:ss");
         strArrHistory[1] = (tcMain.TabPages.Count > 0 ? tcMain.TabPages[0].Controls["rbtn" + _currentButtonNum.ToString("D2")] as RadioButton : null)?.Text.Replace("&&", "&") ?? string.Empty;
-        strArrHistory[2] = songTitle.Replace("&&", "&"); // frühere Umwandlung wg. Akzelerator rückgängig machen
+        strArrHistory[2] = songTitle.Replace("&&", "&");
         lvItemHistory = new ListViewItem(strArrHistory)
         {
-            Tag = DateTime.Now.ToString(longDateFormat), // DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Local).ToString("s")
+            Tag = DateTime.Now.ToString(longDateFormat),
             ToolTipText = LongSubItemText(songTitle) ? songTitle : ""
         };
         historyLV.Items.Insert(0, lvItemHistory);
@@ -986,7 +1048,7 @@ public partial class FrmMain : Form
                         {
                             if (!_playWakeFromSleep) { return; } // falls StartPlaying manuell ausgelöst wurde
                             var foo = false; // one second more
-                            if (Utilities.PingGoogleSuccess(Bass.BASS_GetConfig(BASSConfig.BASS_CONFIG_NET_TIMEOUT))) { foo = true; }
+                            if (await Utilities.PingGoogleSuccessAsync(Bass.BASS_GetConfig(BASSConfig.BASS_CONFIG_NET_TIMEOUT))) { foo = true; }
                             await Task.Delay(1000).ConfigureAwait(false);
                             if (foo) { break; }
                             else if (i == max)
@@ -1024,107 +1086,164 @@ public partial class FrmMain : Form
         }
     }
 
-    protected override void WndProc(ref Message m)
+    protected override unsafe void WndProc(ref Message m)
     {
-        if (m.Msg == NativeMethods.WM_COPYDATA)
+        if (m.Msg == NativeMethods.WM_SHOWNETRADIO)  // 1. Dynamisch vergebene Nachrichten (Laufzeit) müssen per 'if' geprüft werden
         {
-            var copyData = Marshal.PtrToStructure<NativeMethods.COPYDATASTRUCT>(m.LParam);
-            if (copyData.dwData == 2)
-            {
-                var arguments = Marshal.PtrToStringUni(copyData.lpData);
-                if (!string.IsNullOrEmpty(arguments))
+            ShowFullPlayer();
+            base.WndProc(ref m);
+            return;
+        }
+        switch ((uint)m.Msg)  // 2. Alle festen (konstanten) Nachrichten kommen in den schnellen 'switch'
+        {
+            case NativeMethods.WM_COPYDATA:
                 {
-                    var args = arguments.Split('|');
-                    for (var i = 0; i < args.Length; i++)
+                    var copyData = (NativeMethods.COPYDATASTRUCT*)m.LParam;
+                    if (copyData->dwData == 2 && copyData->lpData != nint.Zero)
                     {
-                        if (Regex.IsMatch(args[i], @"^[/-][1-9][0-5]?$") && int.TryParse(args[i][1..], out var intStation))
+                        var argumentsSpan = MemoryMarshal.CreateReadOnlySpanFromNullTerminated((char*)copyData->lpData);
+                        var remaining = argumentsSpan;
+                        while (!remaining.IsEmpty)  // Allokationsfreies Splitten durch den Span
                         {
-                            var btnName = "rbtn" + intStation.ToString("D2"); // Math.Abs nicht nötig wg. [1..]
-                            var controls = tcMain.TabPages[0].Controls.Find(btnName, true);
-                            if (controls.Length == 1 && controls[0] is RadioButton rb && rb.Enabled)
+                            var idx = remaining.IndexOf('|');
+                            var arg = idx == -1 ? remaining : remaining[..idx];
+                            remaining = idx == -1 ? default : remaining[(idx + 1)..];
+                            if (arg.Length < 2) { continue; }
+
+                            var prefix = arg[0];
+                            if (prefix == '/' || prefix == '-')
                             {
-                                rb.Checked = true; // (controls[0] as RadioButton).Checked = true;  // löst StartPlaying aus (BtnReset_Click in RadioButton_CheckedChanged)
-                                var index = miniPlayer.MpCmBxStations.FindStringExact(Utilities.StationLong(dgvStations.Rows[Convert.ToInt32(rb.Tag?.ToString()) - 1].Cells[0].Value.ToString()));
-                                if (index >= 0 && miniPlayer.MpCmBxStations.SelectedIndex != index) { miniPlayer.MpCmBxStations.SelectedIndex = index; }
+                                var cmd = arg[1..];
+                                if (int.TryParse(cmd, out var intStation) && intStation is > 0)
+                                {
+                                    var btnName = "rbtn" + intStation.ToString("D2");
+                                    var controls = tcMain.TabPages[0].Controls.Find(btnName, true);
+                                    if (controls.Length == 1 && controls[0] is RadioButton rb && rb.Enabled)
+                                    {
+                                        rb.Checked = true;
+                                        var tagValue = rb.Tag?.ToString();
+                                        if (tagValue != null)
+                                        {
+                                            var stationName = dgvStations.Rows[Convert.ToInt32(tagValue) - 1].Cells[0].Value?.ToString();
+                                            if (stationName != null)
+                                            {
+                                                var index = miniPlayer.MpCmBxStations.FindStringExact(Utilities.StationLong(stationName));
+                                                if (index >= 0 && miniPlayer.MpCmBxStations.SelectedIndex != index) { miniPlayer.MpCmBxStations.SelectedIndex = index; }
+                                            }
+                                        }
+                                    }
+                                }
+                                else if (cmd.Equals("m", StringComparison.OrdinalIgnoreCase) || cmd.Equals("mini", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    ShowMiniPlayer();
+                                    Hide();
+                                    tcMain.SelectedIndex = 0;
+                                }
+                                else if (cmd.Equals("t", StringComparison.OrdinalIgnoreCase) || cmd.Equals("tray", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    Hide();
+                                    miniPlayer.Hide();
+                                }
+                                else if (cmd.Equals("f", StringComparison.OrdinalIgnoreCase) || cmd.Equals("full", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    ShowFullPlayer();
+                                    miniPlayer.Hide();
+                                }
+                                else if (cmd.Equals("playpause", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    if (Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PLAYING) { BASSChannelPause(); }
+                                    else if (_stream != 0 && Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PAUSED) { BASSChannelPlay(); }
+                                    else if (btnReset.Enabled) { BtnReset_Click(null!, null!); }
+                                }
+                                else if (cmd.Equals("p", StringComparison.OrdinalIgnoreCase) || cmd.Equals("play", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    if (Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PLAYING) { continue; }  // Anstelle von 'return', um eventuell weitere Argumente im Span zu verarbeiten
+                                    else if (_stream != 0 && Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PAUSED) { BASSChannelPlay(); }
+                                    else if (btnReset.Enabled) { BtnReset_Click(null!, null!); }
+                                }
+                                else if (cmd.Equals("s", StringComparison.OrdinalIgnoreCase) || cmd.Equals("stop", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    if (Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PLAYING) { BASSChannelPause(); }
+                                }
+                                else if (cmd.Equals("e", StringComparison.OrdinalIgnoreCase) || cmd.Equals("exit", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    SaveConfig();
+                                    Application.Exit();
+                                }
                             }
                         }
-                        else if (Regex.IsMatch(args[i], @"^[/-](m|mini)$", RegexOptions.IgnoreCase))
+                    }
+                    break;
+                }
+
+            case NativeMethods.WM_HOTKEY:
+                {
+                    var keyPressTick = Environment.TickCount;
+                    var elapsed = keyPressTick - lastHotkeyPress;
+                    lastHotkeyPress = keyPressTick;
+                    if (!mainShown) { break; }
+                    if (elapsed <= 400) { Close(); }
+                    else if (miniPlayer.Visible && !miniPlayer.Handle.Equals(NativeMethods.GetForegroundWindow())) { miniPlayer.Activate(); }
+                    else if (miniPlayer.Visible) { miniPlayer.Activate(); }
+                    else if (Visible)
+                    {
+                        if (ActiveForm == null) { Activate(); }
+                        else
                         {
-                            ShowMiniPlayer();
-                            Hide(); //ShowInTaskbar = false; verträgt sich nicht mit GlobalHotkey => zerstört Handle
+                            if ((ModifierKeys & Keys.Shift) == Keys.Shift)
+                            {
+                                Application.Exit();
+                                break;
+                            }
+                            if (close2Tray) { miniPlayer.Hide(); }
+                            else { ShowMiniPlayer(); }
+                            Hide();
                             tcMain.SelectedIndex = 0;
                         }
-                        else if (Regex.IsMatch(args[i], @"^[/-](t|tray)$", RegexOptions.IgnoreCase))
-                        {
-                            Hide();
-                            miniPlayer.Hide();
-                        }
-                        else if (Regex.IsMatch(args[i], @"^[/-](f|full)$", RegexOptions.IgnoreCase))
-                        {
-                            ShowFullPlayer();
-                            miniPlayer.Hide();
-                        }
-                        else if (Regex.IsMatch(args[i], @"^[/-](playpause)$", RegexOptions.IgnoreCase))
-                        {
-                            if (Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PLAYING) { BASSChannelPause(); }
-                            else if (_stream != 0 && Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PAUSED) { BASSChannelPlay(); }
-                            else if (btnReset.Enabled) { BtnReset_Click(null!, null!); }
-                        }
-                        else if (Regex.IsMatch(args[i], @"^[/-](p|play)$", RegexOptions.IgnoreCase))
-                        {
-                            if (Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PLAYING) { return; }
-                            else if (_stream != 0 && Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PAUSED) { BASSChannelPlay(); }
-                            else if (btnReset.Enabled) { BtnReset_Click(null!, null!); }
-                        }
-                        else if (Regex.IsMatch(args[i], @"^[/-](s|stop)$", RegexOptions.IgnoreCase))
-                        {
-                            if (Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PLAYING) { BASSChannelPause(); }
-                        }
-                        else if (Regex.IsMatch(args[i], @"^[/-](e|exit)$", RegexOptions.IgnoreCase))
-                        {
-                            SaveConfig();
-                            Application.Exit();
-                        }
                     }
+                    else { ShowFullPlayer(); }
+                    LogEvent("WndProc: Message WM_HOTKEY received");
+                    break;
                 }
-            }
-        }
-        else if (m.Msg == NativeMethods.WM_SHOWNETRADIO) { ShowFullPlayer(); } // another instance is started
-        else if (m.Msg == NativeMethods.WM_HOTKEY)
-        {
-            var keyPressTick = Environment.TickCount;
-            var elapsed = keyPressTick - lastHotkeyPress;
-            lastHotkeyPress = keyPressTick;
-            if (!mainShown) { return; } // andernfalls kann es bei 2maligem Drücken zu Anzeige des Hauptfensters und des Miniplayers kommen.
-            if (elapsed <= 400 || (ModifierKeys & Keys.Shift) == Keys.Shift) { Close(); }
-            else if (miniPlayer.Visible && !miniPlayer.Handle.Equals(NativeMethods.GetForegroundWindow())) { miniPlayer.Activate(); }
-            else if (miniPlayer.Visible) { miniPlayer.Activate(); }
-            else if (Visible) // heißt nicht, das Form sichtbar bzw. das aktive Fenster sein muss
-            {
-                if (ActiveForm == null) { Activate(); }
-                else
+
+            case NativeMethods.WM_MOUSEWHEEL:
                 {
-                    if (close2Tray) { miniPlayer.Hide(); }
-                    else { ShowMiniPlayer(); }
-                    Hide(); //ShowInTaskbar = false; verträgt sich nicht mit GlobalHotkey => zerstört Handle
-                    tcMain.SelectedIndex = 0;
+                    if (tcMain.SelectedTab == tpPlayer)
+                    {
+                        var delta = (short)((long)m.WParam >> 16);
+                        if (delta != 0) { SetProgressBarVolume(delta); }
+                    }
+                    break;
                 }
-            }
-            else { ShowFullPlayer(); }  // not visible, d.h. im Tray
-            LogEvent("WndProc: Message WM_HOTKEY received");
-        }
-        else if (m.Msg == NativeMethods.WM_MOUSEWHEEL && tcMain.SelectedTab == tpPlayer)
-        {
-            var delta = (int)m.WParam >> 16; // OverflowException!
-            if (delta.GetType() == typeof(int) && delta != 0) { SetProgressBarVolume(delta); } //SetProgressBarVolume(m.WParam.ToInt32());
-        }
-        else if (m.Msg == NativeMethods.WM_QUERYENDSESSION) { Close(); }
-        else if (m.Msg == NativeMethods.WM_NCLBUTTONDBLCLK) { Hide(); ShowMiniPlayer(); }
-        else if (m.Msg == NativeMethods.WM_NCLBUTTONDOWN && tcMain.SelectedTab == tpStations) { dgvStations.EndEdit(); }
-        else if ((m.Msg == NativeMethods.WM_SYSCOMMAND) && ((int)m.WParam == NativeMethods.IDM_CUSTOMITEM1))
-        {
-            SaveConfig();
-            Application.Exit();
+
+            case NativeMethods.WM_QUERYENDSESSION:
+                {
+                    Close();
+                    break;
+                }
+
+            case NativeMethods.WM_NCLBUTTONDBLCLK:
+                {
+                    Hide();
+                    ShowMiniPlayer();
+                    break;
+                }
+
+            case NativeMethods.WM_NCLBUTTONDOWN:
+                {
+                    if (tcMain.SelectedTab == tpStations) { dgvStations.EndEdit(); }
+                    break;
+                }
+
+            case NativeMethods.WM_SYSCOMMAND:
+                {
+                    if ((int)m.WParam == NativeMethods.IDM_CUSTOMITEM1)
+                    {
+                        SaveConfig();
+                        Application.Exit();
+                    }
+                    break;
+                }
         }
         base.WndProc(ref m);
     }
@@ -1418,7 +1537,7 @@ public partial class FrmMain : Form
             playPauseToolStripMenuItem.Image = Properties.Resources.pause;
             btnPlayStop.BackColor = SystemColors.ControlDark;
             miniPlayer.MpBtnPlay.BackColor = SystemColors.ControlDark;
-            NativeMethods.SHGetKnownFolderPath(new Guid("374DE290-123F-4565-9164-39C4925E467B"), 0, IntPtr.Zero, out var downloadPath);
+            var downloadPath = NativeMethods.GetKnownFolderPath(new Guid("374DE290-123F-4565-9164-39C4925E467B")); //   NativeMethods.SHGetKnownFolderPath(new Guid("374DE290-123F-4565-9164-39C4925E467B"), 0, IntPtr.Zero, out var downloadPath);
             if (lblD4.Text.Contains(downloadPath)) // Recording fand gerade statt, lblD4 enthält DownloadDateinamen
             {
                 lblD4.ForeColor = SystemColors.ControlText;
@@ -1682,14 +1801,15 @@ public partial class FrmMain : Form
         if (cmbxHotkey.Visible && cmbxHotkey.Focused && cmbxHotkey.Enabled)
         {
             if (!string.IsNullOrEmpty(hkLetter) && NativeMethods.UnregisterHotKey(Handle, NativeMethods.HOTKEY_ID))
-            {// 1. Schritt: vorhanden Hotkey löschen
+            { // 1. Schritt: vorhanden Hotkey löschen
                 StatusStrip_SingleLabel(false, "Hotkey unregistered");
                 hkLetter = string.Empty;
             }
-            if (string.IsNullOrEmpty(hkLetter) && cbHotkey.Checked && new Regex("^[A-Z]+$").IsMatch(cmbxHotkey.Text))
-            {// 2. Schritt: neuen Hotkey registrieren
+            if (string.IsNullOrEmpty(hkLetter) && cbHotkey.Checked && HotkeyLettersRegex().IsMatch(cmbxHotkey.Text))
+            { // 2. Schritt: neuen Hotkey registrieren
                 RegisterHK(cmbxHotkey.Text); //  MessageBox.Show("RegisterHK(cmbxHotkey.Text)");
             }
+
             somethingToSave = true;
         }
     }
@@ -1704,7 +1824,7 @@ public partial class FrmMain : Form
     }
 
     private void RegisterHK(string hkString)
-    { // 
+    {
         if (NativeMethods.RegisterHotKey(Handle, NativeMethods.HOTKEY_ID, (uint)(NativeMethods.Modifiers.Control | NativeMethods.Modifiers.Win), (uint)(Keys)Convert.ToChar(hkString)) == true)
         {
             StatusStrip_SingleLabel(false, "Hotkey registered (Ctrl+Win+" + hkString + ")");
@@ -1840,8 +1960,7 @@ public partial class FrmMain : Form
     {
         miniPlayer.Hide();
         miniPlayer.Opacity = 1;
-        if (!string.IsNullOrEmpty(hkLetter) && new Regex("^[A-Z]+$").IsMatch(hkLetter)) { RegisterHK(hkLetter); } // Hotkey kann erst registriert werden, wenn das Fenster erstellt wurde
-
+        if (!string.IsNullOrEmpty(hkLetter) && HotkeyLettersRegex().IsMatch(hkLetter)) { RegisterHK(hkLetter); } // Hotkey kann erst registriert werden, wenn das Fenster erstellt wurde
         if (startMiniCmd || startTrayCmd)
         {
             Hide();
@@ -2837,12 +2956,28 @@ public partial class FrmMain : Form
 
     private async void StartPlaying(string? _url, int tagID)
     {
+        _startPlayingCts?.Cancel();
+        _startPlayingCts?.Dispose();
+        var cts = _startPlayingCts = new CancellationTokenSource();
+        var token = cts.Token;
+
         _playWakeFromSleep = false;
 
-        // Netzwerkprüfung
-        if (!Utilities.PingGoogleSuccess(Bass.BASS_GetConfig(BASSConfig.BASS_CONFIG_NET_TIMEOUT)))
+        // 1. OPTIMIERUNG: Sofortiges Audio-Feedback beim Klick!
+        if (_stream != 0)
         {
+            Bass.BASS_ChannelStop(_stream);
             Bass.BASS_StreamFree(_stream);
+            _stream = 0;
+            LogEvent("StartPlaying: Old stream freed on UI thread");
+        }
+
+        // Netzwerkprüfung
+        if (!await Utilities.PingGoogleSuccessAsync(Bass.BASS_GetConfig(BASSConfig.BASS_CONFIG_NET_TIMEOUT)))
+        {
+            if (token.IsCancellationRequested) { return; }  // schon veraltet
+
+            // _stream ist bereits 0, BASS_StreamFree(_stream) ist hier nicht mehr nötig
             RestorePlayerDefaults(tagID);
 
             TaskDialogButton btnSettings = new("Settings…");
@@ -2862,163 +2997,203 @@ public partial class FrmMain : Form
             }
             return;
         }
+        if (token.IsCancellationRequested) { return; }
 
         pbVolIcon.Image = Properties.Resources.progress;
         miniPlayer.MpVolProgBar.Value = volProgressBar.Value = 0;
         lblVolume.Text = "0";
 
-        // --- LOGIK FÜR M3U AUFLÖSUNG START ---
         if (!string.IsNullOrEmpty(_url) && _url.EndsWith(".m3u", StringComparison.OrdinalIgnoreCase))
         {
             try
             {
                 var client = NetHttpClient.Instance;
 
-                // Asynchron den Inhalt laden
-                var newURL = await client.GetStringAsync(_url);
+                // 2. OPTIMIERUNG: Token an GetStringAsync übergeben!
+                var newURL = await client.GetStringAsync(_url, token);
 
-                // Parsen
-                var urlString = Regex.Replace(newURL, @".*(http:\/\/[\S]+).*", "$1", RegexOptions.Singleline);
-                var secString = Regex.Replace(newURL, @".*(https:\/\/[\S]+).*", "$1", RegexOptions.Singleline);
+                var urlString = HttpUrlRegex().Replace(newURL, "$1");
+                var secString = HttpsUrlRegex().Replace(newURL, "$1");
 
-                // Priorisierung
                 newURL = secString.StartsWith("https", StringComparison.OrdinalIgnoreCase) ? secString :
                          urlString.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? urlString : newURL;
 
                 _url = string.IsNullOrEmpty(newURL) ? _url : newURL;
+                if (token.IsCancellationRequested) { return; }
+            }
+            catch (OperationCanceledException)
+            {
+                return; // Lautlos beenden bei Abbruch
             }
             catch (Exception ex)
             {
+                if (token.IsCancellationRequested) { return; }
                 RestorePlayerDefaults(tagID);
                 Utilities.ErrTaskDialog(this, ex);
                 return;
             }
         }
-        // --- LOGIK FÜR M3U AUFLÖSUNG ENDE --- 
-        // HIER fehlte die geschweifte Klammer. Der folgende Code muss für ALLE URLs ausgeführt werden.
 
         lblD3.Text = "⌛Connecting...";
         MiniPlayer.MpLblD2_Text("⌛Connecting...");
 
         var windowHandle = Handle;
-        // BASS Operationen im Hintergrund-Thread, damit die UI nicht einfriert
-        await Task.Run(() =>
+
+        try
         {
-            if (_stream != 0)
+            // 3. OPTIMIERUNG: Rückgabewert nutzen und Token an Task.Run übergeben
+            var newStream = await Task.Run(() =>
             {
-                Bass.BASS_StreamFree(_stream);
-                LogEvent("StartPlaying (_stream != 0): Freeing streams resources, including SYNC");
+                if (token.IsCancellationRequested) { return 0; }
+
+                LogEvent("StartPlaying (BASS_Init): Output device no. " + intOutputDevice.ToString());
+
+                // Initialisierung
+                if (!Bass.BASS_Init(intOutputDevice <= 0 || intOutputDevice >= Bass.BASS_GetDeviceCount() ? -1 : intOutputDevice + 1, 44100, BASSInit.BASS_DEVICE_DEFAULT, windowHandle))
+                {
+                    if (Bass.BASS_ErrorGetCode().Equals(BASSError.BASS_ERROR_ALREADY))
+                    {
+                        LogEvent("StartPlaying (BASS_Init): The device has already been initialized");
+                    }
+                }
+                else
+                {
+                    LogEvent("StartPlaying (BASS_Init): " + Bass.BASS_GetDeviceInfo(Bass.BASS_GetDevice()).ToString() + " (" + (Bass.BASS_GetDevice() - 1) + ") successfully (re)initialized");
+                }
+
+                if (token.IsCancellationRequested) { return 0; }
+
+                var flag = BASSFlag.BASS_DEFAULT | BASSFlag.BASS_STREAM_STATUS | BASSFlag.BASS_STREAM_AUTOFREE | BASSFlag.BASS_STREAM_BLOCK;
+
+                return Bass.BASS_StreamCreateURL(_url, 0, flag, myStreamCreateURL, IntPtr.Zero);
+            }, token);
+
+            // Zurück auf dem UI Thread 
+            if (token.IsCancellationRequested)
+            {
+                if (newStream != 0)
+                {
+                    Bass.BASS_StreamFree(newStream);
+                    LogEvent("StartPlaying: Abgebrochen nach Stream-Erstellung, Stream freigegeben");
+                }
+                return;
             }
 
-            LogEvent("StartPlaying (BASS_Init): Output device no. " + intOutputDevice.ToString());
+            _stream = newStream;
 
-            // Initialisierung
-            if (!Bass.BASS_Init(intOutputDevice <= 0 || intOutputDevice >= Bass.BASS_GetDeviceCount() ? -1 : intOutputDevice + 1, 44100, BASSInit.BASS_DEVICE_DEFAULT, windowHandle))
+            if (_stream == 0)
             {
-                if (Bass.BASS_ErrorGetCode().Equals(BASSError.BASS_ERROR_ALREADY))
+                var errorDescription = Utilities.GetErrorDescription(Bass.BASS_ErrorGetCode());
+                RestorePlayerDefaults(tagID);
+                Bass.BASS_Free();
+                Utilities.MsgTaskDialog(this, "Stream creation failed", errorDescription);
+                LogEvent("StartPlaying (BASS_StreamCreateURL): " + errorDescription);
+                return;
+            }
+
+            _tagInfo = new TAG_INFO(_url);
+            if (_tagInfo != null && BassTags.BASS_TAG_GetFromURL(_stream, _tagInfo))
+            {
+                lblD3.Text = _tagInfo.channelinfo.ToString().Replace("48000Hz", "48kHz").Replace("44100Hz", "44.1kHz").Replace("???, ", _tagInfo.channelinfo.ctype == BASSChannelType.BASS_CTYPE_STREAM_FLAC_OGG ? "FLAC, " : "");
+
+                lblD3.Text = AudioFormatSpacingRegex().Replace(lblD3.Text, "$1 $2");
+
+                lblD3.Text += _tagInfo.bitrate != 0 ? ", " + _tagInfo.bitrate.ToString() + " kbit/s" : string.Empty;
+                lblD3.Text += ", 00:00:00";
+
+                if (_tagInfo.channelinfo.ctype == BASSChannelType.BASS_CTYPE_STREAM_MF &&
+                    Marshal.PtrToStructure<WAVEFORMATEX>(Bass.BASS_ChannelGetTags(_stream, BASSTag.BASS_TAG_WAVEFORMAT))?.wFormatTag == WAVEFormatTag.MPEG_HEAAC)
                 {
-                    LogEvent("StartPlaying (BASS_Init): The device has already been initialized");
+                    lblD3.Text = lblD3.Text.Replace("MF", "AAC");
                 }
+
+                lblD2.Text = _tagInfo.ToString().Replace("&", "&&");
+                MiniPlayer.MpLblD2_Text(lblD2.Text);
+                LogEvent("Channelinfo: " + _tagInfo.channelinfo.ctype + ")");
             }
             else
             {
-                LogEvent("StartPlaying (BASS_Init): " + Bass.BASS_GetDeviceInfo(Bass.BASS_GetDevice()).ToString() + " (" + (Bass.BASS_GetDevice() - 1) + ") successfully (re)initialized");
+                lblD3.Text = "00:00:00";
+                MiniPlayer.MpLblD2_Text("NetRadio");
             }
 
-            var flag = BASSFlag.BASS_DEFAULT | BASSFlag.BASS_STREAM_STATUS | BASSFlag.BASS_STREAM_AUTOFREE;
+            if (tcMain.SelectedTab == tpSectrum) { StatusStrip_SingleLabel(false, lblD2.Text); }
+            if (logHistory) { AddToHistory(lblD2.Text); }
 
-            // Der Stream wird erstellt (dies dauert oft einen Moment wg. DNS/Connect)
-            _stream = Bass.BASS_StreamCreateURL(_url, 0, flag, myStreamCreateURL, IntPtr.Zero);
-        });
+            // Syncs setzen
+            _connectFail = new SYNCPROC(ConnectionSync);
+            if (Bass.BASS_ChannelSetSync(_stream, BASSSync.BASS_SYNC_DOWNLOAD | BASSSync.BASS_SYNC_ONETIME, 0, _connectFail, IntPtr.Zero) == 0)
+            {
+                Utilities.MsgTaskDialog(this, "Setting up a download synchronizer failed.", "", TaskDialogIcon.Warning);
+            }
 
-        // Zurück auf dem UI Thread (wegen await Task.Run)
-        if (_stream == 0)
+            _deviceFail = new SYNCPROC(DeviceSync);
+            if (Bass.BASS_ChannelSetSync(_stream, BASSSync.BASS_SYNC_DEV_FAIL | BASSSync.BASS_SYNC_ONETIME, 0, _deviceFail, IntPtr.Zero) == 0)
+            {
+                Utilities.MsgTaskDialog(this, "Setting up a device synchronizer failed.", "", TaskDialogIcon.Warning);
+            }
+
+            _metaSync = new SYNCPROC(MetaSync);
+            if (Bass.BASS_ChannelSetSync(_stream, BASSSync.BASS_SYNC_META, 0, _metaSync, IntPtr.Zero) == 0)
+            {
+                Utilities.MsgTaskDialog(this, "Setting up a meta synchronizer failed.", "", TaskDialogIcon.Warning);
+            }
+
+            // Playback starten
+            Bass.BASS_ChannelSetAttribute(_stream, BASSAttribute.BASS_ATTRIB_VOL, channelVolume);
+            currPlayingTime = TimeSpan.Zero;
+            _isBuffering = true;
+            timerLevel.Start();
+            spectrumTimer.Start();
+
+            Bass.BASS_ChannelPlay(_stream, false);
+
+            miniPlayer.MpBtnPlay.Enabled = btnPlayStop.Enabled = btnIncrease.Enabled = btnDecrease.Enabled = btnReset.Enabled = btnRecord.Enabled = true;
+
+            // GUI Updates nach erfolgreichem Start
+            var info = new BASS_CHANNELINFO();
+            if (tagID > 0 && Bass.BASS_ChannelGetInfo(_stream, info) && !string.IsNullOrEmpty(info.filename))
+            {
+                dgvStations.Rows[tagID - 1].Cells[1].Value = info.filename;
+
+                if (lblD3.Text.Length <= 1)
+                {
+                    lblD3.Text = HzRegex().Replace(info.ToString(), ((double)info.freq / 1000).ToString() + "kHz").Replace("???, ", info.ctype == BASSChannelType.BASS_CTYPE_STREAM_FLAC_OGG ? "FLAC, " : "");
+
+                    lblD3.Text = AudioFormatSpacingRegex().Replace(lblD3.Text, "$1 $2");
+
+                    lblD3.Text += ", 00:00:00";
+                }
+
+                if (lblD4.Text.EndsWith(" OK"))
+                {
+                    lblD4.Text = info.filename;
+                }
+            }
+
+            btnPlayStop.Image = Properties.Resources.pause_white;
+            miniPlayer.MpBtnPlay.Image = Properties.Resources.pause_white;
+            playPauseToolStripMenuItem.Text = "Pause";
+            playPauseToolStripMenuItem.Image = Properties.Resources.pause;
+        }
+        catch (OperationCanceledException)
         {
-            var errorDescription = Utilities.GetErrorDescription(Bass.BASS_ErrorGetCode());
+            // Task wurde vor der Ausführung storniert
+            LogEvent("StartPlaying Error: Task storniert.");
+        }
+        catch (Exception ex) when (!token.IsCancellationRequested)
+        {
+            if (_stream != 0) { Bass.BASS_StreamFree(_stream); _stream = 0; }
             RestorePlayerDefaults(tagID);
-            Bass.BASS_Free();
-            Utilities.MsgTaskDialog(this, "Stream creation failed", errorDescription);
-            LogEvent("StartPlaying (BASS_StreamCreateURL): " + errorDescription);
-            return;
+            Utilities.ErrTaskDialog(this, ex);
+            LogEvent("StartPlaying Error: " + ex.Message);
         }
-
-        _tagInfo = new TAG_INFO(_url);
-        if (_tagInfo != null && BassTags.BASS_TAG_GetFromURL(_stream, _tagInfo))
+        catch (Exception)
         {
-            lblD3.Text = _tagInfo.channelinfo.ToString().Replace("48000Hz", "48kHz").Replace("44100Hz", "44.1kHz").Replace("???, ", _tagInfo.channelinfo.ctype == BASSChannelType.BASS_CTYPE_STREAM_FLAC_OGG ? "FLAC, " : "");
-            lblD3.Text = Regex.Replace(lblD3.Text, "([0-9])(kHz|bit)", "$1 $2");
-            lblD3.Text += _tagInfo.bitrate != 0 ? ", " + _tagInfo.bitrate.ToString() + " kbit/s" : string.Empty;
-            lblD3.Text += ", 00:00:00";
-
-            if (_tagInfo.channelinfo.ctype == BASSChannelType.BASS_CTYPE_STREAM_MF &&
-                Marshal.PtrToStructure<WAVEFORMATEX>(Bass.BASS_ChannelGetTags(_stream, BASSTag.BASS_TAG_WAVEFORMAT))?.wFormatTag == WAVEFormatTag.MPEG_HEAAC)
-            {
-                lblD3.Text = lblD3.Text.Replace("MF", "AAC");
-            }
-
-            lblD2.Text = _tagInfo.ToString().Replace("&", "&&");
-            MiniPlayer.MpLblD2_Text(lblD2.Text);
-            LogEvent("Channelinfo: " + _tagInfo.channelinfo.ctype + ")");
+            // Abbruch durch neuen Sender-Klick – kein Fehler
+            if (_stream != 0) { Bass.BASS_StreamFree(_stream); _stream = 0; }
         }
-        else
-        {
-            lblD3.Text = "00:00:00";
-            MiniPlayer.MpLblD2_Text("NetRadio");
-        }
-
-        if (tcMain.SelectedTab == tpSectrum) { StatusStrip_SingleLabel(false, lblD2.Text); }
-        if (logHistory) { AddToHistory(lblD2.Text); }
-
-        // Syncs setzen
-        _connectFail = new SYNCPROC(ConnectionSync);
-        if (Bass.BASS_ChannelSetSync(_stream, BASSSync.BASS_SYNC_DOWNLOAD | BASSSync.BASS_SYNC_ONETIME, 0, _connectFail, IntPtr.Zero) == 0)
-        {
-            Utilities.MsgTaskDialog(this, "Setting up a download synchronizer failed.", "", TaskDialogIcon.Warning);
-        }
-
-        _deviceFail = new SYNCPROC(DeviceSync);
-        if (Bass.BASS_ChannelSetSync(_stream, BASSSync.BASS_SYNC_DEV_FAIL | BASSSync.BASS_SYNC_ONETIME, 0, _deviceFail, IntPtr.Zero) == 0)
-        {
-            Utilities.MsgTaskDialog(this, "Setting up a device synchronizer failed.", "", TaskDialogIcon.Warning);
-        }
-
-        _metaSync = new SYNCPROC(MetaSync);
-        if (Bass.BASS_ChannelSetSync(_stream, BASSSync.BASS_SYNC_META, 0, _metaSync, IntPtr.Zero) == 0)
-        {
-            Utilities.MsgTaskDialog(this, "Setting up a meta synchronizer failed.", "", TaskDialogIcon.Warning);
-        }
-
-        // Playback starten
-        Bass.BASS_ChannelSetAttribute(_stream, BASSAttribute.BASS_ATTRIB_VOL, channelVolume);
-        currPlayingTime = TimeSpan.Zero;
-        _isBuffering = true;
-        timerLevel.Start();
-        spectrumTimer.Start();
-
-        Bass.BASS_ChannelPlay(_stream, false);
-
-        miniPlayer.MpBtnPlay.Enabled = btnPlayStop.Enabled = btnIncrease.Enabled = btnDecrease.Enabled = btnReset.Enabled = btnRecord.Enabled = true;
-
-        // GUI Updates nach erfolgreichem Start
-        BASS_CHANNELINFO info = new();
-        if (tagID > 0 && Bass.BASS_ChannelGetInfo(_stream, info) && !string.IsNullOrEmpty(info.filename))
-        {
-            dgvStations.Rows[tagID - 1].Cells[1].Value = info.filename;
-            if (lblD3.Text.Length <= 1)
-            {
-                lblD3.Text = Regex.Replace(info.ToString(), "[0-9]+Hz", ((double)info.freq / 1000).ToString() + "kHz").Replace("???, ", info.ctype == BASSChannelType.BASS_CTYPE_STREAM_FLAC_OGG ? "FLAC, " : "");
-                lblD3.Text = Regex.Replace(lblD3.Text, "([0-9])(kHz|bit)", "$1 $2");
-                lblD3.Text += ", 00:00:00";
-            }
-            if (lblD4.Text.EndsWith(" OK")) { lblD4.Text = info.filename; }
-        }
-
-        btnPlayStop.Image = Properties.Resources.pause_white;
-        miniPlayer.MpBtnPlay.Image = Properties.Resources.pause_white;
-        playPauseToolStripMenuItem.Text = "Pause";
-        playPauseToolStripMenuItem.Image = Properties.Resources.pause;
     }
-
 
     private void BtnRecord_Click(object sender, EventArgs e)
     {
@@ -3124,17 +3299,29 @@ public partial class FrmMain : Form
             else if (miniPlayer.Visible) { MiniPlayer.DrawLevelMeter(Utils.LowWord32(level) * miniWidth / 32768, Utils.HighWord32(level) * miniWidth / 32768); }
             if (everySecond)
             {
-                if (tcMain.SelectedTab == tpHistory) { TPHistory_SetStatusBarText(); }
+                if (tcMain.SelectedTab == tpHistory)
+                {
+                    TPHistory_SetStatusBarText();
+                }
+
                 var seconds = currPlayingTime.ToString(@"hh\:mm\:ss");
-                if (Regex.Match(lblD3.Text, @"\d{2}:\d{2}:\d{2}$").Success) { lblD3.Text = lblD3.Text[..^8] + seconds; }
+
+                // IsMatch ist performanter als Match().Success
+                if (TimeTrailingRegex().IsMatch(lblD3.Text))
+                {
+                    lblD3.Text = lblD3.Text[..^8] + seconds;
+                }
                 else
                 {
                     if (lblD3.Text.Length > 0)
                     {
                         lblD3.Text += ", " + seconds;
-                        lblD3.Text = Regex.Replace(lblD3.Text, @"^-, ", ""); // Unnötige Zeichen am Anfang entfernen
+                        lblD3.Text = LeadingDashCommaRegex().Replace(lblD3.Text, ""); // Unnötige Zeichen am Anfang entfernen
                     }
-                    else { lblD3.Text = seconds; }
+                    else
+                    {
+                        lblD3.Text = seconds;
+                    }
                 }
             }
         }
@@ -3202,7 +3389,7 @@ public partial class FrmMain : Form
     private void TimerCloseFinally_Tick(object sender, EventArgs e)
     {
         timerCloseFinally.Stop();
-        try { Process.Start(localSetupFile); } 
+        try { Process.Start(localSetupFile); }
         catch (Exception ex) // when (ex is ArgumentNullException or InvalidOperationException or Win32Exception)
         {
             Utilities.ErrTaskDialog(this, ex);
@@ -3220,7 +3407,7 @@ public partial class FrmMain : Form
                 try
                 {
                     // Lokale Datei vorbereiten
-                    NativeMethods.SHGetKnownFolderPath(new Guid("374DE290-123F-4565-9164-39C4925E467B"), 0, IntPtr.Zero, out var targetDir); // Downloads folder    
+                    var targetDir = NativeMethods.GetKnownFolderPath(new Guid("374DE290-123F-4565-9164-39C4925E467B"));  // NativeMethods.SHGetKnownFolderPath(new Guid("374DE290-123F-4565-9164-39C4925E467B"), 0, IntPtr.Zero, out var targetDir); // Downloads folder    
                     if (!Directory.Exists(targetDir)) { targetDir = Path.GetTempPath(); }
                     localSetupFile = Path.Combine(targetDir, appName + "Setup.exe");
                     progressBar.Visible = true;
@@ -3646,7 +3833,7 @@ public partial class FrmMain : Form
     {
         if (sender == null || tableActions == null) { return; } // || tableActions.Rows.Count == 0
         var num = 0;
-        ((Timer)sender).Stop();
+        ((System.Windows.Forms.Timer)sender).Stop();
         if (sender == timerAction1) { num = 0; }
         else if (sender == timerAction2) { num = 1; }
         else if (sender == timerAction3) { num = 2; }
@@ -4051,4 +4238,3 @@ public partial class FrmMain : Form
         if (!doubleClickOccurred) { BtnPlayStop_Click(null!, EventArgs.Empty); }
     }
 }
-

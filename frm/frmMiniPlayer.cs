@@ -11,6 +11,9 @@ namespace NetRadio;
 
 public partial class MiniPlayer : Form
 {
+    [GeneratedRegex(@"\s+")]
+    private partial Regex WhitespaceRegex();
+
     internal static Point MpMousePos => MousePosition; //{  get { return MousePosition; } }
     internal ProgressBarEx MpVolProgBar
     {
@@ -175,13 +178,6 @@ public partial class MiniPlayer : Form
     private void MiniPlayer_MouseDown(object sender, MouseEventArgs e)
     {
         if (e.Clicks != 1) { return; } // MouseDoubleClick event not firing after add MouseDown event
-        //if (e.Button == MouseButtons.Left && cmBxStations.Focused) // + wird nicht als Hotkey für Volume erkannt sonder in Textbox geschrieben
-        //{
-        //    int index = cmBxStations.FindStringExact(labelD1Text);
-        //    if (index >= 0) { cmBxStations.SelectedIndex = index; }
-        //    else { cmBxStations.Text = ""; }
-        //    panel.Focus();
-        //}
         NativeMethods.ReleaseCapture();
         _ = NativeMethods.SendMessage(Handle, NativeMethods.WM_NCLBUTTONDOWN, NativeMethods.HT_CAPTION, 0);
     }
@@ -202,7 +198,7 @@ public partial class MiniPlayer : Form
     }
     private void CloseToolStripMenuItem_Click(object sender, EventArgs e)
     {
-        if ((ModifierKeys & Keys.Shift) == Keys.Shift) {OnFormExit(e); }
+        if ((ModifierKeys & Keys.Shift) == Keys.Shift) { OnFormExit(e); }
         else { OnFormHide(e); }
     }
 
@@ -427,12 +423,17 @@ public partial class MiniPlayer : Form
     private void GoogleToolStripMenuItem_Click(object sender, EventArgs e)
     {
         var search = string.Empty;
+
         if (!string.IsNullOrEmpty(labelD2.Text)) { search = labelD2.Text; }
+
         if (!string.IsNullOrEmpty(search))
         {
             try
             {
-                ProcessStartInfo psi = new("https://www.google.com/search?q=" + System.Web.HttpUtility.HtmlEncode(Regex.Replace(search.ToLowerInvariant(), @"\s+", "+").Trim().Replace(".", ""))) { UseShellExecute = true };
+                var psi = new ProcessStartInfo("https://www.google.com/search?q=" + System.Web.HttpUtility.HtmlEncode(WhitespaceRegex().Replace(search.ToLowerInvariant(), "+").Trim().Replace(".", "")))
+                {
+                    UseShellExecute = true
+                };
                 Process.Start(psi);
             }
             catch (Exception ex) when (ex is Win32Exception or InvalidOperationException) { Utilities.ErrTaskDialog(this, ex); }

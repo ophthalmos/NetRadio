@@ -10,14 +10,30 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Win32; // Registry
 using Un4seen.Bass;
 
 namespace NetRadio.cls;
 
-internal class Utilities // internal is standard
+internal partial class Utilities // internal is standard
 {
+    [GeneratedRegex(@"[\[{].*\||[\[{](.*)[]}]")]
+    private static partial Regex LongCaptionRegex();
+
+    [GeneratedRegex(@"\s+")]
+    private static partial Regex MultipleSpacesRegex();
+
+    [GeneratedRegex(@"[\[{]([^\]|}]*)\|.*[]}]")]
+    private static partial Regex ShortCaptionPart1Regex();
+
+    [GeneratedRegex(@"[\[{][^\]|}]*[]}]")]
+    private static partial Regex RemoveBracketsRegex();
+
+    [GeneratedRegex(@"(.+? .+?) ")]
+    private static partial Regex TruncateAfterSecondSpaceRegex();
+
     private const string runLocation = @"Software\Microsoft\Windows\CurrentVersion\Run";
 
     public static readonly List<string> TaskNames = ["Start playing", "Stop playing", "Start recording", "Stop recording", "Put PC to sleep", "Hibernate PC", "Shut down PC"];
@@ -166,10 +182,32 @@ internal class Utilities // internal is standard
         catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { ErrTaskDialog(iWin, ex); }
     }
 
-    public static bool PingGoogleSuccess(int timeout)
-    { // InternetGetConnectedState: This code only checks if the network cable is plugged in
-        try { return NativeMethods.InternetGetConnectedState(out _, 0) && new Ping().Send(new IPAddress([8, 8, 8, 8]), timeout).Status == IPStatus.Success; }
-        catch { return false; } // erforderlich //  && System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable()
+    //public static bool PingGoogleSuccess(int timeout)
+    //{ // InternetGetConnectedState: This code only checks if the network cable is plugged in
+    //    try { return NativeMethods.InternetGetConnectedState(out _, 0) && new Ping().Send(new IPAddress([8, 8, 8, 8]), timeout).Status == IPStatus.Success; }
+    //    catch { return false; } // erforderlich //  && System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable()
+    //}
+
+    public static async Task<bool> PingGoogleSuccessAsync(int timeout)
+    {
+        try
+        {
+            // Schneller Vorab-Check (Kabel gezogen/WLAN aus)
+            if (!NativeMethods.InternetGetConnectedState(out _, 0))
+            {
+                return false;
+            }
+
+            using var ping = new Ping();
+            var address = new IPAddress([8, 8, 8, 8]);
+            var reply = await ping.SendPingAsync(address, timeout);
+
+            return reply.Status == IPStatus.Success;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public static void SetClipboardUnicodeText(string text)
@@ -197,22 +235,22 @@ internal class Utilities // internal is standard
     public static string StationLong(string? caption, bool button = false)
     {
         if (string.IsNullOrEmpty(caption)) { return string.Empty; }
-        caption = Regex.Replace(caption, @"[\[{].*\||[\[{](.*)[]}]", "$1");
+        caption = LongCaptionRegex().Replace(caption, "$1");
         caption = caption.Replace("[", string.Empty).Replace("]", string.Empty);
         caption = caption.Replace("{", string.Empty).Replace("}", string.Empty);
-        if (button) { caption = caption.Replace("&", "&&"); } // & wird sonst als Akzelerator interpretiert (nächstes Zeichen wird unterstrichen)
-        return Regex.Replace(caption, @"\s+", " "); // doppelte Leerzeichen entfernen
+        if (button) { caption = caption.Replace("&", "&&"); }  // & wird sonst als Akzelerator interpretiert (nächstes Zeichen wird unterstrichen)
+        return MultipleSpacesRegex().Replace(caption, " "); // doppelte Leerzeichen entfernen
     }
 
     public static string StationShort(string? s, bool button = false)
     {
         if (string.IsNullOrEmpty(s)) { return string.Empty; }
-        s = Regex.Replace(s, @"[\[{]([^\]|}]*)\|.*[]}]", "$1"); // innerhalb geschweifter Klammern wird Part1 genommen
-        s = Regex.Replace(s, @"[\[{][^\]|}]*[]}]", string.Empty); // Text innerhalb eckiger Klammern wird entfernt, Zwischebereich darf keine schließende Klammer enthalten [^\]]*; [ muss maskiert werden, ] nicht
-        s = Regex.Replace(s, @"\s+", " "); // doppelte Leerzeichen entfernen
-        if (button) { s = s.Replace("&", "&&"); } // & wird sonst als Akzelerator interpretiert (nächstes Zeichen wird unterstrichen)
-        var m = Regex.Match(s, @"(.+? .+?) ");
-        if (m.Success) { s = m.Groups[1].Value; } // Text nach dem 2. Leerzeichen wird abgeschnitten
+        s = ShortCaptionPart1Regex().Replace(s, "$1"); // innerhalb geschweifter Klammern wird Part1 genommen
+        s = RemoveBracketsRegex().Replace(s, string.Empty); // Text innerhalb eckiger Klammern wird entfernt
+        s = MultipleSpacesRegex().Replace(s, " "); // doppelte Leerzeichen entfernen
+        if (button) { s = s.Replace("&", "&&"); }  // & wird sonst als Akzelerator interpretiert (nächstes Zeichen wird unterstrichen)
+        var m = TruncateAfterSecondSpaceRegex().Match(s);
+        if (m.Success) { s = m.Groups[1].Value; }  // Text nach dem 2. Leerzeichen wird abgeschnitten
         return s.Trim();
     }
 

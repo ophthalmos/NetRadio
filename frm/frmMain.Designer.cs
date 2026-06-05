@@ -33,7 +33,7 @@ namespace NetRadio
         {
             components = new System.ComponentModel.Container();
             var resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmMain));
-            var dataGridViewCellStyle2 = new DataGridViewCellStyle();
+            var dataGridViewCellStyle1 = new DataGridViewCellStyle();
             tcMain = new TabControl();
             tpPlayer = new TabPage();
             btnRecord = new Button();
@@ -1141,14 +1141,14 @@ namespace NetRadio
             dgvStations.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvStations.BackgroundColor = System.Drawing.SystemColors.ControlLightLight;
             dgvStations.ClipboardCopyMode = DataGridViewClipboardCopyMode.Disable;
-            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.ControlDark;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Segoe UI", 10F);
-            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.ControlDark;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.True;
-            dgvStations.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.ControlDark;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI", 10F);
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.ControlDark;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = DataGridViewTriState.True;
+            dgvStations.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             dgvStations.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             dgvStations.Columns.AddRange(new DataGridViewColumn[] { col1, col2 });
             dgvStations.ContextMenuStrip = contextMenuStations;
@@ -1922,12 +1922,12 @@ namespace NetRadio
             lblHotkey.AutoSize = true;
             lblHotkey.Enabled = false;
             lblHotkey.Font = new System.Drawing.Font("Segoe UI", 10F);
-            lblHotkey.Location = new System.Drawing.Point(176, 20);
+            lblHotkey.Location = new System.Drawing.Point(165, 20);
             lblHotkey.Margin = new Padding(4, 0, 4, 0);
             lblHotkey.Name = "lblHotkey";
-            lblHotkey.Size = new System.Drawing.Size(83, 19);
+            lblHotkey.Size = new System.Drawing.Size(140, 19);
             lblHotkey.TabIndex = 7;
-            lblHotkey.Text = "Ctrl +Win +";
+            lblHotkey.Text = "(Shift +) Ctrl + Win +";
             // 
             // cmbxHotkey
             // 
@@ -1937,7 +1937,7 @@ namespace NetRadio
             cmbxHotkey.Font = new System.Drawing.Font("Segoe UI", 10F);
             cmbxHotkey.FormattingEnabled = true;
             cmbxHotkey.Items.AddRange(new object[] { "", "A", "B", "C", "D", "E", "G", "H", "I", "J", "K", "L", "M", "N", "O", "Q", "R", "S", "T", "V", "W", "X", "Y", "Z" });
-            cmbxHotkey.Location = new System.Drawing.Point(264, 16);
+            cmbxHotkey.Location = new System.Drawing.Point(313, 17);
             cmbxHotkey.Margin = new Padding(4, 3, 4, 3);
             cmbxHotkey.MaxLength = 1;
             cmbxHotkey.Name = "cmbxHotkey";

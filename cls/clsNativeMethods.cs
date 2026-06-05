@@ -7,45 +7,45 @@ using System.Windows.Forms;
 
 namespace NetRadio.cls;
 
-internal static class NativeMethods
+internal static partial class NativeMethods
 {
     public const int WM_SYSCOLORCHANGE = 0x0015;
-    public const int WM_KEYDOWN = 0x100; //  WM_SYSKEYDOWN = 0x104;
-    public const int WM_KEYUP = 0x101; //  WM_SYSKEYUP = 0x105;
+    public const int WM_KEYDOWN = 0x100;
+    public const int WM_KEYUP = 0x101;
     public const int WM_MOUSEWHEEL = 0x020A;
     public const int KEY_PRESSED = 0x8000;
     public const int WM_NCHITTEST = 0x84;
     public const int HTCLIENT = 0x1;
     public const int HTCAPTION = 0x2;
     public const int WM_HOTKEY = 0x312;
-    public const int HOTKEY_ID = 0x002A; // 42;
+    public const int HOTKEY_ID = 0x002A;
     public const int VK_SHIFT = 0x10;
     public const int WM_QUERYENDSESSION = 0x0011;
     public const int WM_SETCURSOR = 0x0020;
     public const int WM_CLOSE = 0x10;
-    public const int WS_VSCROLL = 0x00200000; // WS_HSCROLL = 0x00100000;
+    public const int WS_VSCROLL = 0x00200000;
     public const int GWL_STYLE = -16;
     public const int LVM_FIRST = 0x1000;
     public const int LVM_SCROLL = LVM_FIRST + 20;
     public const int HWND_BROADCAST = 0xffff;
     public const int VK_CONTROL = 0x11;
-    public const int WM_NCLBUTTONDOWN = 0xA1;
+    public const uint WM_NCLBUTTONDOWN = 0x00A1;
+    public const nint HT_CAPTION = 2; // nint, da wParam in SendMessage ein Pointer-Typ ist
     public const int WM_NCLBUTTONDBLCLK = 0x00A3;
-    public const int SW_SHOWNOACTIVATE = 4; // similar to SW_SHOWNORMAL, except that the window is not activated.
-    public const int HT_CAPTION = 0x2;
+    public const int SW_SHOWNOACTIVATE = 4;
     public const int WM_COPYDATA = 0x004A;
     public const int WM_SYSCOMMAND = 0x112;
     public const int MF_SEPARATOR = 0x800;
     public const int MF_BYPOSITION = 0x400;
     public const int MF_STRING = 0x0;
-    public const int IDM_CUSTOMITEM1 = 1000; //public const Int32 IDM_CUSTOMITEM2 = 1001;
+    public const int IDM_CUSTOMITEM1 = 1000;
+
     private static nint _hookIDKeyboard = nint.Zero;
     private const int WH_KEYBOARD_LL = 13;
     public static event KeyEventHandler? KeyDown;
 
     public static readonly uint WM_SHOWNETRADIO = RegisterWindowMessage("WM_SHOWNETRADIO");
     private delegate bool CallBackPtr(int hwnd, int lParam);
-    private static CallBackPtr? callBackPtr;
     public static List<nint> enumedwindowPtrs = [];
     public static List<Rectangle> enumedwindowRects = [];
     private delegate bool EnumThreadDelegate(nint hWnd, nint lParam);
@@ -59,123 +59,133 @@ internal static class NativeMethods
     {
         var state = KeyStates.None;
         var retVal = GetKeyState((int)key);
-        if ((retVal & 0x8000) == 0x8000) { state |= KeyStates.Down; } //If the high-order bit is 1, the key is down otherwise, it is up.
-        if ((retVal & 1) == 1) { state |= KeyStates.Toggled; } //If the low-order bit is 1, the key is toggled.
+        if ((retVal & 0x8000) == 0x8000) { state |= KeyStates.Down; }
+        if ((retVal & 1) == 1) { state |= KeyStates.Toggled; }
         return state;
     }
 
-    public static bool HitTest(Rectangle ctrlRect, nint ctrlHandle, Point p) //  IntPtr ExcludeWindow
+    public static unsafe bool HitTest(Rectangle ctrlRect, nint ctrlHandle, Point p)
     {
-        enumedwindowPtrs.Clear(); // clear results
+        enumedwindowPtrs.Clear();
         enumedwindowRects.Clear();
-        callBackPtr = new CallBackPtr(EnumCallBack); // Create callback and start enumeration
-        _ = EnumDesktopWindows(nint.Zero, callBackPtr, 0);
-        Region r = new(ctrlRect); // Go from last to first window, and substract them from the ctrlRect area
-        var StartClipping = false;
+        _ = EnumDesktopWindows(nint.Zero, &EnumCallBack, nint.Zero);  // Direkte Übergabe des Methoden-Pointers mit dem Adressoperator &
+        var r = new Region(ctrlRect);
+        var startClipping = false;
         for (var i = enumedwindowRects.Count - 1; i >= 0; i--)
         {
-            if (StartClipping) { r.Exclude(enumedwindowRects[i]); } //  && enumedwindowPtrs[i] != ExcludeWindow
-            if (enumedwindowPtrs[i] == ctrlHandle) { StartClipping = true; }
+            if (startClipping) { r.Exclude(enumedwindowRects[i]); }
+            if (enumedwindowPtrs[i] == ctrlHandle) { startClipping = true; }
         }
-        return r.IsVisible(p); // return boolean indicating if point is visible to clipped (truly visible) window
+        return r.IsVisible(p);
     }
 
-    private static bool EnumCallBack(int hwnd, int lParam)
+    [UnmanagedCallersOnly]
+    private static int EnumCallBack(nint hwnd, nint lParam)
     {
-        if (IsWindow(hwnd) && IsWindowVisible(hwnd) && !IsIconic(hwnd)) // If window is visible and not minimized (isiconic)
+        if (IsWindow(hwnd) && IsWindowVisible(hwnd) && !IsIconic(hwnd))
         {
-            enumedwindowPtrs.Add(hwnd); // add the handle and windowrect to "found windows" collection
-            if (GetWindowRect(hwnd, out var rct)) { enumedwindowRects.Add(new Rectangle(rct.Left, rct.Top, rct.Right - rct.Left, rct.Bottom - rct.Top)); } // add rect to list
-            else { enumedwindowRects.Add(new Rectangle(0, 0, 0, 0)); } // invalid, make empty rectangle
+            enumedwindowPtrs.Add(hwnd);
+            if (GetWindowRect(hwnd, out var rct)) { enumedwindowRects.Add(new Rectangle(rct.Left, rct.Top, rct.Right - rct.Left, rct.Bottom - rct.Top)); }
+            else { enumedwindowRects.Add(new Rectangle(0, 0, 0, 0)); }
         }
-        return true;
+        return 1; // 1 = Win32 TRUE (weiter enumerieren)
     }
 
-    public static IEnumerable<nint> EnumerateWinHandles(int processId)
+    public static unsafe IEnumerable<nint> EnumerateWinHandles(int processId)
     {
-        List<nint> handles = [];
-        foreach (ProcessThread thread in Process.GetProcessById(processId).Threads)
+        var handles = new List<nint>();
+        var gch = GCHandle.Alloc(handles); // Liste vor dem Garbage Collector verstecken
+        try
         {
-            EnumThreadWindows(thread.Id, (hWnd, lParam) => { handles.Add(hWnd); return true; }, nint.Zero);
+            foreach (ProcessThread thread in Process.GetProcessById(processId).Threads) { EnumThreadWindows(thread.Id, &EnumThreadWindowCallback, GCHandle.ToIntPtr(gch)); }
         }
+        finally { gch.Free(); }  // Speicherleck verhindern
         return handles;
     }
 
-    [DllImport("user32.dll")]
-    public static extern nint GetSystemMenu(nint hWnd, bool bRevert);
-
-    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-    public static extern bool AppendMenu(nint hMenu, int wFlags, int wIDNewItem, string lpNewItem);
-
-    [DllImport("user32.dll")]
-    public static extern int GetWindowTextLength(nint hWnd);
-
-    [DllImport("user32.dll")]
-    private static extern bool EnumThreadWindows(int dwThreadId, EnumThreadDelegate lpfn, nint lParam);
-
-    [DllImport("user32.dll")]
-    internal static extern bool ShowWindow(nint hWnd, int nCmdShow);
-
-    public static bool IsKeyDown(Keys key)
+    [UnmanagedCallersOnly]
+    private static int EnumThreadWindowCallback(nint hWnd, nint lParam)
     {
-        return KeyStates.Down == (GetKeyState(key) & KeyStates.Down);
-    } // IsKeyToggled(Keys key) { return KeyStates.Toggled == (GetKeyState(key) & KeyStates.Toggled); }
+        var gch = GCHandle.FromIntPtr(lParam);
+        if (gch.Target is List<nint> list) { list.Add(hWnd); }
+        return 1; // 1 = Win32 TRUE
+    }
 
+    [LibraryImport("user32.dll")]
+    public static partial nint GetSystemMenu(nint hWnd, [MarshalAs(UnmanagedType.Bool)] bool bRevert);
 
-    [DllImport("user32.dll", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.StdCall)]
-    internal static extern short GetKeyState(int nVirtKey);
+    [LibraryImport("user32.dll", EntryPoint = "AppendMenuW", StringMarshalling = StringMarshalling.Utf16, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool AppendMenu(nint hMenu, int wFlags, int wIDNewItem, string lpNewItem);
 
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-    public static extern nint SendMessage(nint hWnd, uint Msg, nint wParam, nint lParam);
+    [LibraryImport("user32.dll")]
+    public static partial int GetWindowTextLength(nint hWnd);
 
-    [DllImport("user32.dll")]
-    public static extern int SendMessage(nint hWnd, int Msg, int wParam, int lParam);
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static unsafe partial bool EnumThreadWindows(int dwThreadId, delegate* unmanaged<nint, nint, int> lpfn, nint lParam);
 
-    [DllImport("user32.dll")]
-    public static extern bool ReleaseCapture();
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static partial bool ShowWindow(nint hWnd, int nCmdShow);
 
-    [DllImport("uxtheme", ExactSpelling = true, CharSet = CharSet.Unicode)]
-    public static extern int SetWindowTheme(nint hWnd, string textSubAppName, string textSubIdList);
+    public static bool IsKeyDown(Keys key) => KeyStates.Down == (GetKeyState(key) & KeyStates.Down);
+
+    [LibraryImport("user32.dll")]
+    internal static partial short GetKeyState(int nVirtKey);
+
+    [LibraryImport("user32.dll", EntryPoint = "SendMessageW", StringMarshalling = StringMarshalling.Utf16)]
+    public static partial nint SendMessage(nint hWnd, uint Msg, nint wParam, nint lParam);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool ReleaseCapture();
+
+    [LibraryImport("uxtheme.dll", StringMarshalling = StringMarshalling.Utf16)]
+    public static partial int SetWindowTheme(nint hWnd, string textSubAppName, string textSubIdList);
 
     public enum Modifiers : uint
     {
         Alt = 0x0001, Control = 0x0002, Shift = 0x0004, Win = 0x0008
     }
 
-    [DllImport("Gdi32.dll", EntryPoint = "CreateRoundRectRgn")]
-    public static extern nint CreateRoundRectRgn(int nLeftRect, int nTopRect, int nRightRect, int nBottomRect, int nWidthEllipse, int nHeightEllipse);
+    [LibraryImport("Gdi32.dll")]
+    public static partial nint CreateRoundRectRgn(int nLeftRect, int nTopRect, int nRightRect, int nBottomRect, int nWidthEllipse, int nHeightEllipse);
 
-    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-    public static extern nint SetFocus(nint hWnd);
+    [LibraryImport("user32.dll", SetLastError = true)]
+    public static partial nint SetFocus(nint hWnd);
 
-    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-    public static extern int MessageBoxTimeout(nint hWnd, string lpText, string lpCaption, uint uType, short wLanguageId, int dwMilliseconds);
+    // MessageBoxTimeoutW explizit angegeben, da es eine undokumentierte Funktion ist
+    [LibraryImport("user32.dll", EntryPoint = "MessageBoxTimeoutW", StringMarshalling = StringMarshalling.Utf16, SetLastError = true)]
+    public static partial int MessageBoxTimeout(nint hWnd, string lpText, string lpCaption, uint uType, short wLanguageId, int dwMilliseconds);
 
-    [DllImport("wininet.dll", SetLastError = true)]
-    public static extern bool InternetGetConnectedState(out int lpdwFlags, int dwReserved);
-
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern int GetWindowLong(nint hWnd, int nIndex);
-
-    [DllImport("shell32.dll", CharSet = CharSet.Unicode, ExactSpelling = true, PreserveSig = false)]
-    internal static extern void SHGetKnownFolderPath([MarshalAs(UnmanagedType.LPStruct)] Guid rfid, uint dwFlags, nint hToken, out string ppszPath); // 'out string' sorgt hier automatisch für das Freigeben des Speichers
-
-    [DllImport("user32")]
-    public static extern bool PostMessage(nint hwnd, uint msg, nint wparam, nint lparam);
-
-    [DllImport("user32", CharSet = CharSet.Unicode)]
-    public static extern uint RegisterWindowMessage(string message);
-
-    [DllImport("user32.dll")]
+    [LibraryImport("wininet.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool RegisterHotKey(nint hWnd, int id, uint fsModifiers, uint vk);
+    public static partial bool InternetGetConnectedState(out int lpdwFlags, int dwReserved);
 
-    [DllImport("user32.dll")]
+    [LibraryImport("user32.dll", EntryPoint = "GetWindowLongW", SetLastError = true)]
+    public static partial int GetWindowLong(nint hWnd, int nIndex);
+
+    [LibraryImport("shell32.dll")]
+    internal static partial int SHGetKnownFolderPath(in Guid rfid, uint dwFlags, nint hToken, out nint ppszPath);
+
+    [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool UnregisterHotKey(nint hWnd, int id);
+    public static partial bool PostMessage(nint hwnd, uint msg, nint wparam, nint lparam);
 
-    [DllImport("user32.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
-    public static extern nint GetForegroundWindow();
+    [LibraryImport("user32.dll", EntryPoint = "RegisterWindowMessageW", StringMarshalling = StringMarshalling.Utf16)]
+    public static partial uint RegisterWindowMessage(string lpString);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool RegisterHotKey(nint hWnd, int id, uint fsModifiers, uint vk);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool UnregisterHotKey(nint hWnd, int id);
+
+    [LibraryImport("user32.dll")]
+    public static partial nint GetForegroundWindow();
 
     public static bool VerticalScrollbarVisible(Control ctl)
     {
@@ -183,50 +193,52 @@ internal static class NativeMethods
         return (wndStyle & WS_VSCROLL) != 0;
     }
 
-    [DllImport("user32.dll")]
+    [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool IsWindowVisible(nint hWnd);
+    private static partial bool IsWindowVisible(nint hWnd);
 
-    [DllImport("user32.dll")]
+    [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool IsWindow(nint hWnd);
+    private static partial bool IsWindow(nint hWnd);
 
-    [DllImport("user32.dll")]
+    [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool IsIconic(nint hWnd);
+    private static partial bool IsIconic(nint hWnd);
 
-    [DllImport("user32.dll")]
-    private static extern int EnumDesktopWindows(nint hDesktop, CallBackPtr callPtr, int lPar);
-
-    [DllImport("user32.dll")]
+    [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool GetWindowRect(nint hWnd, out RECT lpRect);
+    private static unsafe partial bool EnumDesktopWindows(nint hDesktop, delegate* unmanaged<nint, nint, int> callPtr, nint lPar);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool GetWindowRect(nint hWnd, out RECT lpRect);
 
     [StructLayout(LayoutKind.Sequential)]
     private struct RECT
     {
-        public int Left;        // x position of upper-left corner
-        public int Top;         // y position of upper-left corner
-        public int Right;       // x position of lower-right corner
-        public int Bottom;      // y position of lower-right corner
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
     }
 
     [StructLayout(LayoutKind.Sequential)]
     public struct COPYDATASTRUCT
     {
-        public nint dwData; // The data to be passed to the receiving application. This member can be IntPtr.Zero.
-        public int cbData; // The size, in bytes, of the data pointed to by the lpData member.
-        public nint lpData; // The data to be passed to the receiving application. This member can be IntPtr.Zero.
+        public nint dwData;
+        public int cbData;
+        public nint lpData;
     }
 
-    [DllImport("user32.dll", CallingConvention = CallingConvention.StdCall, SetLastError = true, CharSet = CharSet.Unicode)]
-    private static extern nint SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, nint hInstance, int threadId);
+    [LibraryImport("user32.dll", EntryPoint = "SetWindowsHookExW", SetLastError = true)]
+    private static unsafe partial nint SetWindowsHookEx(int idHook, delegate* unmanaged<int, nint, nint, nint> lpfn, nint hInstance, int threadId);
 
-    [DllImport("user32.dll", CallingConvention = CallingConvention.StdCall, SetLastError = true, CharSet = CharSet.Unicode)]
-    private static extern bool UnhookWindowsHookEx(nint idHook);
+    [LibraryImport("user32.dll", SetLastError = true)]
+    private static partial nint CallNextHookEx(nint hhk, int nCode, nint wParam, nint lParam);
 
-    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-    private static extern int CallNextHookEx(nint hhk, int nCode, nint wParam, nint lParam);
+    [LibraryImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool UnhookWindowsHookEx(nint idHook);
 
     private delegate int LowLevelKeyboardProc(int nCode, nint wParam, nint lParam);
 
@@ -240,28 +252,30 @@ internal static class NativeMethods
         internal nuint dwExtraInfo;
     }
 
-    private static int LowLevelKeyboardHookProc(int nCode, nint wParam, nint lParam)
+    [UnmanagedCallersOnly]
+    private static nint LowLevelKeyboardHookProc(int nCode, nint wParam, nint lParam)
     {
-        if (nCode >= 0 && wParam == WM_KEYDOWN) // || wParam == WM_SYSKEYUP)) WM_SYSKEYUP is necessary to trap Alt-key combinations
+        if (nCode >= 0 && wParam == WM_KEYDOWN)
         {
             var kbStruct = Marshal.PtrToStructure<KBDLLHOOKSTRUCT>(lParam);
             var keys = (Keys)kbStruct.vkCode;
+
             switch (keys)
             {
                 case Keys.MediaPlayPause:
                 case Keys.MediaNextTrack:
                 case Keys.MediaPreviousTrack:
                 case Keys.MediaStop:
-                    if (Application.OpenForms.Count > 0 && KeyDown != null)
-                    {
-                        KeyDown(Application.OpenForms[0], new KeyEventArgs(keys));
-                    }
-                    return 1; // nur diese Anwendung verarbeitet MediaKeys
+                    if (Application.OpenForms.Count > 0 && KeyDown != null) { KeyDown(Application.OpenForms[0], new KeyEventArgs(keys)); }
+                    return 1;
             }
         }
         else if (nCode >= 0 && wParam == WM_KEYUP)
         {
-            switch ((Keys)Marshal.PtrToStructure<KBDLLHOOKSTRUCT>(lParam).vkCode)
+            var kbStruct = Marshal.PtrToStructure<KBDLLHOOKSTRUCT>(lParam);
+            var keys = (Keys)kbStruct.vkCode;
+
+            switch (keys)
             {
                 case Keys.MediaPlayPause:
                 case Keys.MediaNextTrack:
@@ -273,21 +287,25 @@ internal static class NativeMethods
         return CallNextHookEx(_hookIDKeyboard, nCode, wParam, lParam);
     }
 
-    internal static nint RegisterMediaKeys()
+    public static string GetKnownFolderPath(Guid folderGuid)
     {
-        return _hookIDKeyboard = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardHookProc, nint.Zero, 0);
+        if (SHGetKnownFolderPath(folderGuid, 0, nint.Zero, out var pPath) == 0)
+        {
+            try { return Marshal.PtrToStringUni(pPath) ?? string.Empty; }
+            finally { Marshal.FreeCoTaskMem(pPath); }  // WICHTIG: Speicher wieder freigeben 
+        }
+        return string.Empty;
     }
+
+    internal static unsafe nint RegisterMediaKeys()
+    {
+        _hookIDKeyboard = SetWindowsHookEx(WH_KEYBOARD_LL, &LowLevelKeyboardHookProc, nint.Zero, 0);
+        return _hookIDKeyboard;
+    }
+
     internal static void UnregisterMediaKeys() => UnhookWindowsHookEx(_hookIDKeyboard);
 
-    [DllImport("shell32.dll", SetLastError = true)]
+    [LibraryImport("shell32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    internal static extern bool IsUserAnAdmin(); // LogEvent
-
-    //internal static bool IsUserAdminManaged()
-    //{
-    //    using var identity = System.Security.Principal.WindowsIdentity.GetCurrent();
-    //    var principal = new System.Security.Principal.WindowsPrincipal(identity);
-    //    return principal.IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator);
-    //}
-
+    internal static partial bool IsUserAnAdmin();
 }

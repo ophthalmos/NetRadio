@@ -1,5 +1,5 @@
 #define MyAppName "NetRadio"
-#define MyAppVersion "2.5.10"
+#define MyAppVersion "2.5.11"
 
 [Setup]
 AppName={#MyAppName}
