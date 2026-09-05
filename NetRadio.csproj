@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows8.0</TargetFramework>
+    <TargetFramework>net10.0-windows7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>disable</ImplicitUsings>
@@ -14,13 +14,13 @@
     <StartupObject>NetRadio.Program</StartupObject>
     <Title>NetRadio</Title>
     <Description>NetRadio</Description>
-    <AssemblyVersion>2.5.11</AssemblyVersion>
-    <FileVersion>2.5.11</FileVersion>
+    <AssemblyVersion>2.6.0</AssemblyVersion>
+    <FileVersion>2.6.0</FileVersion>
     <SourceRevisionId>build$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss"))</SourceRevisionId>
     <Copyright>(c) 2026 by W. Happe, GPL v3</Copyright>
-    <Version>2.5.11</Version>
+    <Version>2.6.0</Version>
     <GenerateResourceWarnOnBinaryFormatterUse>false</GenerateResourceWarnOnBinaryFormatterUse>
-    <SupportedOSPlatformVersion>8.0</SupportedOSPlatformVersion>
+    <SatelliteResourceLanguages>de;es;fr</SatelliteResourceLanguages>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
@@ -51,10 +51,6 @@
     <IsTrimmable>False</IsTrimmable>
     <IsAotCompatible>False</IsAotCompatible>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="cls\clsDarkMode.cs" />
-  </ItemGroup>
 
   <ItemGroup>
     <None Remove="RadioMaster.exe.lnk" />
@@ -121,11 +117,17 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy &quot;$(TargetPath)&quot; &quot;C:\Program Files\$(AssemblyName)\&quot; /y&#xD;&#xA;xcopy &quot;$(TargetDir)\*.exe&quot; &quot;C:\Program Files\$(AssemblyName)\&quot; /y" />
+    <Exec Command="xcopy &quot;$(TargetPath)&quot; &quot;C:\Program Files\$(AssemblyName)\&quot; /y&#xD;&#xA;xcopy &quot;$(TargetDir)\*.exe&quot; &quot;C:\Program Files\$(AssemblyName)\&quot; /y&#xD;&#xA;xcopy &quot;$(TargetDir)de\NetRadio.resources.dll&quot; &quot;C:\Program Files\$(AssemblyName)\de\&quot; /y&#xD;&#xA;xcopy &quot;$(TargetDir)es\NetRadio.resources.dll&quot; &quot;C:\Program Files\$(AssemblyName)\es\&quot; /y&#xD;&#xA;xcopy &quot;$(TargetDir)fr\NetRadio.resources.dll&quot; &quot;C:\Program Files\$(AssemblyName)\fr\&quot; /y" />
   </Target>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
     <Exec Command="powershell -Command &quot;if (Get-Process -Name '$(AssemblyName)' -ErrorAction SilentlyContinue) { Stop-Process -Name '$(AssemblyName)' -Force }&quot;" />
+  </Target>
+
+  <!-- Übersetzungs-Konsistenz (englischer Text = resx-Schlüssel): meldet nach jedem Debug-Build
+       fehlende und verwaiste Schlüssel als Warnungen (LNG001/LNG002), s. check-lng.ps1 -->
+  <Target Name="CheckTranslations" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug'">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\check-lng.ps1&quot;" WorkingDirectory="$(MSBuildProjectDirectory)" ContinueOnError="true" />
   </Target>
 
 </Project>
