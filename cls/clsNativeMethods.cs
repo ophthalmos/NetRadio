@@ -137,7 +137,7 @@ internal static partial class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool AppendMenu(nint hMenu, int wFlags, int wIDNewItem, string lpNewItem);
 
-    [LibraryImport("user32.dll")]
+    [LibraryImport("user32.dll", EntryPoint = "GetWindowTextLengthW")] // user32 exportiert nur die A/W-Varianten; LibraryImport probiert anders als DllImport kein Suffix aus
     public static partial int GetWindowTextLength(nint hWnd);
 
     [LibraryImport("user32.dll")]
@@ -188,7 +188,7 @@ internal static partial class NativeMethods
     [LibraryImport("shell32.dll")]
     internal static partial int SHGetKnownFolderPath(in Guid rfid, uint dwFlags, nint hToken, out nint ppszPath);
 
-    [LibraryImport("user32.dll")]
+    [LibraryImport("user32.dll", EntryPoint = "PostMessageW")] // s. GetWindowTextLength: ohne EntryPoint EntryPointNotFoundException zur Laufzeit (Zweitinstanz-Signal!)
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool PostMessage(nint hwnd, uint msg, nint wparam, nint lparam);
 
