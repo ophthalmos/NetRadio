@@ -83,6 +83,7 @@
             listView.SelectedIndexChanged += ListView_SelectedIndexChanged;
             listView.DoubleClick += ListView_DoubleClick;
             listView.KeyDown += ListView_KeyDown;
+            listView.BeforeLabelEdit += ListView_BeforeLabelEdit;
             // 
             // lbName
             // 

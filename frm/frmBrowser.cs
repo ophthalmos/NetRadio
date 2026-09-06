@@ -294,6 +294,11 @@ public partial class FrmBrowser : Form
         DialogResult = DialogResult.OK;
     }
 
+    private void ListView_BeforeLabelEdit(object sender, LabelEditEventArgs e)
+    {
+        LabelEditGuard.Pin(listView); // WinForms-Bug: sonst droht nach der Bearbeitung ein FailFast-Absturz
+    }
+
     private void ListView_DoubleClick(object sender, EventArgs e)
     {
         SaveAndLeave();
