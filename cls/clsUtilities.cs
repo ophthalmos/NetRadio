@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -38,6 +40,14 @@ internal partial class Utilities // internal is standard
 
     public static readonly List<string> TaskNames = ["Start playing", "Stop playing", "Start recording", "Stop recording", "Put PC to sleep", "Hibernate PC", "Shut down PC"];
 
+    /// <summary>Führt einen übersetzt angezeigten Task-Namen auf den englischen Speichernamen zurück —
+    /// in der Config und in tableActions stehen die Task-Namen immer englisch.</summary>
+    internal static string TaskNameFromDisplay(string display)
+    {
+        foreach (var name in TaskNames) { if (Lng.T(name) == display) { return name; } }
+        return display; // unbekannter Text (z. B. aus einer Alt-Konfiguration): unverändert übernehmen
+    }
+
     internal static void MsgTaskDialog(IWin32Window? owner, string heading, string message = "", TaskDialogIcon? icon = null)
     {
         icon ??= TaskDialogIcon.Error;
@@ -54,7 +64,7 @@ internal partial class Utilities // internal is standard
         {
             Caption = Application.ProductName,
             Heading = heading,
-            Text = $"{text}\n\n(Closing in {seconds} s)", // Initialer Text
+            Text = text + "\n\n" + string.Format(Lng.T("(Closing in {0} s)"), seconds), // Initialer Text
             Icon = icon,
             Buttons = { btnOK },
             DefaultButton = btnOK,
@@ -72,7 +82,7 @@ internal partial class Utilities // internal is standard
                 timer.Stop();
                 if (page.BoundDialog != null) { btnOK.PerformClick(); }
             }
-            else { page.Text = $"{text}\n\n(Closing in {remainingSeconds} s)"; }
+            else { page.Text = text + "\n\n" + string.Format(Lng.T("(Closing in {0} s)"), remainingSeconds); }
         };
         if (owner == null) { TaskDialog.ShowDialog(page); }
         else { TaskDialog.ShowDialog(owner, page); }
@@ -87,7 +97,7 @@ internal partial class Utilities // internal is standard
         {
             Caption = Application.ProductName,
             Heading = heading,
-            Text = $"{text}\n\n(Auto-confirm in {seconds} s)",
+            Text = text + "\n\n" + string.Format(Lng.T("(Auto-confirm in {0} s)"), seconds),
             Icon = icon, // Hier wird das Icon gesetzt
             Buttons = { btnOK, btnCancel },
             DefaultButton = btnCancel,
@@ -105,7 +115,7 @@ internal partial class Utilities // internal is standard
                 timer.Stop();
                 if (page.BoundDialog != null) { btnOK.PerformClick(); }
             }
-            else { page.Text = $"{text}\n\n(Auto-confirm in {remaining} s)"; }
+            else { page.Text = text + "\n\n" + string.Format(Lng.T("(Auto-confirm in {0} s)"), remaining); }
         };
         var result = owner != null ? TaskDialog.ShowDialog(owner, page) : TaskDialog.ShowDialog(page);
         return result == btnCancel;
@@ -114,7 +124,7 @@ internal partial class Utilities // internal is standard
     public static void ErrTaskDialog(IWin32Window? owner, Exception error, TaskDialogIcon? icon = null)
     {
         icon ??= TaskDialogIcon.Error;
-        TaskDialogButton copyButton = new("Copy Details");
+        TaskDialogButton copyButton = new(Lng.T("Copy Details"));
         TaskDialogPage page = new()
         {
             Caption = Application.ProductName,
@@ -125,8 +135,8 @@ internal partial class Utilities // internal is standard
             Expander = new TaskDialogExpander()
             {
                 Text = $"--- StackTrace ---\n{error}\n\n--- System ---\nOS: {Environment.OSVersion}\nRuntime: {RuntimeInformation.FrameworkDescription}",
-                CollapsedButtonText = "Show technical details",
-                ExpandedButtonText = "Hide details",
+                CollapsedButtonText = Lng.T("Show technical details"),
+                ExpandedButtonText = Lng.T("Hide details"),
                 Position = TaskDialogExpanderPosition.AfterFootnote
             }
         };
@@ -157,6 +167,49 @@ internal partial class Utilities // internal is standard
         return (isYes, isNo, isCancelled);
     }
 
+    //public static Size GetTargetIconSize(IntPtr hwnd)
+    //{
+    //    // Zielgröße aus Systemmetrics (Fallback)
+    //    var cx = NativeMethods.GetSystemMetrics(NativeMethods.SM_CXICON);
+    //    var cy = NativeMethods.GetSystemMetrics(NativeMethods.SM_CYICON);
+
+    //    // Wenn möglich, DPI für das Fenster holen und ggf. anpassen
+    //    try
+    //    {
+    //        var dpi = NativeMethods.GetDpiForWindow(hwnd);
+    //        // SM_CXICON/SM_CYICON sind in physischen Pixeln; bei modernen Windows-Versionen
+    //        // sind sie bereits DPI-angepasst, aber du kannst hier zusätzliche Logik einbauen.
+    //    }
+    //    catch { /* GetDpiForWindow kann auf älteren Systemen fehlschlagen */ }
+    //    return new Size(cx, cy);
+    //}
+
+    //public static IntPtr CreateHIconForTaskbar(Bitmap sourceBitmap, Size targetSize)
+    //{
+    //    Bitmap bmp;  // Wenn Quelle nicht exakt passt, skaliere mit hoher Qualität
+    //    if (sourceBitmap.Width == targetSize.Width && sourceBitmap.Height == targetSize.Height) { bmp = (Bitmap)sourceBitmap.Clone(); }
+    //    else
+    //    {
+    //        bmp = new Bitmap(targetSize.Width, targetSize.Height, PixelFormat.Format32bppArgb);
+    //        using var g = Graphics.FromImage(bmp);
+    //        g.CompositingMode = CompositingMode.SourceOver;
+    //        g.CompositingQuality = CompositingQuality.HighQuality;
+    //        g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+    //        g.SmoothingMode = SmoothingMode.AntiAlias;
+    //        g.DrawImage(sourceBitmap, new Rectangle(0, 0, targetSize.Width, targetSize.Height));
+    //    }
+    //    var hIcon = bmp.GetHicon();
+    //    bmp.Dispose();
+    //    return hIcon;
+    //}
+
+    //public static Bitmap GetBestBitmapForSize(Size targetSize, Bitmap res16, Bitmap res32)
+    //{
+    //    if (Math.Max(targetSize.Width, targetSize.Height) >= 24) { return res32; }  // einfache Heuristik: Wenn Zielgröße 24 oder größer…
+    //    return res16;
+    //}
+
+
     public static void StartFile(IWin32Window? iWin, string filePath)
     {
         try
@@ -167,7 +220,6 @@ internal partial class Utilities // internal is standard
         catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { ErrTaskDialog(iWin, ex); }
     }
 
-
     public static void StartLink(IWin32Window? iWin, string url)
     {
         try
@@ -177,47 +229,32 @@ internal partial class Utilities // internal is standard
                 ProcessStartInfo psi = new(url) { UseShellExecute = true };
                 Process.Start(psi);
             }
-            else { MsgTaskDialog(iWin ?? null, "Ungültiger Link!", "'" + url + "' ist keine gültige URL.", TaskDialogIcon.ShieldWarningYellowBar); }
+            else { MsgTaskDialog(iWin, Lng.T("Invalid link!"), string.Format(Lng.T("'{0}' is not a valid URL."), url), TaskDialogIcon.ShieldWarningYellowBar); }
         }
         catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException) { ErrTaskDialog(iWin, ex); }
     }
-
-    //public static bool PingGoogleSuccess(int timeout)
-    //{ // InternetGetConnectedState: This code only checks if the network cable is plugged in
-    //    try { return NativeMethods.InternetGetConnectedState(out _, 0) && new Ping().Send(new IPAddress([8, 8, 8, 8]), timeout).Status == IPStatus.Success; }
-    //    catch { return false; } // erforderlich //  && System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable()
-    //}
 
     public static async Task<bool> PingGoogleSuccessAsync(int timeout)
     {
         try
         {
-            // Schneller Vorab-Check (Kabel gezogen/WLAN aus)
-            if (!NativeMethods.InternetGetConnectedState(out _, 0))
-            {
-                return false;
-            }
-
+            if (!NativeMethods.InternetGetConnectedState(out _, 0)) { return false; }
             using var ping = new Ping();
             var address = new IPAddress([8, 8, 8, 8]);
             var reply = await ping.SendPingAsync(address, timeout);
-
             return reply.Status == IPStatus.Success;
         }
-        catch
-        {
-            return false;
-        }
+        catch { return false; }
     }
 
     public static void SetClipboardUnicodeText(string text)
     {
         if (string.IsNullOrEmpty(text)) { return; }
-        try { Clipboard.SetText(text, TextDataFormat.UnicodeText); }
-        catch (ExternalException)
+        for (var attempt = 0; attempt < 3; attempt++)
         {
-            Thread.Sleep(100);
-            Clipboard.SetText(text, TextDataFormat.UnicodeText);
+            try { Clipboard.SetText(text, TextDataFormat.UnicodeText); return; }
+            catch (ExternalException) when (attempt < 2) { Thread.Sleep(100); }
+            catch (ExternalException) { }  // 3. Versuch fehlgeschlagen, Fehler wird ignoriert
         }
     }
 
@@ -256,7 +293,7 @@ internal partial class Utilities // internal is standard
 
     internal static string GetErrorDescription(BASSError error)
     {
-        return error switch
+        return Lng.T(error switch // übersetzt werden nur die praxisrelevanten Netz-/Gerätefehler, der Rest fällt auf Englisch zurück
         {
             BASSError.BASS_ERROR_INIT => "BASS_Init has not been successfully called.",
             BASSError.BASS_ERROR_NOTAVAIL => "The BASS_STREAM_AUTOFREE flag cannot be combined with the BASS_STREAM_DECODE flag.",
@@ -275,7 +312,7 @@ internal partial class Utilities // internal is standard
             BASSError.BASS_ERROR_NONET => "No internet connection could be opened.",
             BASSError.BASS_ERROR_TIMEOUT => "The server did not respond to the request.",// within the timeout period.";
             BASSError.BASS_ERROR_ILLPARAM => "Illegal Parameter. Url is not a valid URL.",
-            BASSError.BASS_ERROR_UNKNOWN => "Unkown Error!",
+            BASSError.BASS_ERROR_UNKNOWN => "Unknown Error!",
             BASSError.BASS_ERROR_DRIVER => "There is no available device driver... the device may already be in use.",
             BASSError.BASS_ERROR_BUFLOST => "The sample buffer was lost",
             BASSError.BASS_ERROR_HANDLE => "Invalid handle",
@@ -303,11 +340,11 @@ internal partial class Utilities // internal is standard
             BASSError.BASS_ERROR_BUSY => "The device is busy (eg. in exclusive use by another process)",
             BASSError.BASS_ERROR_SERVER_CERT => "missing/invalid certificate",
             BASSError.BASS_ERROR_MP4_NOSTREAM => "BASS_AAC: non-streamable due to MP4 atom order ('mdat' before 'moov')",
-            _ => "Unkown Error",
-        };
+            _ => "Unknown Error",
+        });
     }
 
-    public static string GetFileSize(int byteCount)
+    public static string GetFileSize(long byteCount)
     {
         var size = "0 Bytes";
         if (byteCount >= 1073741824.0) { size = string.Format("{0:##.##}", byteCount / 1073741824.0) + " GB"; }
@@ -319,7 +356,7 @@ internal partial class Utilities // internal is standard
 
     public static void SetAutoStart(string appName, string assemblyLocation)
     {
-        var key = Registry.CurrentUser.CreateSubKey(runLocation);
+        using var key = Registry.CurrentUser.CreateSubKey(runLocation);
         key.SetValue(appName, assemblyLocation);
     }
 
@@ -334,7 +371,7 @@ internal partial class Utilities // internal is standard
 
     public static bool IsAutoStartEnabled(string appName, string assemblyLocation)
     {
-        var key = Registry.CurrentUser.OpenSubKey(runLocation);
+        using var key = Registry.CurrentUser.OpenSubKey(runLocation);
         if (key == null) { return false; }
 
         var value = (string?)key.GetValue(appName);
@@ -345,22 +382,22 @@ internal partial class Utilities // internal is standard
 
     public static bool IsInnoSetupValid(string assemblyLocation)
     {
-        var key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\NetRadio_is1");
+        using var key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\NetRadio_is1");
         if (key == null) { return false; }
         var value = (string?)key.GetValue("UninstallString");
         if (value == null) { return false; }
         else if (Debugger.IsAttached) { return true; } // run by Visual Studio
-        else { return assemblyLocation.Equals(RemoveFromEnd(value.Trim('"'), "\\unins000.exe")); } // "C:\Program Files\NetRadio\unins000.exe"
+        else { return assemblyLocation.Equals(RemoveFromEnd(value.Trim('"'), "\\unins000.exe"), StringComparison.OrdinalIgnoreCase); } // "C:\Program Files\NetRadio\unins000.exe"
     }
 
     public static void UnSetAutoStart(string appName)
     {
-        var key = Registry.CurrentUser.CreateSubKey(runLocation);
+        using var key = Registry.CurrentUser.CreateSubKey(runLocation);
         key.DeleteValue(appName);
     }
 
     public static DateTime GetBuildDate()
-    { //s. <SourceRevisionId>build$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss"))</SourceRevisionId> in ClipMenu.csproj
+    {   //s. <SourceRevisionId>build$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss"))</SourceRevisionId> in ClipMenu.csproj
         const string BuildVersionMetadataPrefix = "+build";
         var attribute = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>();
         if (attribute?.InformationalVersion != null)
@@ -376,46 +413,7 @@ internal partial class Utilities // internal is standard
         return default;
     }
 
-
-    public static string RemoveFromEnd(string str, string toRemove)
-    {
-        return str.EndsWith(toRemove) ? str[..^toRemove.Length] : str;
-    }
-
-    //public static void WriteCSVRow(StringBuilder result, int itemsCount, Func<int, bool> isColumnNeeded, Func<int, string> columnValue)
-    //{
-    //    bool isFirstTime = true;
-    //    for (int i = 0; i < itemsCount; i++)
-    //    {
-    //        if (!isColumnNeeded(i)) { continue; }
-
-    //        if (!isFirstTime) { result.Append(";"); }
-    //        isFirstTime = false;
-    //        result.Append(string.Format("\"{0}\"", columnValue(i)));
-    //    }
-    //    result.AppendLine();
-    //}
-
-    //public static void ListView2CsvFile(string filePath, ListView historyListView)
-    //{
-    //    using StreamWriter sw = new(filePath, false, Encoding.UTF8);
-    //    for (int i = 0; i < historyListView.Columns.Count; i++) // Spaltenüberschriften
-    //    {
-    //        sw.Write($"\"{historyListView.Columns[i].Text}\"");
-    //        if (i < historyListView.Columns.Count - 1) { sw.Write(";"); }
-    //    }
-    //    sw.WriteLine();
-    //    foreach (ListViewItem item in historyListView.Items) // Daten aus jedem ListViewItem
-    //    {
-    //        for (int i = 0; i < item.SubItems.Count; i++)
-    //        {
-    //            if (i == 0) { sw.Write($"\"{DateTime.ParseExact(item.Tag.ToString(), "s", CultureInfo.InvariantCulture):yyyyMMdd-HH:mm:ss}\""); }
-    //            else { sw.Write($"\"{item.SubItems[i].Text}\""); }
-    //            if (i < item.SubItems.Count - 1) { sw.Write(";"); }
-    //        }
-    //        sw.WriteLine();
-    //    }
-    //}
+    public static string RemoveFromEnd(string str, string toRemove) => str.EndsWith(toRemove) ? str[..^toRemove.Length] : str;
 
     public static void SortHistoryNormal(ListView historyListView, CListViewItemComparer lviComparer, string[] lvSortOrderArray)
     {
@@ -434,7 +432,7 @@ internal partial class Utilities // internal is standard
         {
             for (var col = 0; col < gridView.Columns.Count; col++)
             {
-                if (gridView.Rows[row].Cells[col].Value != null && !string.IsNullOrEmpty(gridView.Rows[row].Cells[col].Value.ToString())) { isEmpty = false; break; }
+                if (gridView.Rows[row].Cells[col].Value != null && !string.IsNullOrEmpty(gridView.Rows[row].Cells[col].Value?.ToString())) { isEmpty = false; break; }
             }
         }
         return isEmpty;
@@ -446,14 +444,14 @@ internal partial class Utilities // internal is standard
         {
             if (row.Cells[i].Value != null)
             {
-                if (!string.IsNullOrWhiteSpace(row.Cells[i].Value.ToString())) { return false; }
+                if (!string.IsNullOrWhiteSpace(row.Cells[i].Value?.ToString())) { return false; }
             }
         }
         return true;
     }
 
     public static void ResizeColumns(ListView lv, bool bBlockUIUpdate)
-    {// KeePass\UI\UIUtil.cs
+    {   // KeePass\UI\UIUtil.cs
         if (lv == null) { return; }
         var nColumns = 0;
         foreach (ColumnHeader ch in lv.Columns)
@@ -480,4 +478,3 @@ internal partial class Utilities // internal is standard
     }
 
 }
-//public class VolumeEventArgs(int value) : EventArgs { public int Delta { get; set; } = value; }

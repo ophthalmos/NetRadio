@@ -1,10 +1,12 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
+using System.ComponentModel;
 
 namespace NetRadio;
 
 public partial class FrmWait : Form
 {
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public string LabelText
     {
         set => labelPleaseWait.Text = value;
@@ -12,6 +14,7 @@ public partial class FrmWait : Form
     public FrmWait(Point point)
     {
         InitializeComponent();
+        cls.Lng.Apply(this); // übersetzt alle Designer-Texte, falls nicht Englisch eingestellt ist
         Location = new Point(point.X + 50, point.Y + 25);
     }
 

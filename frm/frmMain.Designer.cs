@@ -33,7 +33,7 @@ namespace NetRadio
         {
             components = new System.ComponentModel.Container();
             var resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmMain));
-            var dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            var dataGridViewCellStyle2 = new DataGridViewCellStyle();
             tcMain = new TabControl();
             tpPlayer = new TabPage();
             btnRecord = new Button();
@@ -138,6 +138,8 @@ namespace NetRadio
             cbLogHistory = new CheckBox();
             tpSettings = new TabPage();
             panel1 = new Panel();
+            gbLanguage = new GroupBox();
+            cbUiLanguage = new ComboBox();
             gbxModeSettings = new GroupBox();
             cbClose2Tray = new CheckBox();
             rbStartModeTray = new RadioButton();
@@ -202,47 +204,8 @@ namespace NetRadio
             linkPayPal = new LinkLabel();
             lblInformation = new Label();
             tpSectrum = new TabPage();
-            Lbl19 = new Label();
-            Lbl18 = new Label();
-            Lbl17 = new Label();
-            Lbl16 = new Label();
-            Lbl15 = new Label();
-            Lbl14 = new Label();
-            Lbl13 = new Label();
-            Lbl12 = new Label();
-            Lbl11 = new Label();
-            Lbl10 = new Label();
-            Lbl09 = new Label();
-            Lbl08 = new Label();
-            Lbl07 = new Label();
-            Lbl06 = new Label();
-            Lbl05 = new Label();
-            Lbl04 = new Label();
-            Lbl03 = new Label();
-            Lbl02 = new Label();
-            Lbl01 = new Label();
-            Lbl00 = new Label();
             spectrumPanel = new Panel();
-            Bar01 = new VerticalProgressBar();
-            Bar02 = new VerticalProgressBar();
-            Bar03 = new VerticalProgressBar();
-            Bar04 = new VerticalProgressBar();
-            Bar05 = new VerticalProgressBar();
-            Bar06 = new VerticalProgressBar();
-            Bar07 = new VerticalProgressBar();
-            Bar08 = new VerticalProgressBar();
-            Bar09 = new VerticalProgressBar();
-            Bar10 = new VerticalProgressBar();
-            Bar11 = new VerticalProgressBar();
-            Bar12 = new VerticalProgressBar();
-            Bar13 = new VerticalProgressBar();
-            Bar14 = new VerticalProgressBar();
-            Bar15 = new VerticalProgressBar();
-            Bar16 = new VerticalProgressBar();
-            Bar17 = new VerticalProgressBar();
-            Bar18 = new VerticalProgressBar();
-            Bar19 = new VerticalProgressBar();
-            Bar20 = new VerticalProgressBar();
+            spectrumDisplay = new SpectrumDisplay();
             tpMiniplayer = new TabPage();
             statusStrip = new StatusStrip();
             toolStripStatusLabel = new ToolStripStatusLabel();
@@ -279,6 +242,7 @@ namespace NetRadio
             ((System.ComponentModel.ISupportInitialize)numUpDnSaveHistory).BeginInit();
             tpSettings.SuspendLayout();
             panel1.SuspendLayout();
+            gbLanguage.SuspendLayout();
             gbxModeSettings.SuspendLayout();
             gbAutoRecord.SuspendLayout();
             gbOutput.SuspendLayout();
@@ -365,6 +329,7 @@ namespace NetRadio
             tpPlayer.TabIndex = 0;
             tpPlayer.ToolTipText = "Player (F4)";
             tpPlayer.UseVisualStyleBackColor = true;
+            tpPlayer.MouseDown += TpPlayer_MouseDown;
             tpPlayer.MouseUp += TpPlayer_MouseUp;
             // 
             // btnRecord
@@ -1141,14 +1106,14 @@ namespace NetRadio
             dgvStations.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvStations.BackgroundColor = System.Drawing.SystemColors.ControlLightLight;
             dgvStations.ClipboardCopyMode = DataGridViewClipboardCopyMode.Disable;
-            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.ControlDark;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI", 10F);
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.ControlDark;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = DataGridViewTriState.True;
-            dgvStations.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.ControlDark;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Segoe UI", 10F);
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.ControlDark;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.True;
+            dgvStations.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
             dgvStations.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             dgvStations.Columns.AddRange(new DataGridViewColumn[] { col1, col2 });
             dgvStations.ContextMenuStrip = contextMenuStations;
@@ -1165,12 +1130,11 @@ namespace NetRadio
             dgvStations.TabIndex = 0;
             dgvStations.CellBeginEdit += DgvStations_CellBeginEdit;
             dgvStations.CellEndEdit += DgvStations_CellEndEdit;
-            dgvStations.CellValueChanged += DgvStations_CellValueChanged;
             dgvStations.RowPostPaint += DgvStations_RowPostPaint;
-            dgvStations.RowsRemoved += DgvStations_RowsRemoved;
             dgvStations.SelectionChanged += DgvStations_SelectionChanged;
             dgvStations.DragDrop += DgvStations_DragDrop;
             dgvStations.DragOver += DataGridView_DragOver;
+            dgvStations.DragLeave += DgvStations_DragLeave;
             dgvStations.KeyDown += DgvStations_KeyDown;
             dgvStations.MouseClick += DgvStations_MouseClick;
             dgvStations.MouseDown += DgvStations_MouseDown;
@@ -1526,7 +1490,7 @@ namespace NetRadio
             // numUpDnSaveHistory
             // 
             numUpDnSaveHistory.BorderStyle = BorderStyle.FixedSingle;
-            numUpDnSaveHistory.Location = new System.Drawing.Point(45, 39);
+            numUpDnSaveHistory.Location = new System.Drawing.Point(77, 42);
             numUpDnSaveHistory.Maximum = new decimal(new int[] { 9, 0, 0, 0 });
             numUpDnSaveHistory.Name = "numUpDnSaveHistory";
             numUpDnSaveHistory.Size = new System.Drawing.Size(33, 25);
@@ -1559,20 +1523,20 @@ namespace NetRadio
             // lblSaveHistory2
             // 
             lblSaveHistory2.AutoSize = true;
-            lblSaveHistory2.Location = new System.Drawing.Point(79, 41);
+            lblSaveHistory2.Location = new System.Drawing.Point(113, 44);
             lblSaveHistory2.Name = "lblSaveHistory2";
-            lblSaveHistory2.Size = new System.Drawing.Size(60, 19);
+            lblSaveHistory2.Size = new System.Drawing.Size(34, 19);
             lblSaveHistory2.TabIndex = 8;
-            lblSaveHistory2.Text = "histories";
+            lblSaveHistory2.Text = "logs";
             // 
             // lblSaveHistory1
             // 
             lblSaveHistory1.AutoSize = true;
-            lblSaveHistory1.Location = new System.Drawing.Point(7, 41);
+            lblSaveHistory1.Location = new System.Drawing.Point(8, 44);
             lblSaveHistory1.Name = "lblSaveHistory1";
-            lblSaveHistory1.Size = new System.Drawing.Size(37, 19);
+            lblSaveHistory1.Size = new System.Drawing.Size(66, 19);
             lblSaveHistory1.TabIndex = 5;
-            lblSaveHistory1.Text = "Save";
+            lblSaveHistory1.Text = "Autosave";
             // 
             // historyExportButton
             // 
@@ -1624,6 +1588,7 @@ namespace NetRadio
             // panel1
             // 
             panel1.BackColor = System.Drawing.SystemColors.ControlLightLight;
+            panel1.Controls.Add(gbLanguage);
             panel1.Controls.Add(gbxModeSettings);
             panel1.Controls.Add(gbAutoRecord);
             panel1.Controls.Add(gbOutput);
@@ -1637,6 +1602,32 @@ namespace NetRadio
             panel1.Name = "panel1";
             panel1.Size = new System.Drawing.Size(395, 337);
             panel1.TabIndex = 3;
+            // 
+            // gbLanguage
+            // 
+            gbLanguage.Controls.Add(cbUiLanguage);
+            gbLanguage.Font = new System.Drawing.Font("Segoe UI", 9F);
+            gbLanguage.Location = new System.Drawing.Point(263, 286);
+            gbLanguage.Margin = new Padding(4, 3, 4, 3);
+            gbLanguage.Name = "gbLanguage";
+            gbLanguage.Padding = new Padding(4, 3, 4, 3);
+            gbLanguage.Size = new System.Drawing.Size(125, 49);
+            gbLanguage.TabIndex = 12;
+            gbLanguage.TabStop = false;
+            gbLanguage.Text = "Language";
+            // 
+            // cbUiLanguage
+            // 
+            cbUiLanguage.DropDownStyle = ComboBoxStyle.DropDownList;
+            cbUiLanguage.Font = new System.Drawing.Font("Segoe UI", 10F);
+            cbUiLanguage.FormattingEnabled = true;
+            cbUiLanguage.Items.AddRange(new object[] { "English", "Deutsch", "Español", "Français" });
+            cbUiLanguage.Location = new System.Drawing.Point(8, 18);
+            cbUiLanguage.Margin = new Padding(4, 3, 4, 3);
+            cbUiLanguage.Name = "cbUiLanguage";
+            cbUiLanguage.Size = new System.Drawing.Size(109, 25);
+            cbUiLanguage.TabIndex = 4;
+            cbUiLanguage.SelectionChangeCommitted += CbUiLanguage_SelectionChangeCommitted;
             // 
             // gbxModeSettings
             // 
@@ -1719,11 +1710,11 @@ namespace NetRadio
             gbAutoRecord.Controls.Add(cbActions);
             gbAutoRecord.Controls.Add(btnActions);
             gbAutoRecord.Font = new System.Drawing.Font("Segoe UI", 9F);
-            gbAutoRecord.Location = new System.Drawing.Point(266, 6);
+            gbAutoRecord.Location = new System.Drawing.Point(263, 6);
             gbAutoRecord.Margin = new Padding(4, 3, 4, 3);
             gbAutoRecord.Name = "gbAutoRecord";
             gbAutoRecord.Padding = new Padding(4, 3, 4, 3);
-            gbAutoRecord.Size = new System.Drawing.Size(121, 48);
+            gbAutoRecord.Size = new System.Drawing.Size(124, 48);
             gbAutoRecord.TabIndex = 6;
             gbAutoRecord.TabStop = false;
             gbAutoRecord.Text = "Scheduled tasks";
@@ -1760,7 +1751,7 @@ namespace NetRadio
             gbOutput.Margin = new Padding(4, 3, 4, 3);
             gbOutput.Name = "gbOutput";
             gbOutput.Padding = new Padding(4, 3, 4, 3);
-            gbOutput.Size = new System.Drawing.Size(378, 49);
+            gbOutput.Size = new System.Drawing.Size(248, 49);
             gbOutput.TabIndex = 5;
             gbOutput.TabStop = false;
             gbOutput.Text = "Output device";
@@ -1773,7 +1764,7 @@ namespace NetRadio
             cmbxOutput.Location = new System.Drawing.Point(8, 18);
             cmbxOutput.Margin = new Padding(4, 3, 4, 3);
             cmbxOutput.Name = "cmbxOutput";
-            cmbxOutput.Size = new System.Drawing.Size(362, 25);
+            cmbxOutput.Size = new System.Drawing.Size(232, 25);
             cmbxOutput.TabIndex = 4;
             cmbxOutput.DropDown += CmbxOutput_DropDown;
             cmbxOutput.SelectedIndexChanged += CmbxOutput_SelectedIndexChanged;
@@ -2456,26 +2447,6 @@ namespace NetRadio
             // 
             // tpSectrum
             // 
-            tpSectrum.Controls.Add(Lbl19);
-            tpSectrum.Controls.Add(Lbl18);
-            tpSectrum.Controls.Add(Lbl17);
-            tpSectrum.Controls.Add(Lbl16);
-            tpSectrum.Controls.Add(Lbl15);
-            tpSectrum.Controls.Add(Lbl14);
-            tpSectrum.Controls.Add(Lbl13);
-            tpSectrum.Controls.Add(Lbl12);
-            tpSectrum.Controls.Add(Lbl11);
-            tpSectrum.Controls.Add(Lbl10);
-            tpSectrum.Controls.Add(Lbl09);
-            tpSectrum.Controls.Add(Lbl08);
-            tpSectrum.Controls.Add(Lbl07);
-            tpSectrum.Controls.Add(Lbl06);
-            tpSectrum.Controls.Add(Lbl05);
-            tpSectrum.Controls.Add(Lbl04);
-            tpSectrum.Controls.Add(Lbl03);
-            tpSectrum.Controls.Add(Lbl02);
-            tpSectrum.Controls.Add(Lbl01);
-            tpSectrum.Controls.Add(Lbl00);
             tpSectrum.Controls.Add(spectrumPanel);
             tpSectrum.ImageIndex = 6;
             tpSectrum.Location = new System.Drawing.Point(4, 29);
@@ -2485,434 +2456,24 @@ namespace NetRadio
             tpSectrum.ToolTipText = "Visualization (F12)";
             tpSectrum.UseVisualStyleBackColor = true;
             // 
-            // Lbl19
-            // 
-            Lbl19.Font = new System.Drawing.Font("Segoe UI", 6F);
-            Lbl19.Location = new System.Drawing.Point(369, 323);
-            Lbl19.Margin = new Padding(0);
-            Lbl19.Name = "Lbl19";
-            Lbl19.Size = new System.Drawing.Size(19, 15);
-            Lbl19.TabIndex = 52;
-            Lbl19.Text = "20K";
-            Lbl19.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // Lbl18
-            // 
-            Lbl18.Font = new System.Drawing.Font("Segoe UI", 6F);
-            Lbl18.Location = new System.Drawing.Point(350, 323);
-            Lbl18.Margin = new Padding(0);
-            Lbl18.Name = "Lbl18";
-            Lbl18.Size = new System.Drawing.Size(19, 15);
-            Lbl18.TabIndex = 51;
-            Lbl18.Text = "14K";
-            Lbl18.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // Lbl17
-            // 
-            Lbl17.Font = new System.Drawing.Font("Segoe UI", 6F);
-            Lbl17.Location = new System.Drawing.Point(331, 323);
-            Lbl17.Margin = new Padding(0);
-            Lbl17.Name = "Lbl17";
-            Lbl17.Size = new System.Drawing.Size(19, 15);
-            Lbl17.TabIndex = 50;
-            Lbl17.Text = "11K";
-            Lbl17.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // Lbl16
-            // 
-            Lbl16.Font = new System.Drawing.Font("Segoe UI", 6F);
-            Lbl16.Location = new System.Drawing.Point(312, 323);
-            Lbl16.Margin = new Padding(0);
-            Lbl16.Name = "Lbl16";
-            Lbl16.Size = new System.Drawing.Size(19, 15);
-            Lbl16.TabIndex = 49;
-            Lbl16.Text = "7.7K";
-            Lbl16.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // Lbl15
-            // 
-            Lbl15.Font = new System.Drawing.Font("Segoe UI", 6F);
-            Lbl15.Location = new System.Drawing.Point(293, 323);
-            Lbl15.Margin = new Padding(0);
-            Lbl15.Name = "Lbl15";
-            Lbl15.Size = new System.Drawing.Size(19, 15);
-            Lbl15.TabIndex = 48;
-            Lbl15.Text = "5.6K";
-            Lbl15.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // Lbl14
-            // 
-            Lbl14.Font = new System.Drawing.Font("Segoe UI", 6F);
-            Lbl14.Location = new System.Drawing.Point(274, 323);
-            Lbl14.Margin = new Padding(0);
-            Lbl14.Name = "Lbl14";
-            Lbl14.Size = new System.Drawing.Size(19, 15);
-            Lbl14.TabIndex = 47;
-            Lbl14.Text = "4.1K";
-            Lbl14.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // Lbl13
-            // 
-            Lbl13.Font = new System.Drawing.Font("Segoe UI", 6F);
-            Lbl13.Location = new System.Drawing.Point(255, 323);
-            Lbl13.Margin = new Padding(0);
-            Lbl13.Name = "Lbl13";
-            Lbl13.Size = new System.Drawing.Size(19, 15);
-            Lbl13.TabIndex = 46;
-            Lbl13.Text = "3.0K";
-            Lbl13.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // Lbl12
-            // 
-            Lbl12.Font = new System.Drawing.Font("Segoe UI", 6F);
-            Lbl12.Location = new System.Drawing.Point(236, 323);
-            Lbl12.Margin = new Padding(0);
-            Lbl12.Name = "Lbl12";
-            Lbl12.Size = new System.Drawing.Size(19, 15);
-            Lbl12.TabIndex = 45;
-            Lbl12.Text = "2.2K";
-            Lbl12.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // Lbl11
-            // 
-            Lbl11.Font = new System.Drawing.Font("Segoe UI", 6F);
-            Lbl11.Location = new System.Drawing.Point(217, 323);
-            Lbl11.Margin = new Padding(0);
-            Lbl11.Name = "Lbl11";
-            Lbl11.Size = new System.Drawing.Size(19, 15);
-            Lbl11.TabIndex = 44;
-            Lbl11.Text = "1.6K";
-            Lbl11.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // Lbl10
-            // 
-            Lbl10.Font = new System.Drawing.Font("Segoe UI", 6F);
-            Lbl10.Location = new System.Drawing.Point(198, 323);
-            Lbl10.Margin = new Padding(0);
-            Lbl10.Name = "Lbl10";
-            Lbl10.Size = new System.Drawing.Size(19, 15);
-            Lbl10.TabIndex = 43;
-            Lbl10.Text = "1.2K";
-            Lbl10.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // Lbl09
-            // 
-            Lbl09.Font = new System.Drawing.Font("Segoe UI", 6F);
-            Lbl09.Location = new System.Drawing.Point(179, 323);
-            Lbl09.Margin = new Padding(0);
-            Lbl09.Name = "Lbl09";
-            Lbl09.Size = new System.Drawing.Size(19, 15);
-            Lbl09.TabIndex = 42;
-            Lbl09.Text = "850";
-            Lbl09.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // Lbl08
-            // 
-            Lbl08.Font = new System.Drawing.Font("Segoe UI", 6F);
-            Lbl08.Location = new System.Drawing.Point(160, 323);
-            Lbl08.Margin = new Padding(0);
-            Lbl08.Name = "Lbl08";
-            Lbl08.Size = new System.Drawing.Size(19, 15);
-            Lbl08.TabIndex = 41;
-            Lbl08.Text = "620";
-            Lbl08.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // Lbl07
-            // 
-            Lbl07.Font = new System.Drawing.Font("Segoe UI", 6F);
-            Lbl07.Location = new System.Drawing.Point(141, 323);
-            Lbl07.Margin = new Padding(0);
-            Lbl07.Name = "Lbl07";
-            Lbl07.Size = new System.Drawing.Size(19, 15);
-            Lbl07.TabIndex = 40;
-            Lbl07.Text = "453";
-            Lbl07.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // Lbl06
-            // 
-            Lbl06.Font = new System.Drawing.Font("Segoe UI", 6F);
-            Lbl06.Location = new System.Drawing.Point(122, 323);
-            Lbl06.Margin = new Padding(0);
-            Lbl06.Name = "Lbl06";
-            Lbl06.Size = new System.Drawing.Size(19, 15);
-            Lbl06.TabIndex = 39;
-            Lbl06.Text = "331";
-            Lbl06.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // Lbl05
-            // 
-            Lbl05.Font = new System.Drawing.Font("Segoe UI", 6F);
-            Lbl05.Location = new System.Drawing.Point(103, 323);
-            Lbl05.Margin = new Padding(0);
-            Lbl05.Name = "Lbl05";
-            Lbl05.Size = new System.Drawing.Size(19, 15);
-            Lbl05.TabIndex = 38;
-            Lbl05.Text = "241";
-            Lbl05.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // Lbl04
-            // 
-            Lbl04.Font = new System.Drawing.Font("Segoe UI", 6F);
-            Lbl04.Location = new System.Drawing.Point(84, 323);
-            Lbl04.Margin = new Padding(0);
-            Lbl04.Name = "Lbl04";
-            Lbl04.Size = new System.Drawing.Size(19, 15);
-            Lbl04.TabIndex = 37;
-            Lbl04.Text = "176";
-            Lbl04.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // Lbl03
-            // 
-            Lbl03.Font = new System.Drawing.Font("Segoe UI", 6F);
-            Lbl03.Location = new System.Drawing.Point(65, 323);
-            Lbl03.Margin = new Padding(0);
-            Lbl03.Name = "Lbl03";
-            Lbl03.Size = new System.Drawing.Size(19, 15);
-            Lbl03.TabIndex = 36;
-            Lbl03.Text = "129";
-            Lbl03.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // Lbl02
-            // 
-            Lbl02.Font = new System.Drawing.Font("Segoe UI", 6F);
-            Lbl02.Location = new System.Drawing.Point(46, 323);
-            Lbl02.Margin = new Padding(0);
-            Lbl02.Name = "Lbl02";
-            Lbl02.Size = new System.Drawing.Size(19, 15);
-            Lbl02.TabIndex = 35;
-            Lbl02.Text = "94";
-            Lbl02.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // Lbl01
-            // 
-            Lbl01.Font = new System.Drawing.Font("Segoe UI", 6F);
-            Lbl01.Location = new System.Drawing.Point(27, 323);
-            Lbl01.Margin = new Padding(0);
-            Lbl01.Name = "Lbl01";
-            Lbl01.Size = new System.Drawing.Size(19, 15);
-            Lbl01.TabIndex = 34;
-            Lbl01.Text = "69";
-            Lbl01.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // Lbl00
-            // 
-            Lbl00.Font = new System.Drawing.Font("Segoe UI", 6F);
-            Lbl00.Location = new System.Drawing.Point(8, 323);
-            Lbl00.Margin = new Padding(0);
-            Lbl00.Name = "Lbl00";
-            Lbl00.Size = new System.Drawing.Size(19, 15);
-            Lbl00.TabIndex = 33;
-            Lbl00.Text = "50";
-            Lbl00.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
             // spectrumPanel
             // 
             spectrumPanel.BackColor = System.Drawing.Color.AliceBlue;
             spectrumPanel.BorderStyle = BorderStyle.FixedSingle;
-            spectrumPanel.Controls.Add(Bar01);
-            spectrumPanel.Controls.Add(Bar02);
-            spectrumPanel.Controls.Add(Bar03);
-            spectrumPanel.Controls.Add(Bar04);
-            spectrumPanel.Controls.Add(Bar05);
-            spectrumPanel.Controls.Add(Bar06);
-            spectrumPanel.Controls.Add(Bar07);
-            spectrumPanel.Controls.Add(Bar08);
-            spectrumPanel.Controls.Add(Bar09);
-            spectrumPanel.Controls.Add(Bar10);
-            spectrumPanel.Controls.Add(Bar11);
-            spectrumPanel.Controls.Add(Bar12);
-            spectrumPanel.Controls.Add(Bar13);
-            spectrumPanel.Controls.Add(Bar14);
-            spectrumPanel.Controls.Add(Bar15);
-            spectrumPanel.Controls.Add(Bar16);
-            spectrumPanel.Controls.Add(Bar17);
-            spectrumPanel.Controls.Add(Bar18);
-            spectrumPanel.Controls.Add(Bar19);
-            spectrumPanel.Controls.Add(Bar20);
+            spectrumPanel.Controls.Add(spectrumDisplay);
             spectrumPanel.Location = new System.Drawing.Point(6, 8);
             spectrumPanel.Name = "spectrumPanel";
-            spectrumPanel.Size = new System.Drawing.Size(384, 312);
+            spectrumPanel.Size = new System.Drawing.Size(384, 330);
             spectrumPanel.TabIndex = 32;
             // 
-            // Bar01
+            // spectrumDisplay
             // 
-            Bar01.BackColor = System.Drawing.Color.AliceBlue;
-            Bar01.Location = new System.Drawing.Point(1, 0);
-            Bar01.Maximum = 255;
-            Bar01.Name = "Bar01";
-            Bar01.Size = new System.Drawing.Size(19, 312);
-            Bar01.TabIndex = 0;
-            // 
-            // Bar02
-            // 
-            Bar02.BackColor = System.Drawing.Color.AliceBlue;
-            Bar02.Location = new System.Drawing.Point(20, 0);
-            Bar02.Maximum = 255;
-            Bar02.Name = "Bar02";
-            Bar02.Size = new System.Drawing.Size(19, 312);
-            Bar02.TabIndex = 1;
-            // 
-            // Bar03
-            // 
-            Bar03.BackColor = System.Drawing.Color.AliceBlue;
-            Bar03.Location = new System.Drawing.Point(39, 0);
-            Bar03.Maximum = 255;
-            Bar03.Name = "Bar03";
-            Bar03.Size = new System.Drawing.Size(19, 312);
-            Bar03.TabIndex = 2;
-            // 
-            // Bar04
-            // 
-            Bar04.BackColor = System.Drawing.Color.AliceBlue;
-            Bar04.Location = new System.Drawing.Point(58, 0);
-            Bar04.Maximum = 255;
-            Bar04.Name = "Bar04";
-            Bar04.Size = new System.Drawing.Size(19, 312);
-            Bar04.TabIndex = 3;
-            // 
-            // Bar05
-            // 
-            Bar05.BackColor = System.Drawing.Color.AliceBlue;
-            Bar05.Location = new System.Drawing.Point(77, 0);
-            Bar05.Maximum = 255;
-            Bar05.Name = "Bar05";
-            Bar05.Size = new System.Drawing.Size(19, 312);
-            Bar05.TabIndex = 4;
-            // 
-            // Bar06
-            // 
-            Bar06.BackColor = System.Drawing.Color.AliceBlue;
-            Bar06.Location = new System.Drawing.Point(96, 0);
-            Bar06.Maximum = 255;
-            Bar06.Name = "Bar06";
-            Bar06.Size = new System.Drawing.Size(19, 312);
-            Bar06.TabIndex = 5;
-            // 
-            // Bar07
-            // 
-            Bar07.BackColor = System.Drawing.Color.AliceBlue;
-            Bar07.Location = new System.Drawing.Point(115, 0);
-            Bar07.Maximum = 255;
-            Bar07.Name = "Bar07";
-            Bar07.Size = new System.Drawing.Size(19, 312);
-            Bar07.TabIndex = 6;
-            // 
-            // Bar08
-            // 
-            Bar08.BackColor = System.Drawing.Color.AliceBlue;
-            Bar08.Location = new System.Drawing.Point(134, 0);
-            Bar08.Maximum = 255;
-            Bar08.Name = "Bar08";
-            Bar08.Size = new System.Drawing.Size(19, 312);
-            Bar08.TabIndex = 7;
-            // 
-            // Bar09
-            // 
-            Bar09.BackColor = System.Drawing.Color.AliceBlue;
-            Bar09.Location = new System.Drawing.Point(153, 0);
-            Bar09.Maximum = 255;
-            Bar09.Name = "Bar09";
-            Bar09.Size = new System.Drawing.Size(19, 312);
-            Bar09.TabIndex = 8;
-            // 
-            // Bar10
-            // 
-            Bar10.BackColor = System.Drawing.Color.AliceBlue;
-            Bar10.Location = new System.Drawing.Point(172, 0);
-            Bar10.Maximum = 255;
-            Bar10.Name = "Bar10";
-            Bar10.Size = new System.Drawing.Size(19, 312);
-            Bar10.TabIndex = 9;
-            // 
-            // Bar11
-            // 
-            Bar11.BackColor = System.Drawing.Color.AliceBlue;
-            Bar11.Location = new System.Drawing.Point(191, 0);
-            Bar11.Maximum = 255;
-            Bar11.Name = "Bar11";
-            Bar11.Size = new System.Drawing.Size(19, 312);
-            Bar11.TabIndex = 10;
-            // 
-            // Bar12
-            // 
-            Bar12.BackColor = System.Drawing.Color.AliceBlue;
-            Bar12.Location = new System.Drawing.Point(210, 0);
-            Bar12.Maximum = 255;
-            Bar12.Name = "Bar12";
-            Bar12.Size = new System.Drawing.Size(19, 312);
-            Bar12.TabIndex = 11;
-            // 
-            // Bar13
-            // 
-            Bar13.BackColor = System.Drawing.Color.AliceBlue;
-            Bar13.Location = new System.Drawing.Point(229, 0);
-            Bar13.Maximum = 255;
-            Bar13.Name = "Bar13";
-            Bar13.Size = new System.Drawing.Size(19, 312);
-            Bar13.TabIndex = 12;
-            // 
-            // Bar14
-            // 
-            Bar14.BackColor = System.Drawing.Color.AliceBlue;
-            Bar14.Location = new System.Drawing.Point(248, 0);
-            Bar14.Maximum = 255;
-            Bar14.Name = "Bar14";
-            Bar14.Size = new System.Drawing.Size(19, 312);
-            Bar14.TabIndex = 13;
-            // 
-            // Bar15
-            // 
-            Bar15.BackColor = System.Drawing.Color.AliceBlue;
-            Bar15.Location = new System.Drawing.Point(267, 0);
-            Bar15.Maximum = 255;
-            Bar15.Name = "Bar15";
-            Bar15.Size = new System.Drawing.Size(19, 312);
-            Bar15.TabIndex = 14;
-            // 
-            // Bar16
-            // 
-            Bar16.BackColor = System.Drawing.Color.AliceBlue;
-            Bar16.Location = new System.Drawing.Point(286, 0);
-            Bar16.Maximum = 255;
-            Bar16.Name = "Bar16";
-            Bar16.Size = new System.Drawing.Size(19, 312);
-            Bar16.TabIndex = 15;
-            // 
-            // Bar17
-            // 
-            Bar17.BackColor = System.Drawing.Color.AliceBlue;
-            Bar17.Location = new System.Drawing.Point(305, 0);
-            Bar17.Maximum = 255;
-            Bar17.Name = "Bar17";
-            Bar17.Size = new System.Drawing.Size(19, 312);
-            Bar17.TabIndex = 16;
-            // 
-            // Bar18
-            // 
-            Bar18.BackColor = System.Drawing.Color.AliceBlue;
-            Bar18.Location = new System.Drawing.Point(324, 0);
-            Bar18.Maximum = 255;
-            Bar18.Name = "Bar18";
-            Bar18.Size = new System.Drawing.Size(19, 312);
-            Bar18.TabIndex = 17;
-            // 
-            // Bar19
-            // 
-            Bar19.BackColor = System.Drawing.Color.AliceBlue;
-            Bar19.Location = new System.Drawing.Point(343, 0);
-            Bar19.Maximum = 255;
-            Bar19.Name = "Bar19";
-            Bar19.Size = new System.Drawing.Size(19, 312);
-            Bar19.TabIndex = 18;
-            // 
-            // Bar20
-            // 
-            Bar20.BackColor = System.Drawing.Color.AliceBlue;
-            Bar20.Location = new System.Drawing.Point(362, 0);
-            Bar20.Maximum = 255;
-            Bar20.Name = "Bar20";
-            Bar20.Size = new System.Drawing.Size(19, 312);
-            Bar20.TabIndex = 19;
+            spectrumDisplay.BackColor = System.Drawing.Color.AliceBlue;
+            spectrumDisplay.Dock = DockStyle.Fill;
+            spectrumDisplay.Location = new System.Drawing.Point(0, 0);
+            spectrumDisplay.Name = "spectrumDisplay";
+            spectrumDisplay.Size = new System.Drawing.Size(382, 328);
+            spectrumDisplay.TabIndex = 0;
             // 
             // tpMiniplayer
             // 
@@ -2966,6 +2527,7 @@ namespace NetRadio
             // playPauseToolStripMenuItem
             // 
             playPauseToolStripMenuItem.Enabled = false;
+            playPauseToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 9F);
             playPauseToolStripMenuItem.Image = Properties.Resources.play;
             playPauseToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Fuchsia;
             playPauseToolStripMenuItem.Name = "playPauseToolStripMenuItem";
@@ -2993,7 +2555,7 @@ namespace NetRadio
             // 
             // showToolStripMenuItem
             // 
-            showToolStripMenuItem.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Bold);
+            showToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             showToolStripMenuItem.Image = (System.Drawing.Image)resources.GetObject("showToolStripMenuItem.Image");
             showToolStripMenuItem.Name = "showToolStripMenuItem";
             showToolStripMenuItem.Size = new System.Drawing.Size(127, 22);
@@ -3067,12 +2629,13 @@ namespace NetRadio
             MinimumSize = new System.Drawing.Size(419, 435);
             Name = "FrmMain";
             SizeGripStyle = SizeGripStyle.Hide;
-            StartPosition = FormStartPosition.Manual;
+            StartPosition = FormStartPosition.CenterScreen;
             Text = "NetRadio";
             HelpButtonClicked += FrmMain_HelpButtonClicked;
             Activated += FrmMain_Activated;
             Deactivate += FrmMain_Deactivate;
             FormClosing += FrmMain_FormClosing;
+            FormClosed += FrmMain_FormClosed;
             Load += FrmMain_Load;
             Shown += FrmMain_Shown;
             Click += FrmMain_Click;
@@ -3095,6 +2658,7 @@ namespace NetRadio
             ((System.ComponentModel.ISupportInitialize)numUpDnSaveHistory).EndInit();
             tpSettings.ResumeLayout(false);
             panel1.ResumeLayout(false);
+            gbLanguage.ResumeLayout(false);
             gbxModeSettings.ResumeLayout(false);
             gbxModeSettings.PerformLayout();
             gbAutoRecord.ResumeLayout(false);
@@ -3287,47 +2851,8 @@ namespace NetRadio
         private CheckBox cbLogHistory;
         private SaveFileDialog saveFileDialog;
         private TabPage tpSectrum;
-        private VerticalProgressBar Bar01;
-        private VerticalProgressBar Bar02;
-        private VerticalProgressBar Bar03;
-        private VerticalProgressBar Bar04;
-        private VerticalProgressBar Bar05;
-        private VerticalProgressBar Bar06;
-        private VerticalProgressBar Bar07;
-        private VerticalProgressBar Bar08;
-        private VerticalProgressBar Bar09;
-        private VerticalProgressBar Bar10;
-        private VerticalProgressBar Bar11;
-        private VerticalProgressBar Bar12;
-        private VerticalProgressBar Bar13;
-        private VerticalProgressBar Bar14;
-        private VerticalProgressBar Bar15;
-        private VerticalProgressBar Bar16;
-        private VerticalProgressBar Bar17;
-        private VerticalProgressBar Bar18;
-        private VerticalProgressBar Bar19;
-        private VerticalProgressBar Bar20;
+        private SpectrumDisplay spectrumDisplay;
         private Panel spectrumPanel;
-        private Label Lbl19;
-        private Label Lbl18;
-        private Label Lbl17;
-        private Label Lbl16;
-        private Label Lbl15;
-        private Label Lbl14;
-        private Label Lbl13;
-        private Label Lbl12;
-        private Label Lbl11;
-        private Label Lbl10;
-        private Label Lbl09;
-        private Label Lbl08;
-        private Label Lbl07;
-        private Label Lbl06;
-        private Label Lbl05;
-        private Label Lbl04;
-        private Label Lbl03;
-        private Label Lbl02;
-        private Label Lbl01;
-        private Label Lbl00;
         private Label lblAuthor;
         private ToolStripSeparator tsSepListViewDeleteEntry;
         private ToolStripMenuItem tSMItemListViewDeleteEntry;
@@ -3360,6 +2885,8 @@ namespace NetRadio
         private Label lblRadio42Version;
         private Label lbUn4SeenVersion;
         private Timer timerNotifyIcon;
+        private GroupBox gbLanguage;
+        private ComboBox cbUiLanguage;
     }
 }
 

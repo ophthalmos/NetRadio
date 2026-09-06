@@ -41,6 +41,7 @@ namespace NetRadio
             copyToClipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             closeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             volProgressBar = new ProgressBarEx();
             pictureBoxLevel = new System.Windows.Forms.PictureBox();
             btnPlayPause = new System.Windows.Forms.Button();
@@ -51,7 +52,6 @@ namespace NetRadio
             timerVolTT = new System.Windows.Forms.Timer(components);
             panelDown = new System.Windows.Forms.Panel();
             panelControls = new System.Windows.Forms.Panel();
-            exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             panelTitle.SuspendLayout();
             contextMenuDisplay.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBoxLevel).BeginInit();
@@ -129,7 +129,7 @@ namespace NetRadio
             // 
             contextMenuDisplay.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { googleToolStripMenuItem, copyToClipboardToolStripMenuItem, toolStripSeparator1, closeToolStripMenuItem, exitToolStripMenuItem });
             contextMenuDisplay.Name = "contextMenuDisplay";
-            contextMenuDisplay.Size = new System.Drawing.Size(243, 120);
+            contextMenuDisplay.Size = new System.Drawing.Size(243, 98);
             // 
             // googleToolStripMenuItem
             // 
@@ -164,6 +164,15 @@ namespace NetRadio
             closeToolStripMenuItem.Size = new System.Drawing.Size(242, 22);
             closeToolStripMenuItem.Text = "Close";
             closeToolStripMenuItem.Click += CloseToolStripMenuItem_Click;
+            // 
+            // exitToolStripMenuItem
+            // 
+            exitToolStripMenuItem.Image = Properties.Resources.exit;
+            exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+            exitToolStripMenuItem.ShortcutKeyDisplayString = "Shift+Esc";
+            exitToolStripMenuItem.Size = new System.Drawing.Size(242, 22);
+            exitToolStripMenuItem.Text = "Exit";
+            exitToolStripMenuItem.Click += ExitToolStripMenuItem_Click;
             // 
             // volProgressBar
             // 
@@ -285,15 +294,6 @@ namespace NetRadio
             panelControls.TabIndex = 32;
             panelControls.MouseDown += MiniPlayer_MouseDown;
             // 
-            // exitToolStripMenuItem
-            // 
-            exitToolStripMenuItem.Image = Properties.Resources.exit;
-            exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            exitToolStripMenuItem.ShortcutKeyDisplayString = "Shift+Esc";
-            exitToolStripMenuItem.Size = new System.Drawing.Size(242, 22);
-            exitToolStripMenuItem.Text = "Exit";
-            exitToolStripMenuItem.Click += ExitToolStripMenuItem_Click;
-            // 
             // MiniPlayer
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -309,7 +309,7 @@ namespace NetRadio
             ShowIcon = false;
             ShowInTaskbar = false;
             StartPosition = System.Windows.Forms.FormStartPosition.Manual;
-            Text = "MiniPlayer";
+            Text = "NetRadio";
             TopMost = true;
             Activated += MiniPlayer_Activated;
             Deactivate += MiniPlayer_Deactivate;

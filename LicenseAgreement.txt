@@ -1,9 +1,6 @@
 License agreement
 
-The copyright of "NetRadio" belongs to the author of this software, Wilhelm Happe
-
-With installing, copying or any other use of "NetRadio" you are accepting this
-license agreement.
+The copyright of "NetRadio" belongs to the author of this software, Wilhelm Happe. With installing, copying or any other use of "NetRadio" you are accepting this license agreement.
 
 1. Terms of use
 "NetRadio" is freeware. You may use this software without charge for any purpose, including commercial use, without time limit.

@@ -19,6 +19,7 @@ internal class ProgressBarEx : ProgressBar
 
     protected override void OnPaint(PaintEventArgs e)
     {
+        if (Maximum == 0) { return; }
         SolidBrush brush;
         Rectangle rec = new(0, 0, Width, Height);
         if (ProgressBarRenderer.IsSupported) { ProgressBarRenderer.DrawHorizontalBar(e.Graphics, rec); }

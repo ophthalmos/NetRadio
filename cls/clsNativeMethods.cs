@@ -9,6 +9,11 @@ namespace NetRadio.cls;
 
 internal static partial class NativeMethods
 {
+    public const int WM_COMMAND = 0x0111; 
+    public const int THBN_CLICKED = 0x1800;
+    //public const int SM_CXICON = 11;
+    //public const int SM_CYICON = 12;
+
     public const int WM_SYSCOLORCHANGE = 0x0015;
     public const int WM_KEYDOWN = 0x100;
     public const int WM_KEYUP = 0x101;
@@ -45,9 +50,8 @@ internal static partial class NativeMethods
     public static event KeyEventHandler? KeyDown;
 
     public static readonly uint WM_SHOWNETRADIO = RegisterWindowMessage("WM_SHOWNETRADIO");
-    private delegate bool CallBackPtr(int hwnd, int lParam);
-    public static List<nint> enumedwindowPtrs = [];
-    public static List<Rectangle> enumedwindowRects = [];
+    private static readonly List<nint> enumedwindowPtrs = [];
+    private static readonly List<Rectangle> enumedwindowRects = [];
     private delegate bool EnumThreadDelegate(nint hWnd, nint lParam);
 
     private enum KeyStates
@@ -110,6 +114,21 @@ internal static partial class NativeMethods
         if (gch.Target is List<nint> list) { list.Add(hWnd); }
         return 1; // 1 = Win32 TRUE
     }
+
+    //[LibraryImport("user32.dll")]
+    //internal static partial int GetSystemMetrics(int nIndex);
+
+    //[LibraryImport("user32.dll")]
+    //internal static partial uint GetDpiForWindow(IntPtr hWnd);
+
+#pragma warning disable SYSLIB1054 // Verwenden Sie LibraryImportAttribute anstelle von DllImportAttribute
+    [DllImport("ole32.dll", ExactSpelling = true)]
+    internal static extern int CoCreateInstance(in Guid rclsid, nint pUnkOuter, int dwClsContext, in Guid riid, out ITaskbarList3 ppv);
+#pragma warning restore SYSLIB1054
+
+    [LibraryImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static partial bool DestroyIcon(nint hIcon);
 
     [LibraryImport("user32.dll")]
     public static partial nint GetSystemMenu(nint hWnd, [MarshalAs(UnmanagedType.Bool)] bool bRevert);

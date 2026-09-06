@@ -15,36 +15,44 @@ public partial class MiniPlayer : Form
     private partial Regex WhitespaceRegex();
 
     internal static Point MpMousePos => MousePosition; //{  get { return MousePosition; } }
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     internal ProgressBarEx MpVolProgBar
     {
         set => volProgressBar = value;
         get => volProgressBar;
     }
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     internal Button MpBtnAOT
     {
         set => btnAOT = value;
         get => btnAOT;
     }
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     internal ComboBox MpCmBxStations
     {
         set => cmBxStations = value;
         get => cmBxStations;
     }
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     internal Button MpBtnPlay
     {
         set => btnPlayPause = value;
         get => btnPlayPause;
     }
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     internal PictureBox MpPBLevel
     {
         set => pictureBoxLevel = value;
         get => pictureBoxLevel;
     }
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     internal ToolTip MpToolTip
     {
         set => toolTip = value;
         get => toolTip;
     }
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    internal AppSettings Settings { get; set; } = new(); // FrmMain setzt hier die geladene Instanz (Single Source of Truth)
 
     public event EventHandler? FormExit;
     public event EventHandler? FormHide;
@@ -52,7 +60,6 @@ public partial class MiniPlayer : Form
     public event EventHandler? PlayPause;
     public event EventHandler? PlayerReset;
     public event EventHandler? VolumeProgress;
-    //public event EventHandler<VolumeEventArgs> VolumeMouseWheelX; // file clsUtilities
     public event MouseEventHandler? VolumeMouseWheel; // file clsUtilities
     public event EventHandler? IncreaseVolume;
     public event EventHandler? DecreaseVolume;
@@ -63,33 +70,25 @@ public partial class MiniPlayer : Form
     private int levelLeft, levelRight;
     private static MiniPlayer? _this; // Objektverweis für statische Methode
     private readonly Region _client;
-    //private static string labelD1Text = string.Empty;
     private bool insideRestoreBtn = false;
     private bool shiftRestoreBtn = false;
     private bool rightMouseBtnDown = false;
-    //private const int CS_DROPSHADOW = 0x20000;
-
+    //private static readonly int lastHotkeyPress;
 
     public MiniPlayer()
     {
         InitializeComponent();
         DropShadow.ApplyShadows(this); // Changed from instance call to static call
         _this = this;
-        //UpdateAppearance();
         _client = Region.FromHrgn(NativeMethods.CreateRoundRectRgn(1, 1, Width - 1, Height - 1, 15, 15));
         Region = Region.FromHrgn(NativeMethods.CreateRoundRectRgn(0, 0, Width, Height, 15, 15)); // FormBorderStyle.None
     }
 
-    //protected override CreateParams CreateParams
-    //{
-    //    get
-    //    {
-    //        CreateParams cp = base.CreateParams;
-    //        // Aktiviert den nativen Schatten des Betriebssystems
-    //        cp.ClassStyle |= CS_DROPSHADOW;
-    //        return cp;
-    //    }
-    //}
+    internal void ApplyLanguage() // separater Aufruf aus FrmMain: Der MiniPlayer entsteht schon vor dem Laden der Einstellungen (und damit vor Lng.Initialize)
+    {
+        Lng.Apply(this, toolTip);
+        Lng.Apply(contextMenuDisplay); // Kontextmenü hängt nicht im Control-Baum
+    }
 
     protected virtual void OnFormExit(EventArgs e) => FormExit?.Invoke(this, e);
     protected virtual void OnFormHide(EventArgs e) => FormHide?.Invoke(this, e);
@@ -97,7 +96,6 @@ public partial class MiniPlayer : Form
     protected virtual void OnPlayPause(EventArgs e) => PlayPause?.Invoke(this, e);
     protected virtual void OnPlayerReset(EventArgs e) => PlayerReset?.Invoke(this, e);
     protected virtual void OnVolumeProgress(EventArgs e) => VolumeProgress?.Invoke(this, e);
-    //protected virtual void OnVolumeMouseWheelX(VolumeEventArgs e) { VolumeMouseWheelX?.Invoke(this, e); }
     protected virtual void OnVolumeMouseWheel(MouseEventArgs e) => VolumeMouseWheel?.Invoke(this, e);
     protected virtual void OnIncreaseVolume(EventArgs e) => IncreaseVolume?.Invoke(this, e);
     protected virtual void OnDecreaseVolume(EventArgs e) => DecreaseVolume?.Invoke(this, e);
@@ -128,14 +126,11 @@ public partial class MiniPlayer : Form
         }
     }
 
-    public bool MpVisible()
-    {
-        return Visible;
-    }
-    public static void MpLblD2_Text(string text)
-    {
-        _this!.labelD2.Text = text;
-    }
+    //public bool MpVisible()
+    //{
+    //    return Visible;
+    //}
+    public static void MpLblD2_Text(string text) => _this!.labelD2.Text = text;
 
     private void Panel_Paint(object sender, PaintEventArgs e)
     {
@@ -188,14 +183,8 @@ public partial class MiniPlayer : Form
         else { OnFormHide(e); }
     }
 
-    private void BtnPlayPause_Click(object sender, EventArgs e)
-    {
-        OnPlayPause(e);
-    }
-    private void BtnReload_Click(object sender, EventArgs e)
-    {
-        OnPlayerReset(e);
-    }
+    private void BtnPlayPause_Click(object sender, EventArgs e) => OnPlayPause(e);
+    private void BtnReload_Click(object sender, EventArgs e) => OnPlayerReset(e);
     private void CloseToolStripMenuItem_Click(object sender, EventArgs e)
     {
         if ((ModifierKeys & Keys.Shift) == Keys.Shift) { OnFormExit(e); }
@@ -265,7 +254,7 @@ public partial class MiniPlayer : Form
                     if (ActiveControl != cmBxStations)
                     {
                         OnIncreaseVolume(EventArgs.Empty);
-                        toolTip.Show("Volume " + volProgressBar.Value.ToString() + "%", volProgressBar, 20, 7, 1000);
+                        toolTip.Show(Lng.T("Volume") + " " + volProgressBar.Value.ToString() + "%", volProgressBar, 20, 7, 1000);
                         //toolTip.Show("Volume " + volProgressBar.Value.ToString() + "%", volProgressBar);
                         //timerVolTT.Start();
                         return true;
@@ -278,9 +267,7 @@ public partial class MiniPlayer : Form
                     if (ActiveControl != cmBxStations)
                     {
                         OnDecreaseVolume(EventArgs.Empty);
-                        toolTip.Show("Volume " + volProgressBar.Value.ToString() + "%", volProgressBar, 20, 7, 1000);
-                        //toolTip.Show("Volume " + volProgressBar.Value.ToString() + "%", volProgressBar);
-                        //timerVolTT.Start();
+                        toolTip.Show(Lng.T("Volume") + " " + volProgressBar.Value.ToString() + "%", volProgressBar, 20, 7, 1000);
                         return true;
                     }
                     else { return false; }
@@ -309,6 +296,7 @@ public partial class MiniPlayer : Form
                     cmBxStations.DroppedDown = true;
                     return true;
                 }
+            case Keys.Q | Keys.Control: { Application.Exit(); return true; } // beendet immer, auch bei close2Tray 
             case Keys.NumPad1:
             case Keys.D1: { if (cmBxStations.Items.Count >= 1) { cmBxStations.SelectedIndex = 0; OnStationChanged(EventArgs.Empty); return true; } return false; }
             case Keys.NumPad2:
@@ -337,13 +325,13 @@ public partial class MiniPlayer : Form
         {
             shiftRestoreBtn = true;
             btnRestore.Invalidate();
-            toolTip.SetToolTip(btnRestore, "Quit Application");
+            toolTip.SetToolTip(btnRestore, Lng.T("Quit Application"));
         }
         else if (m.Msg == NativeMethods.WM_KEYUP && (Keys)m.WParam == Keys.ShiftKey && shiftRestoreBtn) // .Text = "🡽"
         {
             shiftRestoreBtn = false;
             btnRestore.Invalidate();
-            toolTip.SetToolTip(btnRestore, "Main Window (Esc)");
+            toolTip.SetToolTip(btnRestore, Lng.T("Main Window (Esc)"));
         }
         return base.ProcessKeyPreview(ref m);
     }
@@ -362,35 +350,26 @@ public partial class MiniPlayer : Form
             if (delta.GetType() == typeof(int) && delta != 0)
             {
                 OnVolumeMouseWheel(new MouseEventArgs(MouseButtons.None, 0, Cursor.Position.X, Cursor.Position.Y, delta)); //OnVolumeMouseWheelX(new VolumeEventArgs(m.WParam.ToInt32()));
-                toolTip.Show("Volume " + volProgressBar.Value.ToString() + "%", volProgressBar, 20, 7, 1000);
+                toolTip.Show(Lng.T("Volume") + " " + volProgressBar.Value.ToString() + "%", volProgressBar, 20, 7, 1000);
             }
         }
         base.WndProc(ref m);
     }
 
-    //private void VolProgressBar_MouseWheel(object sender, MouseEventArgs e)
-    //{
-    //    OnVolumeMouseWheel(e); //OnVolumeMouseWheel(new VolumeEventArgs() { Delta = e.Delta < 0 ? 1 : -1 });
-    //    toolTip.SetToolTip(volProgressBar, "Volume " + volProgressBar.Value.ToString() + "%");
-    //}
-
-    private void VolProgressBar_MouseDown(object sender, MouseEventArgs e)
-    {
-        OnVolumeProgress(EventArgs.Empty);
-    }
+    private void VolProgressBar_MouseDown(object sender, MouseEventArgs e) => OnVolumeProgress(EventArgs.Empty);
 
     private void VolProgressBar_MouseMove(object sender, MouseEventArgs e)
     {
         if ((e.Button & MouseButtons.Left) == MouseButtons.Left)
         {
             OnVolumeProgress(EventArgs.Empty);
-            if (toolTip.GetToolTip(volProgressBar) != volProgressBar.Value.ToString()) { toolTip.SetToolTip(volProgressBar, "Volume " + volProgressBar.Value.ToString() + "%"); }
+            if (toolTip.GetToolTip(volProgressBar) != volProgressBar.Value.ToString()) { toolTip.SetToolTip(volProgressBar, Lng.T("Volume") + " " + volProgressBar.Value.ToString() + "%"); }
         }
     }
 
     private void VolProgressBar_MouseUp(object sender, MouseEventArgs e)
     {
-        toolTip.SetToolTip(volProgressBar, "Volume(+/–)");
+        toolTip.SetToolTip(volProgressBar, Lng.T("Volume(+/–)"));
         toolTip.Hide(volProgressBar);
     }
 
@@ -500,7 +479,7 @@ public partial class MiniPlayer : Form
         {
             if (insideRestoreBtn && GetChildAtPoint(e.Location) != null)
             {
-                if (FrmMain.MainClose2Tray)
+                if (Settings.CloseToTray)
                 {
                     rightMouseBtnDown = false;
                     Hide();

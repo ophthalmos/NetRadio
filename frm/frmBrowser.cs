@@ -54,7 +54,9 @@ public partial class FrmBrowser : Form
     public FrmBrowser(string searchText, Point point, Version version)
     {
         InitializeComponent();
-        Text = "Search results";
+        Lng.Apply(this); // übersetzt alle Designer-Texte, falls nicht Englisch eingestellt ist
+        Lng.Apply(contextMenuStrip); // Kontextmenü hängt nicht im Control-Baum
+        Text = Lng.T("Search results");
         _searchText = searchText;
         Location = point;
         curVersion = version;
@@ -65,7 +67,7 @@ public partial class FrmBrowser : Form
         await LoadStationsAsync();
         Top += 25;
         Left += 50;
-        toolStripStatusLabel.Text = $"{listView.Items.Count} {(listView.Items.Count < 2 ? "item" : "items")} found. Press <Alt+Enter> or <F4> for details.";
+        toolStripStatusLabel.Text = $"{listView.Items.Count} {(listView.Items.Count < 2 ? Lng.T("item") : Lng.T("items"))} {Lng.T("found. Press <Alt+Enter> or <F4> for details.")}";
     }
 
     private async Task LoadStationsAsync()
@@ -99,7 +101,7 @@ public partial class FrmBrowser : Form
             {
                 try
                 {
-                    f2.LabelText = $"Connecting to: {server}";
+                    f2.LabelText = Lng.T("Connecting to:") + " " + server;
 
                     // URL bauen
                     var searchUrl = $"https://{server}/xml/stations/search?name={Uri.EscapeDataString(_searchText)}";
@@ -159,7 +161,7 @@ public partial class FrmBrowser : Form
                     // Wenn alle Server fehlschlugen, zeigen wir den letzten Fehler an
                     Utilities.ErrTaskDialog(this, lastException);
                 }
-                else { Utilities.MsgTaskDialog(this, "No results found!", $"No stations matching '{_searchText}' were found.", TaskDialogIcon.ShieldWarningYellowBar); }
+                else { Utilities.MsgTaskDialog(this, Lng.T("No results found!"), string.Format(Lng.T("No stations matching '{0}' were found."), _searchText), TaskDialogIcon.ShieldWarningYellowBar); }
 
                 DialogResult = DialogResult.Abort;
                 Close();

@@ -124,10 +124,12 @@
     <Exec Command="powershell -Command &quot;if (Get-Process -Name '$(AssemblyName)' -ErrorAction SilentlyContinue) { Stop-Process -Name '$(AssemblyName)' -Force }&quot;" />
   </Target>
 
-  <!-- Übersetzungs-Konsistenz (englischer Text = resx-Schlüssel): meldet nach jedem Debug-Build
-       fehlende und verwaiste Schlüssel als Warnungen (LNG001/LNG002), s. check-lng.ps1 -->
-  <Target Name="CheckTranslations" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug'">
-    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\check-lng.ps1&quot;" WorkingDirectory="$(MSBuildProjectDirectory)" ContinueOnError="true" />
+  <!-- Übersetzungs-Konsistenz (englischer Text = resx-Schlüssel): meldet nach jedem Build fehlende und verwaiste
+       Schlüssel (LNG001/LNG002) – im Debug als Warnungen, im Release als Fehler mit Build-Abbruch (-Strict),
+       s. check-lng.ps1 -->
+  <Target Name="CheckTranslations" AfterTargets="Build" Condition="Exists('$(MSBuildProjectDirectory)\check-lng.ps1')">
+    <Exec Condition="'$(Configuration)' != 'Release'" Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\check-lng.ps1&quot;" WorkingDirectory="$(MSBuildProjectDirectory)" ContinueOnError="true" />
+    <Exec Condition="'$(Configuration)' == 'Release'" Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\check-lng.ps1&quot; -Strict" WorkingDirectory="$(MSBuildProjectDirectory)" />
   </Target>
 
 </Project>

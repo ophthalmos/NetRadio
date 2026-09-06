@@ -3,21 +3,25 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using NetRadio.cls;
+using System.ComponentModel;
 
 namespace NetRadio;
 
 public partial class FrmSchedule : Form
 {
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     internal List<string> StationsList
     {
         get => stations; 
         set => stations = value;
     }
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     internal ListView ActionListView
     {
         get => aLV;        
         set => aLV = value;
     }
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     internal CheckBox RepeatActionsDaily
     {
         get => cbRepeatActionsDaily;
@@ -31,6 +35,7 @@ public partial class FrmSchedule : Form
     public FrmSchedule()
     {
         InitializeComponent();
+        Lng.Apply(this); // übersetzt alle Designer-Texte, falls nicht Englisch eingestellt ist
     }
 
     private void FrmSchedule_Load(object sender, EventArgs e)
@@ -166,14 +171,14 @@ public partial class FrmSchedule : Form
         var returnValue = 0;
         foreach (ListViewItem item in listView.CheckedItems)
         {
-            if (item.SubItems[1].Text == Utilities.TaskNames[6])
+            if (item.SubItems[1].Text == Lng.T(Utilities.TaskNames[6])) // die ListView zeigt die übersetzten Task-Namen
             {
-                lblRepeat.Text = "Caution: The computer is shut down every day!";
+                lblRepeat.Text = Lng.T("Caution: The computer is shut down every day!");
                 returnValue = 2;
             }
-            else if (item.SubItems[1].Text == Utilities.TaskNames[5])
+            else if (item.SubItems[1].Text == Lng.T(Utilities.TaskNames[5]))
             {
-                lblRepeat.Text = "Caution: The computer hibernates every day!";
+                lblRepeat.Text = Lng.T("Caution: The computer hibernates every day!");
                 returnValue = returnValue == 0 ? 1 : returnValue;
             }
         }

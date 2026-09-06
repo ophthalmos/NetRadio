@@ -28,249 +28,238 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
-            this.imageList = new System.Windows.Forms.ImageList(this.components);
-            this.listView = new System.Windows.Forms.ListView();
-            this.lbName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.lbURL = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.propertiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.acceptToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.cancelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
-            this.statusStrip = new System.Windows.Forms.StatusStrip();
-            this.toolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolTip = new System.Windows.Forms.ToolTip(this.components);
-            this.timer = new System.Windows.Forms.Timer(this.components);
-            this.btnAccept = new System.Windows.Forms.Button();
-            this.btnCancel = new System.Windows.Forms.Button();
-            this.btnDetail = new System.Windows.Forms.Button();
-            this.btnEdit = new System.Windows.Forms.Button();
-            this.contextMenuStrip.SuspendLayout();
-            this.statusStrip.SuspendLayout();
-            this.SuspendLayout();
+            components = new System.ComponentModel.Container();
+            imageList = new System.Windows.Forms.ImageList(components);
+            listView = new System.Windows.Forms.ListView();
+            lbName = new System.Windows.Forms.ColumnHeader();
+            lbURL = new System.Windows.Forms.ColumnHeader();
+            contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(components);
+            editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            propertiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            acceptToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            cancelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            toolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
+            statusStrip = new System.Windows.Forms.StatusStrip();
+            toolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            toolTip = new System.Windows.Forms.ToolTip(components);
+            timer = new System.Windows.Forms.Timer(components);
+            btnAccept = new System.Windows.Forms.Button();
+            btnCancel = new System.Windows.Forms.Button();
+            btnDetail = new System.Windows.Forms.Button();
+            btnEdit = new System.Windows.Forms.Button();
+            contextMenuStrip.SuspendLayout();
+            statusStrip.SuspendLayout();
+            SuspendLayout();
             // 
             // imageList
             // 
-            this.imageList.ColorDepth = System.Windows.Forms.ColorDepth.Depth24Bit;
-            this.imageList.ImageSize = new System.Drawing.Size(32, 32);
-            this.imageList.TransparentColor = System.Drawing.Color.Transparent;
+            imageList.ColorDepth = System.Windows.Forms.ColorDepth.Depth24Bit;
+            imageList.ImageSize = new System.Drawing.Size(32, 32);
+            imageList.TransparentColor = System.Drawing.Color.Transparent;
             // 
             // listView
             // 
-            this.listView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.listView.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.listView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.lbName,
-            this.lbURL});
-            this.listView.ContextMenuStrip = this.contextMenuStrip;
-            this.listView.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.listView.FullRowSelect = true;
-            this.listView.GridLines = true;
-            this.listView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
-            this.listView.HideSelection = false;
-            this.listView.LabelEdit = true;
-            this.listView.Location = new System.Drawing.Point(0, 0);
-            this.listView.Margin = new System.Windows.Forms.Padding(0);
-            this.listView.MultiSelect = false;
-            this.listView.Name = "listView";
-            this.listView.ShowItemToolTips = true;
-            this.listView.Size = new System.Drawing.Size(684, 407);
-            this.listView.TabIndex = 0;
-            this.listView.UseCompatibleStateImageBehavior = false;
-            this.listView.View = System.Windows.Forms.View.Details;
-            this.listView.ColumnWidthChanged += new System.Windows.Forms.ColumnWidthChangedEventHandler(this.ListView_ColumnWidthChanged);
-            this.listView.SelectedIndexChanged += new System.EventHandler(this.ListView_SelectedIndexChanged);
-            this.listView.DoubleClick += new System.EventHandler(this.ListView_DoubleClick);
-            this.listView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ListView_KeyDown);
+            listView.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            listView.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            listView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] { lbName, lbURL });
+            listView.ContextMenuStrip = contextMenuStrip;
+            listView.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0);
+            listView.FullRowSelect = true;
+            listView.GridLines = true;
+            listView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
+            listView.LabelEdit = true;
+            listView.Location = new System.Drawing.Point(0, 0);
+            listView.Margin = new System.Windows.Forms.Padding(0);
+            listView.MultiSelect = false;
+            listView.Name = "listView";
+            listView.ShowItemToolTips = true;
+            listView.Size = new System.Drawing.Size(684, 407);
+            listView.TabIndex = 0;
+            listView.UseCompatibleStateImageBehavior = false;
+            listView.View = System.Windows.Forms.View.Details;
+            listView.ColumnWidthChanged += ListView_ColumnWidthChanged;
+            listView.SelectedIndexChanged += ListView_SelectedIndexChanged;
+            listView.DoubleClick += ListView_DoubleClick;
+            listView.KeyDown += ListView_KeyDown;
             // 
             // lbName
             // 
-            this.lbName.Text = "Name";
-            this.lbName.Width = 200;
+            lbName.Text = "Name";
+            lbName.Width = 200;
             // 
             // lbURL
             // 
-            this.lbURL.Text = "URL";
-            this.lbURL.Width = 480;
+            lbURL.Text = "URL";
+            lbURL.Width = 480;
             // 
             // contextMenuStrip
             // 
-            this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.editToolStripMenuItem,
-            this.propertiesToolStripMenuItem,
-            this.toolStripSeparator2,
-            this.acceptToolStripMenuItem,
-            this.cancelToolStripMenuItem});
-            this.contextMenuStrip.Name = "contextMenuStrip";
-            this.contextMenuStrip.Size = new System.Drawing.Size(185, 98);
-            this.contextMenuStrip.Opening += new System.ComponentModel.CancelEventHandler(this.ContextMenuStrip_Opening);
+            contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { editToolStripMenuItem, propertiesToolStripMenuItem, toolStripSeparator2, acceptToolStripMenuItem, cancelToolStripMenuItem });
+            contextMenuStrip.Name = "contextMenuStrip";
+            contextMenuStrip.Size = new System.Drawing.Size(185, 98);
+            contextMenuStrip.Opening += ContextMenuStrip_Opening;
             // 
             // editToolStripMenuItem
             // 
-            this.editToolStripMenuItem.Image = global::NetRadio.Properties.Resources.edit;
-            this.editToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Fuchsia;
-            this.editToolStripMenuItem.Name = "editToolStripMenuItem";
-            this.editToolStripMenuItem.ShortcutKeyDisplayString = "F2";
-            this.editToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
-            this.editToolStripMenuItem.Text = "Edit";
-            this.editToolStripMenuItem.Click += new System.EventHandler(this.EditToolStripMenuItem_Click);
+            editToolStripMenuItem.Image = Properties.Resources.edit;
+            editToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Fuchsia;
+            editToolStripMenuItem.Name = "editToolStripMenuItem";
+            editToolStripMenuItem.ShortcutKeyDisplayString = "F2";
+            editToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
+            editToolStripMenuItem.Text = "Edit";
+            editToolStripMenuItem.Click += EditToolStripMenuItem_Click;
             // 
             // propertiesToolStripMenuItem
             // 
-            this.propertiesToolStripMenuItem.Image = global::NetRadio.Properties.Resources.retrun;
-            this.propertiesToolStripMenuItem.Name = "propertiesToolStripMenuItem";
-            this.propertiesToolStripMenuItem.ShortcutKeyDisplayString = "Alt+Enter";
-            this.propertiesToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
-            this.propertiesToolStripMenuItem.Text = "Properties";
-            this.propertiesToolStripMenuItem.Click += new System.EventHandler(this.PropertiesToolStripMenuItem_Click);
+            propertiesToolStripMenuItem.Image = Properties.Resources.retrun;
+            propertiesToolStripMenuItem.Name = "propertiesToolStripMenuItem";
+            propertiesToolStripMenuItem.ShortcutKeyDisplayString = "Alt+Enter";
+            propertiesToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
+            propertiesToolStripMenuItem.Text = "Properties";
+            propertiesToolStripMenuItem.Click += PropertiesToolStripMenuItem_Click;
             // 
             // toolStripSeparator2
             // 
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(181, 6);
+            toolStripSeparator2.Name = "toolStripSeparator2";
+            toolStripSeparator2.Size = new System.Drawing.Size(181, 6);
             // 
             // acceptToolStripMenuItem
             // 
-            this.acceptToolStripMenuItem.Image = global::NetRadio.Properties.Resources.accept;
-            this.acceptToolStripMenuItem.Name = "acceptToolStripMenuItem";
-            this.acceptToolStripMenuItem.ShortcutKeyDisplayString = "Enter";
-            this.acceptToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
-            this.acceptToolStripMenuItem.Text = "Accept";
-            this.acceptToolStripMenuItem.Click += new System.EventHandler(this.AcceptToolStripMenuItem_Click);
+            acceptToolStripMenuItem.Image = Properties.Resources.accept;
+            acceptToolStripMenuItem.Name = "acceptToolStripMenuItem";
+            acceptToolStripMenuItem.ShortcutKeyDisplayString = "Enter";
+            acceptToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
+            acceptToolStripMenuItem.Text = "Accept";
+            acceptToolStripMenuItem.Click += AcceptToolStripMenuItem_Click;
             // 
             // cancelToolStripMenuItem
             // 
-            this.cancelToolStripMenuItem.Image = global::NetRadio.Properties.Resources.cancel;
-            this.cancelToolStripMenuItem.Name = "cancelToolStripMenuItem";
-            this.cancelToolStripMenuItem.ShortcutKeyDisplayString = "Esc";
-            this.cancelToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
-            this.cancelToolStripMenuItem.Text = "Cancel";
-            this.cancelToolStripMenuItem.Click += new System.EventHandler(this.CancelToolStripMenuItem_Click);
+            cancelToolStripMenuItem.Image = Properties.Resources.cancel;
+            cancelToolStripMenuItem.Name = "cancelToolStripMenuItem";
+            cancelToolStripMenuItem.ShortcutKeyDisplayString = "Esc";
+            cancelToolStripMenuItem.Size = new System.Drawing.Size(184, 22);
+            cancelToolStripMenuItem.Text = "Cancel";
+            cancelToolStripMenuItem.Click += CancelToolStripMenuItem_Click;
             // 
             // toolStripSeparator
             // 
-            this.toolStripSeparator.Name = "toolStripSeparator";
-            this.toolStripSeparator.Size = new System.Drawing.Size(6, 6);
+            toolStripSeparator.Name = "toolStripSeparator";
+            toolStripSeparator.Size = new System.Drawing.Size(6, 6);
             // 
             // statusStrip
             // 
-            this.statusStrip.GripStyle = System.Windows.Forms.ToolStripGripStyle.Visible;
-            this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripStatusLabel});
-            this.statusStrip.Location = new System.Drawing.Point(0, 439);
-            this.statusStrip.Name = "statusStrip";
-            this.statusStrip.Padding = new System.Windows.Forms.Padding(1, 0, 16, 0);
-            this.statusStrip.Size = new System.Drawing.Size(684, 22);
-            this.statusStrip.TabIndex = 1;
-            this.statusStrip.Text = "statusStrip";
+            statusStrip.GripStyle = System.Windows.Forms.ToolStripGripStyle.Visible;
+            statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { toolStripStatusLabel });
+            statusStrip.Location = new System.Drawing.Point(0, 439);
+            statusStrip.Name = "statusStrip";
+            statusStrip.Padding = new System.Windows.Forms.Padding(1, 0, 16, 0);
+            statusStrip.Size = new System.Drawing.Size(684, 22);
+            statusStrip.TabIndex = 1;
+            statusStrip.Text = "statusStrip";
             // 
             // toolStripStatusLabel
             // 
-            this.toolStripStatusLabel.Name = "toolStripStatusLabel";
-            this.toolStripStatusLabel.Overflow = System.Windows.Forms.ToolStripItemOverflow.Never;
-            this.toolStripStatusLabel.Size = new System.Drawing.Size(0, 17);
-            this.toolStripStatusLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            toolStripStatusLabel.Name = "toolStripStatusLabel";
+            toolStripStatusLabel.Overflow = System.Windows.Forms.ToolStripItemOverflow.Never;
+            toolStripStatusLabel.Size = new System.Drawing.Size(0, 17);
+            toolStripStatusLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // toolStripSeparator1
             // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
+            toolStripSeparator1.Name = "toolStripSeparator1";
+            toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
             // 
             // toolTip
             // 
-            this.toolTip.AutoPopDelay = 500;
-            this.toolTip.InitialDelay = 100;
-            this.toolTip.ReshowDelay = 100;
+            toolTip.AutoPopDelay = 500;
+            toolTip.InitialDelay = 100;
+            toolTip.ReshowDelay = 100;
             // 
             // timer
             // 
-            this.timer.Interval = 10;
-            this.timer.Tick += new System.EventHandler(this.Timer_Tick);
+            timer.Interval = 10;
+            timer.Tick += Timer_Tick;
             // 
             // btnAccept
             // 
-            this.btnAccept.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnAccept.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnAccept.Enabled = false;
-            this.btnAccept.Location = new System.Drawing.Point(577, 410);
-            this.btnAccept.Name = "btnAccept";
-            this.btnAccept.Size = new System.Drawing.Size(95, 25);
-            this.btnAccept.TabIndex = 2;
-            this.btnAccept.Text = "Accept";
-            this.btnAccept.UseVisualStyleBackColor = true;
-            this.btnAccept.Click += new System.EventHandler(this.BtnAccept_Click);
+            btnAccept.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
+            btnAccept.DialogResult = System.Windows.Forms.DialogResult.OK;
+            btnAccept.Enabled = false;
+            btnAccept.Location = new System.Drawing.Point(567, 411);
+            btnAccept.Name = "btnAccept";
+            btnAccept.Size = new System.Drawing.Size(105, 25);
+            btnAccept.TabIndex = 2;
+            btnAccept.Text = "Accept";
+            btnAccept.UseVisualStyleBackColor = true;
+            btnAccept.Click += BtnAccept_Click;
             // 
             // btnCancel
             // 
-            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(476, 410);
-            this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(95, 25);
-            this.btnCancel.TabIndex = 3;
-            this.btnCancel.Text = "Cancel";
-            this.btnCancel.UseVisualStyleBackColor = true;
+            btnCancel.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
+            btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            btnCancel.Location = new System.Drawing.Point(466, 411);
+            btnCancel.Name = "btnCancel";
+            btnCancel.Size = new System.Drawing.Size(95, 25);
+            btnCancel.TabIndex = 3;
+            btnCancel.Text = "Cancel";
+            btnCancel.UseVisualStyleBackColor = true;
             // 
             // btnDetail
             // 
-            this.btnDetail.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnDetail.Enabled = false;
-            this.btnDetail.Location = new System.Drawing.Point(12, 410);
-            this.btnDetail.Name = "btnDetail";
-            this.btnDetail.Size = new System.Drawing.Size(95, 25);
-            this.btnDetail.TabIndex = 4;
-            this.btnDetail.Text = "Properties";
-            this.btnDetail.UseVisualStyleBackColor = true;
-            this.btnDetail.Click += new System.EventHandler(this.BtnDetail_Click);
+            btnDetail.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left;
+            btnDetail.Enabled = false;
+            btnDetail.Location = new System.Drawing.Point(12, 410);
+            btnDetail.Name = "btnDetail";
+            btnDetail.Size = new System.Drawing.Size(105, 25);
+            btnDetail.TabIndex = 4;
+            btnDetail.Text = "Properties";
+            btnDetail.UseVisualStyleBackColor = true;
+            btnDetail.Click += BtnDetail_Click;
             // 
             // btnEdit
             // 
-            this.btnEdit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnEdit.Enabled = false;
-            this.btnEdit.Location = new System.Drawing.Point(113, 411);
-            this.btnEdit.Name = "btnEdit";
-            this.btnEdit.Size = new System.Drawing.Size(95, 25);
-            this.btnEdit.TabIndex = 5;
-            this.btnEdit.Text = "Edit Name";
-            this.btnEdit.UseVisualStyleBackColor = true;
-            this.btnEdit.Click += new System.EventHandler(this.BtnEdit_Click);
+            btnEdit.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left;
+            btnEdit.Enabled = false;
+            btnEdit.Location = new System.Drawing.Point(123, 411);
+            btnEdit.Name = "btnEdit";
+            btnEdit.Size = new System.Drawing.Size(105, 25);
+            btnEdit.TabIndex = 5;
+            btnEdit.Text = "Edit Name";
+            btnEdit.UseVisualStyleBackColor = true;
+            btnEdit.Click += BtnEdit_Click;
             // 
             // FrmBrowser
             // 
-            this.AcceptButton = this.btnAccept;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(684, 461);
-            this.Controls.Add(this.btnEdit);
-            this.Controls.Add(this.btnDetail);
-            this.Controls.Add(this.btnCancel);
-            this.Controls.Add(this.btnAccept);
-            this.Controls.Add(this.statusStrip);
-            this.Controls.Add(this.listView);
-            this.Font = new System.Drawing.Font("Segoe UI", 9.5F);
-            this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
-            this.MinimumSize = new System.Drawing.Size(435, 210);
-            this.Name = "FrmBrowser";
-            this.ShowIcon = false;
-            this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "frmBrowser";
-            this.Load += new System.EventHandler(this.FrmBrowser_Load);
-            this.Resize += new System.EventHandler(this.FrmBrowser_Resize);
-            this.contextMenuStrip.ResumeLayout(false);
-            this.statusStrip.ResumeLayout(false);
-            this.statusStrip.PerformLayout();
-            this.ResumeLayout(false);
-            this.PerformLayout();
+            AcceptButton = btnAccept;
+            AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
+            AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            CancelButton = btnCancel;
+            ClientSize = new System.Drawing.Size(684, 461);
+            Controls.Add(btnEdit);
+            Controls.Add(btnDetail);
+            Controls.Add(btnCancel);
+            Controls.Add(btnAccept);
+            Controls.Add(statusStrip);
+            Controls.Add(listView);
+            Font = new System.Drawing.Font("Segoe UI", 9.5F);
+            Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            MaximizeBox = false;
+            MinimizeBox = false;
+            MinimumSize = new System.Drawing.Size(435, 210);
+            Name = "FrmBrowser";
+            ShowIcon = false;
+            ShowInTaskbar = false;
+            StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
+            Text = "frmBrowser";
+            Load += FrmBrowser_Load;
+            Resize += FrmBrowser_Resize;
+            contextMenuStrip.ResumeLayout(false);
+            statusStrip.ResumeLayout(false);
+            statusStrip.PerformLayout();
+            ResumeLayout(false);
+            PerformLayout();
 
         }
 

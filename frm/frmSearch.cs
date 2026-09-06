@@ -13,6 +13,7 @@ public partial class FrmSearch : Form
     public FrmSearch(string row, string name)
     {
         InitializeComponent();
+        Lng.Apply(this); // übersetzt alle Designer-Texte, falls nicht Englisch eingestellt ist
         lblName.Text = name;
         if (string.IsNullOrEmpty(name)) { lblMsg2.Text = string.Empty; }
         lblRow.Text = row;

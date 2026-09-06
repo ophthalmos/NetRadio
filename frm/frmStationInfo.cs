@@ -11,6 +11,7 @@ public partial class FrmStationInfo : Form
     public FrmStationInfo(int index, int total, string name, string url, string homepage, string favicon, string country, string language, string votes, string codec, string bitrate)
     {
         InitializeComponent();
+        Lng.Apply(this); // übersetzt alle Designer-Texte, falls nicht Englisch eingestellt ist
         Text = index.ToString() + "/" + total.ToString();
         lblName.Text = name.Length > 0 ? name : "N.N.";
         tbxURL.Text = url;
@@ -18,8 +19,8 @@ public partial class FrmStationInfo : Form
         lblCountry.Text = country;
         lblLanguage.Text = language;
         lblVotes.Text = votes;
-        lblCodec.Text = codec.Length > 0 ? codec : "unknown";
-        lblBitrate.Text = bitrate.Equals("0") ? "unknown" : bitrate;
+        lblCodec.Text = codec.Length > 0 ? codec : Lng.T("unknown");
+        lblBitrate.Text = bitrate.Equals("0") ? Lng.T("unknown") : bitrate;
         if (favicon.Length > 0)
         {
             pictureBox.SizeMode = PictureBoxSizeMode.StretchImage;

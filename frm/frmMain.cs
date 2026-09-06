@@ -17,7 +17,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Xml;
+using System.Text.Json;
 using System.Xml.Linq;
 using Microsoft.Win32;
 using NetRadio.cls;
@@ -46,6 +46,9 @@ public partial class FrmMain : Form
     [GeneratedRegex(@"^[/-](t|tray)$", RegexOptions.IgnoreCase)]
     private static partial Regex CmdTrayRegex();
 
+    [GeneratedRegex(@"^[/-](l|language)$", RegexOptions.IgnoreCase)]
+    private static partial Regex CmdLanguageRegex();
+
     [GeneratedRegex(@".*(http:\/\/[\S]+).*", RegexOptions.Singleline)]
     private static partial Regex HttpUrlRegex();
 
@@ -63,8 +66,6 @@ public partial class FrmMain : Form
 
     [GeneratedRegex(@"^-, ")]
     private static partial Regex LeadingDashCommaRegex();
-
-    internal static bool MainClose2Tray => close2Tray;
 
     private readonly string _myUserAgent = "NetRadio";
     [FixedAddressValueType()]
@@ -87,24 +88,19 @@ public partial class FrmMain : Form
     private readonly int _opusPlugIn = 0;
     private readonly int _flacPlugIn = 0;
     private int _downlaodSize = 0;
-    private int _currentButtonNum = 0; // wird im RadioButton_CheckedChanged auf Werte > 0 gesetzt; zurücksetzen auf 0 erfolgt manuell!
+    private int _currentButtonNum = 0;  // Wert wird in SelectStation() synchron gehalten mit _selectedStation.Number
     private readonly Version curVersion = Assembly.GetExecutingAssembly().GetName().Version ?? new Version("0.0.0");
     private readonly string strVersion = "unbekannt";
-    private static bool alwaysOnTop;
-    private static bool logHistory = true;
-    private static bool showTrayInfo = true;
-    private static bool autoStopRecording;
     private static bool startMiniCmd; // Miniplayer Command line
     private static bool startTrayCmd; // TrayModus Command line
     private bool mainShown;
     private static bool updateAvailable;
     private bool somethingToSave;
     private bool radioBtnChanged; // ersetzt auf Station-Tab nothingToSave
-    private string strCellValue = string.Empty;
     private static readonly string appName = Application.ProductName ?? "NetRadio";
     private static readonly string appPath = Application.ExecutablePath; // EXE-Pfad
-    private readonly string xmlPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), appName, appName + ".xml");
-    private readonly string bakPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), appName, appName + ".bak");
+    private readonly string settingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), appName, appName + ".settings.json");
+    private readonly string stationsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), appName, appName + ".stations.json");
     private readonly string logPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), appName, appName + ".log");
     private string hkLetter = string.Empty; // Flag für existierenden Hotkey. AUSNAHME: Programmstart
     private static int lastHotkeyPress;
@@ -112,34 +108,28 @@ public partial class FrmMain : Form
     private int colIndexFromMouseDown;
     private Rectangle dragBoxFromMouseDown;
     private int rowIndexOfItemUnderMouseToDrop;
-    private string? autostartStation;
+    private int _dropIndicatorRowIndex = -1;  // Zeile, über der die Einfügelinie gezeichnet wird (-1 = keine)
     private bool firstEmptyStart = false;
-    private static bool close2Tray = false;
-    private bool showBalloonTip = false;
-    private bool repeatActionsDaily;
+    private readonly AppSettings _settings = new(); // geladene Einstellungen – Single Source of Truth für CloseToTray (auch vom MiniPlayer referenziert); Initializer schützt frühe WndProc-Aufrufe
     private float channelVolume = 1.0f;
     private readonly int stationSum = 25; // Rows = stationSum * 2
-    //private static HttpClient? httpClient;
     private Control? currentDisplayLabel;
     private int levelLeft, levelRight;
-    private readonly RadioButton? autoStartRadioButton = null;
     private int recIncrement = 0;
     private string localSetupFile = string.Empty;
     private string downloadUpdateURL = string.Empty;
     private int intOutputDevice = 0; //  0 = default => Init(-1)
-    private string? strOutputDevice;
     private string? prevOutputDevice;
     private bool changeOutputDevice = false;
     private readonly string findNewStations = "Press <Ctrl+F> to find new radio stations.";
+    private static readonly string[] _languageCodes = ["en", "de", "es", "fr"]; // Reihenfolge = Items von cbUiLanguage
+    private readonly bool _setupVersion; // false = Portable-Modus (Config neben der EXE statt in AppData)
     private bool helpRequested = true;
     private readonly MiniPlayer miniPlayer = new();
-    //private readonly string[] strArrHistory = new string[3];
     private readonly string[] lvSortOrderArray = new string[3];
     private ListViewItem? lvItemHistory;
     private readonly CListViewItemComparer lviComparer = new();      // Sortierer für die ListView
     private readonly BASSTimer spectrumTimer = new(); // Creates a new Timer instance using a default interval of 50ms => 20 Hz.
-    private readonly List<byte> spectrumData = [];
-    private readonly int spectrumlines = 20;
     private TimeSpan currPlayingTime = TimeSpan.Zero;
     private TimeSpan totalPlayingTime = TimeSpan.Zero;
     private readonly float _netPreBuff;
@@ -157,25 +147,34 @@ public partial class FrmMain : Form
     private static readonly System.Windows.Forms.Timer timerAction8 = new();
     private static readonly System.Windows.Forms.Timer timerAction9 = new();
     private SplashForm? frmSplash = null;
-    private int updateIndex = 0; // täglich
-    private int startMode = 0; // Main window
-    private DateTime lastUpdateTime;
     private readonly string readDateFormat = "yyyy-MM-dd HH:mm:ss:fff"; // wird innerhalb der History-CSV-Dateien verwendet
-    private readonly string longDateFormat = "yyyyMMddHHmmssfff";      // lastUpdateTime, ListViewItem.Tag (CListViewItemComparer)
+    private readonly string longDateFormat = "yyyyMMddHHmmssfff";      // _settings.LastUpdateSearch, ListViewItem.Tag (CListViewItemComparer)
     private readonly string shortDateFormat = "yyyyMMdd-HHmmss";      // LogEvent, _downloadFileName, historyFile
     private Version? updateVersion = null;
-    private readonly string? formPosX;
-    private readonly string? formPosY;
-    private readonly string? formWidth;
-    private readonly string? formHeight;
-    private readonly string? miniPosX;
-    private readonly string? miniPosY;
     private bool doubleClickOccurred = false; // NotifyIcon
     private CancellationTokenSource? _startPlayingCts;
+    private readonly RadioButton[] _stationButtons = new RadioButton[25]; // stationSum
+    private Station? _selectedStation;  // Ersetzt die Kombination aus _currentButtonNum + checked RadioButton + ComboBox-Text.
+    private bool _suppressStationEvents;  // Verhindert Event-Loops beim programmatischen Setzen von rb.Checked / cmBxStations.SelectedIndex.
+    private readonly int _autoStartStationNumber; // 0 = kein Autostart // Ersetzt private readonly RadioButton? autoStartRadioButton.
+    private readonly BindingList<StationRow> _stationData = new([.. Enumerable.Range(0, 100).Select(static _ => new StationRow())]) { AllowNew = false, AllowRemove = false, AllowEdit = true, };
+
+    private ITaskbarList3? _taskbarList;
+    private uint _taskbarButtonCreatedMsg;
+    private const uint PLAY_BUTTON_ID = 101; // Beliebige eindeutige ID
+    private readonly Icon _playIcon = Properties.Resources.NetRadio;
+    private readonly Icon _pauseIcon = Properties.Resources.NetRadiX;
 
     public FrmMain()
     {
         InitializeComponent();
+        // DataGridView hat kein öffentliches DoubleBuffered-Property → per Reflection aktivieren
+        typeof(DataGridView).InvokeMember("DoubleBuffered", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.SetProperty, null, dgvStations, (object[])[true]);
+        for (var i = 0; i < stationSum; i++)
+        {
+            var name = $"rbtn{i + 1:D2}";
+            if (tcMain.TabPages[0].Controls[name] is RadioButton rb) { _stationButtons[i] = rb; }
+        }
         timerAction1.Tick += new EventHandler(OnTimedEvent);
         timerAction2.Tick += new EventHandler(OnTimedEvent);
         timerAction3.Tick += new EventHandler(OnTimedEvent);
@@ -187,7 +186,7 @@ public partial class FrmMain : Form
         statusStrip.Renderer = new AutoEllipsisToolStripRenderer();
         _myUserAgentPtr = Marshal.StringToHGlobalAnsi(_myUserAgent);
         CreateLogFile();
-        if (curVersion is not null) { strVersion = string.Join('.', new[] { curVersion.Major, curVersion.Minor, curVersion.Build >= 0 ? curVersion.Build : 0 }); }
+        if (curVersion is not null) { strVersion = string.Join('.', [curVersion.Major, curVersion.Minor, curVersion.Build >= 0 ? curVersion.Build : 0]); }
         LogEvent(appName + ": Version " + strVersion);
         LogEvent("IsUserAdmin: " + NativeMethods.IsUserAnAdmin());  //.IsUserAdminManaged()); 
         var cores = Environment.ProcessorCount;
@@ -237,193 +236,147 @@ public partial class FrmMain : Form
         Bass.BASS_ChannelGetAttribute(_stream, BASSAttribute.BASS_ATTRIB_VOL, ref channelVolume);
         Text = $"{Assembly.GetCallingAssembly().GetName().Name} {VersionRegex().Match(strVersion).Value}";
         lblUpdate.Text = "Current version: " + strVersion;
-        for (var j = 0; j < stationSum * 4; j++) { dgvStations.Rows.Add("", ""); } // dgvStations.Rows.Add(stationSum); ist wahrscheinlich schlechter, weil Cell.Value = null entsteht
-
         tableActions.Columns.Add("Enabled", typeof(bool));
         tableActions.Columns.Add("Task", typeof(string));
         tableActions.Columns.Add("Station", typeof(string));
         tableActions.Columns.Add("Time", typeof(string));
-        if (!Utilities.IsInnoSetupValid(Path.GetDirectoryName(appPath) ?? string.Empty)) // Portable-Version; prüft auch Debugger.IsAttached
+        _setupVersion = Utilities.IsInnoSetupValid(Path.GetDirectoryName(appPath) ?? string.Empty) // prüft auch Debugger.IsAttached
+            || Environment.GetEnvironmentVariable("NETRADIO_SETUPMODE") == "1"; // vom Sprachwechsel-Neustart vererbt: Ohne Debugger fiele eine VS-Instanz sonst in den Portable-Modus und läse eine andere Config
+        if (!_setupVersion) // Portable-Version
         {
-            xmlPath = Path.ChangeExtension(appPath, ".xml");
-            bakPath = Path.ChangeExtension(appPath, ".bak");
+            settingsPath = Path.ChangeExtension(appPath, ".settings.json");
+            stationsPath = Path.ChangeExtension(appPath, ".stations.json");
             logPath = Path.ChangeExtension(appPath, ".log");
+            CreateLogFile(); // logPath hat sich geändert - portable Log leeren/anlegen (.log.bak der Vorsitzung inklusive)
+            LogEvent($"{appName}: Version {strVersion} (portable)");
             LogEvent("IsInnoSetupValid: Portable version");
         }
         else { LogEvent("IsInnoSetupValid: Setup version"); }
 
-        if (File.Exists(xmlPath) && (!File.Exists(bakPath) || File.GetLastWriteTime(bakPath).Date < File.GetLastWriteTime(xmlPath).Date.AddDays(-1)))
+        Directory.CreateDirectory(Path.GetDirectoryName(settingsPath) ?? ""); // If the folder exists already, the line will be ignored.
+        BackupDaily(settingsPath); // → NetRadio.settings.bak
+        BackupDaily(stationsPath); // → NetRadio.stations.bak
+
+        AppSettings? settings = null;
+        List<StationEntry>? stationList = null;
+        try
         {
-            File.Copy(xmlPath, bakPath, true);
-            File.SetLastWriteTime(bakPath, DateTime.Now);
+            settings = JsonConfig.Load<AppSettings>(settingsPath);
+            stationList = JsonConfig.Load<List<StationEntry>>(stationsPath);
+        }
+        catch (Exception ex) when (ex is JsonException or IOException)
+        {
+            LogEvent($"Config load FAILED: {ex.GetType().Name} - {ex.Message}");
+            Utilities.ErrTaskDialog(null, ex);
         }
 
-        if (File.Exists(xmlPath))
+        if (settings is null && stationList is null)
         {
-            using XmlTextReader xtr = new(xmlPath);
-            xtr.WhitespaceHandling = WhitespaceHandling.None; // Whitespace zwischen Elementen
-            try
+            // Einmalige Migration der alten NetRadio.xml (die XML-Datei bleibt als Sicherung liegen, wird aber nie wieder gelesen)
+            var oldXmlPath = Path.Combine(Path.GetDirectoryName(settingsPath) ?? "", appName + ".xml");
+            if (ConfigMigration.FromXml(oldXmlPath) is ({ } migratedSettings, { } migratedStations))
             {
-                var j = 0;
-                while (xtr.Read())
+                settings = migratedSettings;
+                stationList = migratedStations;
+                try
                 {
-                    if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "Station")
-                    {
-                        if (j < dgvStations.RowCount)
-                        {// tritt ein wenn der User die Datei außerhalb des Programms editiert oder der Programmier die Zeilenzahl reduziert
-                            xtr.MoveToAttribute("Name");
-                            dgvStations.Rows[j].Cells[0].Value = xtr.Value;
-                            xtr.MoveToAttribute("URL");
-                            dgvStations.Rows[j].Cells[1].Value = xtr.Value;
-                        }
-                        j++;
-                    }
-                    else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "Hotkey")
-                    {
-                        xtr.MoveToAttribute("Enabled");
-                        if (int.TryParse(xtr.Value, out var intEnabeld)) { cbHotkey.Checked = lblHotkey.Enabled = cmbxHotkey.Enabled = Convert.ToBoolean(Convert.ToInt16(intEnabeld)); }
-                        else { cbHotkey.Checked = lblHotkey.Enabled = cmbxHotkey.Enabled = false; }
-                        xtr.MoveToAttribute("Letter");
-                        if (string.IsNullOrEmpty(xtr.Value)) { lblHotkey.Enabled = cmbxHotkey.Enabled = cbHotkey.Checked = false; }
-                        else if (cbHotkey.Checked && HotkeyRegex().IsMatch(xtr.Value)) { cmbxHotkey.Text = hkLetter = xtr.Value; } // You won't be able to register a hotkey before the window is created
-                    }
-                    else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "Output")
-                    {
-                        xtr.MoveToAttribute("Device");
-                        if (string.IsNullOrEmpty(xtr.Value)) { strOutputDevice = "Default"; }
-                        else { strOutputDevice = xtr.Value; }
-                    }
-                    else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "CloseToTray")
-                    {
-                        xtr.MoveToAttribute("Enabled");
-                        if (int.TryParse(xtr.Value, out var intEnabeld)) { cbClose2Tray.Checked = close2Tray = Convert.ToBoolean(Convert.ToInt16(intEnabeld)); }
-                        else { cbClose2Tray.Checked = false; }
-                    }
-                    else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "BalloonTips")
-                    {
-                        xtr.MoveToAttribute("Enabled");
-                        if (int.TryParse(xtr.Value, out var intEnabeld)) { cbShowBalloonTip.Checked = showBalloonTip = Convert.ToBoolean(Convert.ToInt16(intEnabeld)); }
-                        else { cbShowBalloonTip.Checked = false; }
-                    }
-                    else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "AlwaysOnTop")
-                    {
-                        xtr.MoveToAttribute("Enabled");
-                        if (int.TryParse(xtr.Value, out var intEnabeld)) { miniPlayer.TopMost = cbAlwaysOnTop.Checked = alwaysOnTop = Convert.ToBoolean(Convert.ToInt16(intEnabeld)); }
-                        else { miniPlayer.TopMost = cbAlwaysOnTop.Checked = false; } // s. MiniPlayer_Shown-Event in frmMiniPlayer.cs
-                    }
-                    else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "LogHistory")
-                    {
-                        xtr.MoveToAttribute("Enabled");
-                        if (int.TryParse(xtr.Value, out var intEnabeld)) { cbLogHistory.Checked = logHistory = Convert.ToBoolean(Convert.ToInt16(intEnabeld)); }
-                        else { cbLogHistory.Checked = false; }
-                    }
-                    else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "ShowTrayInfo")
-                    {
-                        xtr.MoveToAttribute("Enabled");
-                        if (int.TryParse(xtr.Value, out var intEnabeld)) { showTrayInfo = Convert.ToBoolean(Convert.ToInt16(intEnabeld)); }
-                        else { showTrayInfo = true; }
-                    }
-                    else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "AutoStopRecording")
-                    {
-                        xtr.MoveToAttribute("Enabled");
-                        if (int.TryParse(xtr.Value, out var intEnabeld)) { cbAutoStopRecording.Checked = autoStopRecording = Convert.ToBoolean(Convert.ToInt16(intEnabeld)); }
-                        else { cbAutoStopRecording.Checked = false; }
-                    }
-                    else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "Volume")
-                    {
-                        xtr.MoveToAttribute("Value");
-                        var volume = int.TryParse(xtr.Value, out var intVolume) ? intVolume : (int)channelVolume * 100;
-                        volume = volume > 100 ? 100 : volume < 0 ? 0 : volume;
-                        channelVolume = Convert.ToSingle(volume) / 100f;
-                        Bass.BASS_ChannelSetAttribute(_stream, BASSAttribute.BASS_ATTRIB_VOL, channelVolume);
-                        miniPlayer.MpVolProgBar.Value = volProgressBar.Value = volume;
-                        lblVolume.Text = volProgressBar.Value.ToString();
-                    }
-                    else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "SaveHistory")
-                    {
-                        xtr.MoveToAttribute("Value");
-                        numUpDnSaveHistory.Value = int.TryParse(xtr.Value, out var intHistory) ? intHistory : 0;
-                    }
-                    else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "StartMode")
-                    {
-                        xtr.MoveToAttribute("Value");
-                        startMode = int.TryParse(xtr.Value, out var intMode) ? intMode : 0;
-                        if (startMode == 0) { rbStartModeMain.Checked = true; }
-                        else if (startMode == 1) { rbStartModeMini.Checked = true; }
-                        else if (startMode == 2) { rbStartModeTray.Checked = true; }
-                    }
-                    else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "UpdateIndex")
-                    {
-                        xtr.MoveToAttribute("Value");
-                        updateIndex = int.TryParse(xtr.Value, out var intUpdate) ? intUpdate : 0;
-                    }
-                    else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "UpdateSearch")
-                    {
-                        xtr.MoveToAttribute("DateTime");
-                        lastUpdateTime = DateTime.TryParseExact(xtr.Value, longDateFormat, null, DateTimeStyles.None, out var date) ? date : DateTime.UtcNow;
-                    }
-                    else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "FormLocation")
-                    {
-                        xtr.MoveToAttribute("PosX");
-                        formPosX = xtr.Value;
-                        xtr.MoveToAttribute("PosY");
-                        formPosY = xtr.Value;
-                        xtr.MoveToAttribute("Width");
-                        formWidth = xtr.Value;
-                        xtr.MoveToAttribute("Height");
-                        formHeight = xtr.Value;
-                    }
-                    else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "MiniLocation")
-                    {
-                        xtr.MoveToAttribute("PosX");
-                        miniPosX = xtr.Value;
-                        xtr.MoveToAttribute("PosY");
-                        miniPosY = xtr.Value;
-                    }
-                    else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "Autostart")
-                    {
-                        xtr.MoveToAttribute("Station");
-                        if (int.TryParse(xtr.Value, out var intStation))
-                        {
-                            if (intStation > 0 && intStation <= stationSum) { cmbxStation.Text = autostartStation = xtr.Value; }
-                        }
-                    }
-                    else if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "RepeatActionsDaily")
-                    {
-                        xtr.MoveToAttribute("Enabled");
-                        if (int.TryParse(xtr.Value, out var intEnabeld)) { repeatActionsDaily = Convert.ToBoolean(Convert.ToInt16(intEnabeld)); }
-                    }
-                    if (xtr.NodeType == XmlNodeType.Element && xtr.LocalName == "Action")
-                    {
-                        xtr.MoveToAttribute("Enabled");
-                        if (!bool.TryParse(xtr.Value, out var enabled)) { enabled = false; }
-                        else if (enabled == true) { cbActions.Checked = true; }
-                        xtr.MoveToAttribute("Task");
-                        var task = xtr.Value;
-                        xtr.MoveToAttribute("Station");
-                        var station = xtr.Value;
-                        xtr.MoveToAttribute("Time");
-                        var time = xtr.Value;
-                        tableActions.Rows.Add(enabled, task, station, time);
-                    }
+                    JsonConfig.Save(settingsPath, settings);
+                    JsonConfig.Save(stationsPath, stationList);
+                    LogEvent("Config migrated from XML to JSON: " + oldXmlPath);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    LogEvent($"Config migration save FAILED: {ex.GetType().Name} - {ex.Message}");
+                    Utilities.ErrTaskDialog(null, ex);
                 }
             }
-            catch (XmlException ex) { Utilities.ErrTaskDialog(null, ex); }
+            else
+            {
+                firstEmptyStart = true;
+                LogEvent("New config: " + settingsPath);
+            }
         }
-        else
+        else { LogEvent($"Config loaded: settings={(settings is null ? "MISSING (defaults)" : "ok")}, stations={(stationList is null ? "MISSING" : $"{stationList.Count(static st => st.Name.Length > 0 || st.Url.Length > 0)}/{stationList.Count}")}"); } // gefüllte/gesamte Listeneinträge
+
+        _settings = settings ?? new AppSettings();
+        miniPlayer.Settings = _settings; // MiniPlayer liest daraus CloseToTray
+
+        if (settings is null && GetSystemLanguage() is { } systemLanguage) // echter Erststart ohne settings.json: Windows-Anzeigesprache als Vorgabe, sonst bliebe es bei Englisch (z. B. wenn der Installer das Programm nicht selbst startet)
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(xmlPath) ?? ""); // If the folder exists already, the line will be ignored.
-            XmlDocument xmlDoc = new();
-            xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?><NetRadio></NetRadio>");
-            xmlDoc.Save(xmlPath); // if the specified file exists, this method overwrites it.
-            firstEmptyStart = true;
-            LogEvent("New config file: " + xmlPath);
+            _settings.Language = systemLanguage;
+            somethingToSave = true; // dauerhaft übernehmen
+            LogEvent("System language: " + systemLanguage);
+        }
+        if (GetCmdLineLanguage() is { } cmdLanguage && cmdLanguage != _settings.Language) // "/l xx" bzw. "/language xx" — so übergibt z. B. der Installer seine Sprachauswahl an den ersten Start
+        {
+            _settings.Language = cmdLanguage;
+            somethingToSave = true; // dauerhaft übernehmen
+            LogEvent("Command line language: " + cmdLanguage);
+        }
+        Lng.Initialize(_settings.Language); // vor allen weiteren Dialogen und vor Lng.Apply
+        Lng.Apply(this, toolTip); // übersetzt alle Designer-Texte samt ToolTips, falls nicht Englisch eingestellt ist
+        Lng.Apply(contextMenuPlayer); // Kontextmenüs hängen nicht im Control-Baum
+        Lng.Apply(contextMenuStations);
+        Lng.Apply(contextMenuDisplay);
+        Lng.Apply(contextMenuTrayIcon);
+        miniPlayer.ApplyLanguage();
+        saveFileDialog.Filter = Lng.T(saveFileDialog.Filter); // Dialog-Komponenten sind keine Controls, Lng.Apply erreicht sie nicht
+        openFileDialog.Filter = Lng.T(openFileDialog.Filter);
+        lblUpdate.Text = Lng.T("Current version:") + " " + strVersion; // die Zuweisung aus dem Konstruktoranfang lag vor der Sprachinitialisierung
+        cbUiLanguage.SelectedIndex = Math.Max(0, Array.IndexOf(_languageCodes, _settings.Language));
+
+        // Wird immer angewendet: Beim ersten Start (keine Config-Dateien) gelten damit die Defaults aus AppSettings
+        cbHotkey.Checked = lblHotkey.Enabled = cmbxHotkey.Enabled = _settings.HotkeyEnabled;
+        if (string.IsNullOrEmpty(_settings.HotkeyLetter)) { lblHotkey.Enabled = cmbxHotkey.Enabled = cbHotkey.Checked = false; }
+        else if (cbHotkey.Checked && HotkeyRegex().IsMatch(_settings.HotkeyLetter)) { cmbxHotkey.Text = hkLetter = _settings.HotkeyLetter; } // You won't be able to register a hotkey before the window is created
+
+        if (string.IsNullOrEmpty(_settings.OutputDevice)) { _settings.OutputDevice = "Default"; }
+        cbClose2Tray.Checked = _settings.CloseToTray;
+        cbShowBalloonTip.Checked = _settings.BalloonTips;
+        miniPlayer.TopMost = cbAlwaysOnTop.Checked = _settings.AlwaysOnTop; // s. MiniPlayer_Shown-Event in frmMiniPlayer.cs
+        cbLogHistory.Checked = _settings.LogHistory;
+        cbAutoStopRecording.Checked = _settings.AutoStopRecording;
+
+        var volume = Math.Clamp(_settings.Volume, 0, 100);
+        channelVolume = volume / 100f;
+        Bass.BASS_ChannelSetAttribute(_stream, BASSAttribute.BASS_ATTRIB_VOL, channelVolume);
+        miniPlayer.MpVolProgBar.Value = volProgressBar.Value = volume;
+        lblVolume.Text = volProgressBar.Value.ToString();
+
+        numUpDnSaveHistory.Value = Math.Clamp(_settings.SaveHistory, (int)numUpDnSaveHistory.Minimum, (int)numUpDnSaveHistory.Maximum);
+        if (_settings.StartMode == 0) { rbStartModeMain.Checked = true; }
+        else if (_settings.StartMode == 1) { rbStartModeMini.Checked = true; }
+        else if (_settings.StartMode == 2) { rbStartModeTray.Checked = true; }
+
+        if (_settings.LastUpdateSearch == default) { _settings.LastUpdateSearch = DateTime.UtcNow; }
+        if (_settings.AutostartStation > 0 && _settings.AutostartStation <= stationSum) { cmbxStation.Text = _settings.AutostartStation.ToString(); }
+        foreach (var action in _settings.Actions)
+        {
+            if (action.Enabled) { cbActions.Checked = true; }
+            tableActions.Rows.Add(action.Enabled, action.Task, action.Station, action.Time);
+        }
+
+        if (stationList is not null)
+        {
+            var legacyFormat = stationList.All(static st => st.Number == 0); // Altformat ohne "Number": Position = Stationsnummer
+            for (var j = 0; j < stationList.Count; j++)
+            {
+                var idx = legacyFormat ? j : stationList[j].Number - 1;
+                if (idx < 0 || idx >= _stationData.Count) { continue; }
+                _stationData[idx].Name = stationList[j].Name;
+                _stationData[idx].Url = stationList[j].Url;
+            }
         }
         foreach (DataGridViewColumn column in dgvStations.Columns) { column.SortMode = DataGridViewColumnSortMode.NotSortable; }
+        // DataPropertyName muss VOR DataSource gesetzt werden, damit keine Spalten auto-generiert werden
+        dgvStations.AutoGenerateColumns = false;
+        dgvStations.Columns[0].DataPropertyName = nameof(StationRow.Name);
+        dgvStations.Columns[1].DataPropertyName = nameof(StationRow.Url);
+        dgvStations.DataSource = _stationData;
 
         if (tableActions.AsEnumerable().Any(row => row.Field<bool>("Enabled"))) { cbActions.Checked = true; }
 
-        if (!logHistory) { numUpDnSaveHistory.Value = 0; } // numUpDnSaveHistory.Text = "0";
+        if (!_settings.LogHistory) { numUpDnSaveHistory.Value = 0; } // numUpDnSaveHistory.Text = "0";
 
         string[] args = [.. Environment.GetCommandLineArgs().Skip(1)];
         if (args.Length > 0)
@@ -432,13 +385,7 @@ public partial class FrmMain : Form
             {
                 if (CmdStationRegex().IsMatch(args[i]) && int.TryParse(args[i][1..], out var intStation))
                 {
-                    var btnName = "rbtn" + intStation.ToString("D2"); // Math.Abs nicht nötig wg. [1..]
-                    var controls = tcMain.TabPages[0].Controls.Find(btnName, true);
-
-                    if (controls.Length == 1 && controls[0] is RadioButton button)
-                    {
-                        autoStartRadioButton = button; // foundBtn.Checked = true;
-                    }
+                    if (intStation >= 1 && intStation <= stationSum) { _autoStartStationNumber = intStation; }
                 }
                 else if (CmdMiniRegex().IsMatch(args[i]))
                 {
@@ -452,33 +399,97 @@ public partial class FrmMain : Form
                 }
             }
         }
-        if (startMode == 1 && !startTrayCmd && !startMiniCmd) // Miniplayer
+        if (_settings.StartMode == 1 && !startTrayCmd && !startMiniCmd) // Miniplayer
         {
             startMiniCmd = true; // siehe frmMain_Shown-Event
             Opacity = 0; // sonst wird GUI kurz angezeigt - unschön
         }
-        else if (startMode == 2 && !startMiniCmd && !startTrayCmd) // tray mode
+        else if (_settings.StartMode == 2 && !startMiniCmd && !startTrayCmd) // tray mode
         {
             startTrayCmd = true; // siehe frmMain_Shown-Event
             Opacity = 0; // sonst wird GUI kurz angezeigt - unschön
         }
-
-        if (autoStartRadioButton == null && !string.IsNullOrEmpty(autostartStation)) // kein Kommandozeilenargumente - dann Autostart-Einstellungen benutzen
-        {
-            LogEvent("AutostartStation: " + autostartStation);
-            var btnName = "rbtn" + autostartStation.PadLeft(2, '0');
-            var controls = tcMain.TabPages[0].Controls.Find(btnName, true);
-            if (controls.Length == 1 && controls[0] is RadioButton button) { autoStartRadioButton = button; } // löst StartPlaying aus (s. FrmMain_Shown-Event)
-        }
-        StatusStrip_SingleLabel(true, findNewStations);
+        if (_settings.AutostartStation >= 1 && _settings.AutostartStation <= stationSum &&
+            string.IsNullOrEmpty(Environment.GetCommandLineArgs().Skip(1).FirstOrDefault())) { _autoStartStationNumber = _settings.AutostartStation; }   // kein Kommandozeilenargumente - dann Autostart-Einstellungen benutzen
+        StatusStrip_SingleLabel(true, Lng.T(findNewStations));
         cbAutostart.Checked = Utilities.IsAutoStartEnabled(appName, "\"" + appPath + "\"" + " -min");
-
         historyLV.ListViewItemSorter = lviComparer;
+        _stationData.ListChanged += StationData_ListChanged;
         spectrumTimer.Tick += SpectrumTick;
+        spectrumTimer.Interval = 47; // ~21 fps; 3 × ~15,6 ms (System-Clock-Tick): feuert dadurch gleichmäßig, egal ob die Timer-Auflösung erhöht ist oder nicht
         _netPreBuff = Bass.BASS_GetConfig(BASSConfig.BASS_CONFIG_NET_PREBUF) / 100f; // 0.75
-
         timerNotifyIcon.Interval = SystemInformation.DoubleClickTime;
     }
+
+    private Station ReadStationFromDgv(int number) => _stationData[number - 1].ToStation(number);
+
+    private void SelectStation(Station? station, bool forcePlay = false)
+    {
+        if (_suppressStationEvents) { return; }
+        var isNewStation = station != _selectedStation;
+        if (!isNewStation && !forcePlay) { return; }  // nichts zu tun
+        _selectedStation = station;
+        _currentButtonNum = station?.Number ?? 0;  // Abwärtskompatibilität für alle Lesestellen
+        _suppressStationEvents = true;
+        try
+        {
+            // ── 1. RadioButtons ───────────────────────────────────────────────
+            for (var i = 0; i < stationSum; i++)
+            {
+                var rb = _stationButtons[i];
+                var active = station?.Number == i + 1;
+                rb.Checked = active;
+                rb.ForeColor = active ? Color.White : SystemColors.ControlText;
+                rb.BackColor = active ? SystemColors.Highlight : Color.Transparent;
+            }
+
+            // ── 2. Haupt-Labels ───────────────────────────────────────────────
+            lblD1.Text = station?.LabelName ?? string.Empty;
+            // lblD4 zeigt während des Streamaufbaus die URL – bleibt im StartPlaying-Flow
+
+            // ── 3. MiniPlayer-ComboBox ────────────────────────────────────────
+            SyncMiniPlayerComboBox(station);
+
+            // ── 4. Level-/Spektrum-Timer zurücksetzen + Anzeige löschen ─────────
+            if (isNewStation || forcePlay)
+            {
+                pbLevel.Image = miniPlayer.MpPBLevel.Image = null;
+                timerLevel.Stop();
+                spectrumTimer.Stop();
+                timerResume.Stop();
+                spectrumDisplay.Clear();
+                // Song-Titel löschen – neue Metadaten kommen via MetaSync / UpdateTagDisplay
+                lblD2.Text = "-";
+                MiniPlayer.MpLblD2_Text("NetRadio");
+                if (tcMain.SelectedTab == tpSectrum) { StatusStrip_SingleLabel(false, lblD2.Text); }
+                Application.DoEvents();
+            }
+
+            // ── 5. Wiedergabe ─────────────────────────────────────────────────
+            if ((isNewStation || forcePlay) && !firstEmptyStart && station is { IsValid: true })
+            {
+                // Stream freigeben wie in BtnReset_Click
+                currPlayingTime = TimeSpan.Zero;
+                playPauseToolStripMenuItem.Enabled = true;
+                if (_stream != 0)
+                {
+                    Bass.BASS_ChannelGetAttribute(_stream, BASSAttribute.BASS_ATTRIB_VOL, ref channelVolume);
+                    Bass.BASS_StreamFree(_stream);
+                }
+                StartPlaying(station.Url, station.Number);
+            }
+        }
+        finally { _suppressStationEvents = false; }
+    }
+
+    private void SyncMiniPlayerComboBox(Station? station)  // Synchronisiert den MiniPlayer-ComboBox-SelectedIndex auf <paramref name="station"
+    {
+        var target = station?.LongName ?? string.Empty;
+        var idx = miniPlayer.MpCmBxStations.FindStringExact(target);
+        if (miniPlayer.MpCmBxStations.SelectedIndex != idx) { miniPlayer.MpCmBxStations.SelectedIndex = idx; }
+    }
+
+
 
     private void MyDownloadProc(IntPtr buffer, int length, IntPtr user)
     {
@@ -506,7 +517,6 @@ public partial class FrmMain : Form
             {
                 if (_fs is null)
                 {
-                    // Pfad sicher ermitteln
                     var downloadPath = NativeMethods.GetKnownFolderPath(new Guid("374DE290-123F-4565-9164-39C4925E467B"));
 
                     var timestamp = DateTime.Now.ToString(shortDateFormat);
@@ -522,7 +532,7 @@ public partial class FrmMain : Form
                             BeginInvoke(() =>
                             {
                                 RecordingStop(false);
-                                Utilities.MsgTaskDialogTimeout(this, "Format not supported", "Recording is only available for MP3 and AAC streams.", 3, TaskDialogIcon.Information);
+                                Utilities.MsgTaskDialogTimeout(this, Lng.T("Format not supported"), Lng.T("Recording is only available for MP3 and AAC streams."), 3, TaskDialogIcon.Information);
                             });
                             return;
 
@@ -554,7 +564,7 @@ public partial class FrmMain : Form
                 if (recIncrement % 5 == 0) // Nur jedes 5. Mal spart CPU-Last
                 {
                     var sizeText = Utilities.GetFileSize(_downlaodSize);
-                    BeginInvoke(() => lblD4.Text = $"Downloading {sizeText}");
+                    BeginInvoke(() => lblD4.Text = Lng.T("Downloading") + " " + sizeText);
                 }
             }
             catch (IOException ex)
@@ -579,7 +589,7 @@ public partial class FrmMain : Form
         else if (_stream == 0) { timerResume.Enabled = false; }
         else
         {
-            lblD3.Text = !lblD3.Text.EndsWith("Trying to reconnect...") ? "◴Trying to reconnect..." : lblD3.Text;
+            lblD3.Text = !lblD3.Text.EndsWith(Lng.T("Trying to reconnect...")) ? "◴" + Lng.T("Trying to reconnect...") : lblD3.Text;
             lblD3.Text = lblD3.Text.StartsWith('◷') ? "◶" + lblD3.Text.TrimStart('◷') :
                          lblD3.Text.StartsWith('◶') ? "◵" + lblD3.Text.TrimStart('◶') :
                          lblD3.Text.StartsWith('◵') ? "◴" + lblD3.Text.TrimStart('◵') : "◷" + lblD3.Text[1..];
@@ -614,12 +624,13 @@ public partial class FrmMain : Form
             spectrumTimer.Stop();
             pbLevel.Image = null;
             miniPlayer.MpPBLevel.Image = null;
-            foreach (var vp in tpSectrum.Controls.OfType<VerticalProgressBar>()) { vp.Value = 0; }
-            if (Bass.BASS_ChannelIsActive(_stream) != BASSActive.BASS_ACTIVE_PLAYING) { lblD3.Text = "⌛Connecting..."; }
-            MiniPlayer.MpLblD2_Text("⌛Connecting..."); //.Replace("ERROR:", "⚠"));
+            spectrumDisplay.Clear();
+            if (Bass.BASS_ChannelIsActive(_stream) != BASSActive.BASS_ACTIVE_PLAYING) { lblD3.Text = "⌛" + Lng.T("Connecting..."); }
+            MiniPlayer.MpLblD2_Text("⌛" + Lng.T("Connecting...")); //.Replace("ERROR:", "⚠"));
             btnPlayStop.Image = Properties.Resources.play_white;
+            UpdateTaskbarIcon(false);
             miniPlayer.MpBtnPlay.Image = Properties.Resources.play_white;
-            playPauseToolStripMenuItem.Text = "Play"; // btnPlayStop.Text = 
+            playPauseToolStripMenuItem.Text = Lng.T("Play"); // btnPlayStop.Text = 
             playPauseToolStripMenuItem.Image = Properties.Resources.play;
             var info = Bass.BASS_ChannelGetInfo(_stream);
             if (info != null)
@@ -637,10 +648,10 @@ public partial class FrmMain : Form
     {
         BeginInvoke(() =>
         {
-            lblD3.Text = "Output device is disconnected or disabled.";
+            lblD3.Text = Lng.T("Output device is disconnected or disabled.");
             LogEvent("DeviceSync: Output device disconnected or disabled");
             Application.DoEvents(); // damit vorstehender Text angezeigt wird
-            System.Threading.Thread.Sleep(1000); // andernfalls werden die gerade entfernten Devices als noch vorhanden angezeigt
+            Thread.Sleep(1000); // andernfalls werden die gerade entfernten Devices als noch vorhanden angezeigt
             var devices = 0;
             BASS_DEVICEINFO dInfo;
             for (var n = 1; (dInfo = Bass.BASS_GetDeviceInfo(n)) != null; n++) { if (dInfo.IsEnabled) { devices++; } }
@@ -648,9 +659,9 @@ public partial class FrmMain : Form
             {
                 timerLevel.Stop();
                 spectrumTimer.Stop();
-                foreach (var vp in tpSectrum.Controls.OfType<VerticalProgressBar>()) { vp.Value = 0; }
+                spectrumDisplay.Clear();
                 intOutputDevice = 0;
-                strOutputDevice = "Default";
+                _settings.OutputDevice = "Default";
                 somethingToSave = true;
                 var info = Bass.BASS_ChannelGetInfo(_stream);
                 if (info != null && Bass.BASS_ChannelStop(_stream) && Bass.BASS_Stop() && Bass.BASS_Free()) { StartPlaying(info.filename, _currentButtonNum); }
@@ -677,14 +688,17 @@ public partial class FrmMain : Form
 
     private void MetaSync(int handle, int channel, int data, IntPtr user) // BASS_SYNC_META is triggered on meta changes of SHOUTcast streams
     {
-        if (data != 0) { BeginInvoke(new UpdateStatusDelegate(UpdateStatusDisplay), [Marshal.PtrToStringAnsi(new IntPtr(data))]); }
+        if (data != 0) { BeginInvoke(() => UpdateStatusDisplay(Marshal.PtrToStringAnsi(new IntPtr(data)) ?? string.Empty)); }
         else
         {
             try
             {
-                if (_tagInfo != null && _tagInfo.UpdateFromMETA(Bass.BASS_ChannelGetTags(channel, BASSTag.BASS_TAG_META | BASSTag.BASS_TAG_ID3V2), TAGINFOEncoding.Utf8OrLatin1, true)) { BeginInvoke(new UpdateTagDelegate(UpdateTagDisplay)); }
+                if (_tagInfo != null && _tagInfo.UpdateFromMETA(Bass.BASS_ChannelGetTags(channel, BASSTag.BASS_TAG_META | BASSTag.BASS_TAG_ID3V2), TAGINFOEncoding.Utf8OrLatin1, true))
+                {
+                    BeginInvoke(UpdateTagDisplay);
+                }
             }
-            catch (ArgumentOutOfRangeException) { } // Wenn Text mehr als 64 Zeichen hat
+            catch (ArgumentOutOfRangeException) { }
         }
     }
 
@@ -692,9 +706,10 @@ public partial class FrmMain : Form
 
     private void UpdateTagDisplay()
     {
-        if (_recording && autoStopRecording)
+        if (_recording && _settings.AutoStopRecording)
         {
-            btnRecord.PerformClick(); btnRecord.Focus(); // RecordingStop();
+            btnRecord.PerformClick();
+            btnRecord.Focus(); // RecordingStop();
             return;
         }
         if (_tagInfo != null)
@@ -702,68 +717,24 @@ public partial class FrmMain : Form
             lblD2.Text = _tagInfo.ToString().Replace("&", "&&"); // & wird sonst als Akzelerator interpretiert (nächstes Zeichen wird unterstrichen)
             MiniPlayer.MpLblD2_Text(lblD2.Text);
             if (tcMain.SelectedTab == tpSectrum) { StatusStrip_SingleLabel(false, lblD2.Text); }
-            if (logHistory) { AddToHistory(_tagInfo.ToString()); }
+            if (_settings.LogHistory) { AddToHistory(_tagInfo.ToString()); }
             lblD4.Text = _tagInfo.filename;
-            if (showBalloonTip)
+            if (_settings.BalloonTips)
             {
                 var foregroundWin = NativeMethods.GetForegroundWindow();
-                if (foregroundWin != miniPlayer.Handle && foregroundWin != Handle) { notifyIcon.ShowBalloonTip(2, "Now playing: ", lblD2.Text, ToolTipIcon.Info); }
+                if (foregroundWin != miniPlayer.Handle && foregroundWin != Handle) { notifyIcon.ShowBalloonTip(2, Lng.T("Now playing: "), lblD2.Text, ToolTipIcon.Info); }
             }
-            //LogEvent("UpdateTagDisplay: " + _tagInfo.title);
+            LogEvent("UpdateTagDisplay: " + _tagInfo.title);
         }
-        else { lblD4.Text = dgvStations.Rows[_currentButtonNum - 1].Cells[1].Value.ToString(); }
+        else { lblD4.Text = dgvStations.Rows[_currentButtonNum - 1].Cells[1].Value?.ToString(); }
     }
 
     private void SpectrumTick(object? sender, EventArgs e)
     {
         if (tcMain.SelectedTab != tpSectrum) { return; }
-        var _fft = new float[1024];
-        var ret = Bass.BASS_ChannelGetData(_stream, _fft, (int)BASSData.BASS_DATA_FFT2048); // get fft data, BASS_ChannelGetData(int handle, float[] buffer, int length)
-        if (ret < -1) { return; }
-        int x, y;
-        var b0 = 0;
-        for (x = 0; x < spectrumlines; x++) //computes the spectrum data
-        {
-            float peak = 0;
-            var b1 = (int)Math.Pow(2, x * 10.0 / (spectrumlines - 1));
-            if (b1 > 1023) { b1 = 1023; }
-            if (b1 <= b0) { b1 = b0 + 1; }
-            for (; b0 < b1; b0++)
-            {
-                if (peak < _fft[1 + b0]) { peak = _fft[1 + b0]; }
-            }
-            y = (int)(Math.Sqrt(peak) * 3 * 255 - 4);
-            if (y > 255) { y = 255; }
-            if (y < 0) { y = 0; }
-            spectrumData.Add((byte)y);  // spectrumData[x + 1] = (byte)y; // 
-        }
-        SetSpectrum(spectrumData);
-        spectrumData.Clear();
-    }
-
-    public void SetSpectrum(List<byte> data)
-    {
-        if (data.Count < spectrumlines) { return; }
-        Bar01.Value = data[0];
-        Bar02.Value = data[1];
-        Bar03.Value = data[2];
-        Bar04.Value = data[3];
-        Bar05.Value = data[4];
-        Bar06.Value = data[5];
-        Bar07.Value = data[6];
-        Bar08.Value = data[7];
-        Bar09.Value = data[8];
-        Bar10.Value = data[9];
-        Bar11.Value = data[10];
-        Bar12.Value = data[11];
-        Bar13.Value = data[12];
-        Bar14.Value = data[13];
-        Bar15.Value = data[14];
-        Bar16.Value = data[15];
-        Bar17.Value = data[16];
-        Bar18.Value = data[17];
-        Bar19.Value = data[18];
-        Bar20.Value = data[19];
+        var fft = new float[1024];
+        if (Bass.BASS_ChannelGetData(_stream, fft, (int)BASSData.BASS_DATA_FFT2048) < 0) { return; } // -1 = Fehler (z. B. kein Stream)
+        spectrumDisplay.SetFft(fft, Bass.BASS_ChannelGetInfo(_stream)?.freq ?? 44100);
     }
 
     private void AddToHistory(string songTitle)
@@ -771,7 +742,7 @@ public partial class FrmMain : Form
         if (string.IsNullOrEmpty(songTitle)) { return; }
         var strArrHistory = new string[3]; // Lokale Instanzierung
         strArrHistory[0] = DateTime.Now.ToString("HH:mm:ss");
-        strArrHistory[1] = (tcMain.TabPages.Count > 0 ? tcMain.TabPages[0].Controls["rbtn" + _currentButtonNum.ToString("D2")] as RadioButton : null)?.Text.Replace("&&", "&") ?? string.Empty;
+        strArrHistory[1] = _selectedStation?.ShortName ?? string.Empty;
         strArrHistory[2] = songTitle.Replace("&&", "&");
         lvItemHistory = new ListViewItem(strArrHistory)
         {
@@ -794,7 +765,8 @@ public partial class FrmMain : Form
     {
         var sysMenuHandle = NativeMethods.GetSystemMenu(Handle, false);
         NativeMethods.AppendMenu(sysMenuHandle, NativeMethods.MF_BYPOSITION | NativeMethods.MF_SEPARATOR, 0, string.Empty);
-        NativeMethods.AppendMenu(sysMenuHandle, NativeMethods.MF_BYPOSITION, NativeMethods.IDM_CUSTOMITEM1, "Exit\tShift+Esc");
+        NativeMethods.AppendMenu(sysMenuHandle, NativeMethods.MF_BYPOSITION, NativeMethods.IDM_CUSTOMITEM1, Lng.T("Exit") + "\tShift+Esc");
+        if (_settings.ExperimentalFeatures) { _taskbarButtonCreatedMsg = NativeMethods.RegisterWindowMessage("TaskbarButtonCreated"); }
 
         lblAuthor.Text = "© 2015-" + Utilities.GetBuildDate().ToString("yyyy") + " Wilhelm Happe";
         lbUn4SeenVersion.Text = $"(v{Bass.BASS_GetVersion(4)})";
@@ -813,11 +785,11 @@ public partial class FrmMain : Form
         }
         if (devicelist.Count > 0) // intOutputDevice wurde mit Wert 0 definiert
         {
-            intOutputDevice = devicelist.IndexOf(strOutputDevice ?? ""); // in dieser Liste ist 0 = Default
+            intOutputDevice = devicelist.IndexOf(_settings.OutputDevice); // in dieser Liste ist 0 = Default
             if (intOutputDevice == defaultDevice) { intOutputDevice = 0; } // Sieht wie in Bug aus, ist aber ein Feature, um wenn möglich "Default" zu erzwingen. BASS_GetDeviceInfo gibt niemals Default aus, sondern immer die höhere DeviceID
             if (intOutputDevice <= 0) { intOutputDevice = 0; } // 0 = Default
-            strOutputDevice = devicelist[intOutputDevice].ToString();
-            LogEvent("FrmMain_Load: " + strOutputDevice + " (" + intOutputDevice + ") is the current device");
+            _settings.OutputDevice = devicelist[intOutputDevice].ToString();
+            LogEvent("FrmMain_Load: " + _settings.OutputDevice + " (" + intOutputDevice + ") is the current device");
         }
 
         miniPlayer.Show(this);
@@ -836,11 +808,10 @@ public partial class FrmMain : Form
         miniPlayer.F12_ShowSpectrum += new EventHandler(MiniPlayer_F12_ShowSpectrum);
 
         SystemEvents.PowerModeChanged += new PowerModeChangedEventHandler(PowerMode_Changed);
-        RewriteButtonText(); // enthält miniPlayer.MpCmBxStations.Items.Add()-Loop
-
+        RefreshStationButtons();
         if (cbActions.Checked) { PrepareActions(); }
         var vScrollBar = dgvStations.Controls.OfType<VScrollBar>().FirstOrDefault();
-        if (vScrollBar != null) { vScrollBar.MouseCaptureChanged += (s, e) => { dgvStations.EndEdit(); }; }
+        vScrollBar?.MouseCaptureChanged += (s, e) => { dgvStations.EndEdit(); };
 
         if (NativeMethods.RegisterMediaKeys() > 0)
         {
@@ -854,7 +825,7 @@ public partial class FrmMain : Form
         }
         //var primaryScreen = Screen.PrimaryScreen;  // Null-Prüfung für PrimaryScreen
         //var screen = primaryScreen?.WorkingArea ?? new Rectangle(0, 0, 1024, 768); // Beispiel-Standardwert
-        if (int.TryParse(formPosX, out var fx) && int.TryParse(formPosY, out var fy) && int.TryParse(formWidth, out var fWidth) && int.TryParse(formHeight, out var fHeight))
+        if (_settings.FormPosX is int fx && _settings.FormPosY is int fy && _settings.FormWidth is int fWidth && _settings.FormHeight is int fHeight)
         {
             var savedBounds = new Rectangle(fx, fy, fWidth, fHeight);
             var isVisibleOnAnyScreen = false;
@@ -875,7 +846,7 @@ public partial class FrmMain : Form
         }
 
         var currScreen = Screen.FromControl(this).WorkingArea; // Null-Prüfung für PrimaryScreen
-        if (int.TryParse(miniPosX, out var x_Pos) && int.TryParse(miniPosY, out var y_Pos))
+        if (_settings.MiniPosX is int x_Pos && _settings.MiniPosY is int y_Pos)
         {
             x_Pos = x_Pos < 0 ? 0
                 : x_Pos + miniPlayer.Width > currScreen.Width
@@ -900,11 +871,9 @@ public partial class FrmMain : Form
         }
         else if (e.KeyCode == Keys.MediaStop)
         {
-            var iTag = 0;
-            foreach (var rb in tcMain.TabPages[0].Controls.OfType<RadioButton>().Where(rb => rb.Checked)) { iTag = Convert.ToInt32(rb.Tag); }
             Bass.BASS_ChannelStop(_stream);
             Bass.BASS_Free();
-            RestorePlayerDefaults(iTag);
+            RestorePlayerDefaults(_selectedStation?.Number ?? 0);
             LogEvent("GlobalKeyboardHook: MediaStop received");
         }
         else if (e.KeyCode == Keys.MediaNextTrack)
@@ -966,11 +935,8 @@ public partial class FrmMain : Form
         e.Handled = true;
     }
 
-    private void MiniPlayer_AppExit(object? sender, EventArgs e)
-    {
-        SaveConfig();
-        Application.Exit();
-    }
+    private void MiniPlayer_AppExit(object? sender, EventArgs e) =>
+        Application.Exit(); // löst FrmMain_FormClosing mit CloseReason.ApplicationExitCall aus → SaveConfig/Cleanup dort
 
     private void MiniPlayer_FormHide(object? sender, EventArgs e)
     {
@@ -985,36 +951,36 @@ public partial class FrmMain : Form
     private void MiniPlayer_PlayPause(object? sender, EventArgs e) => BtnPlayStop_Click(null!, e);
     private void MiniPlayer_VolumeProgress(object? sender, EventArgs e) => SetProgressBarValue();
     private void MiniPlayer_VolumeMouseWheel(object? sender, MouseEventArgs e) => SetMouseWheelValue(e);
-    private void MiniPlayer_IncreaseVolume(object? sender, EventArgs e) => BtnIncrease_Click(null!, null!);
-    private void MiniPlayer_DecreaseVolume(object? sender, EventArgs e)
-    {
-        BtnDecrease_Click(null!, null!);
-    }
+    private void MiniPlayer_IncreaseVolume(object? sender, EventArgs e) => BtnIncrease_Click(null!, EventArgs.Empty);
+    private void MiniPlayer_DecreaseVolume(object? sender, EventArgs e) => BtnDecrease_Click(null!, EventArgs.Empty);
     private void MiniPlayer_F4_ShowPlayer(object? sender, EventArgs e)
     {
-        ShowFullPlayer(); tcMain.SelectedIndex = 0;
+        ShowFullPlayer();
+        tcMain.SelectedIndex = 0;
     }
     private void MiniPlayer_F5_ShowHistory(object? sender, EventArgs e)
     {
-        ShowFullPlayer(); tcMain.SelectedIndex = 2;
+        ShowFullPlayer();
+        tcMain.SelectedIndex = 2;
     }
     private void MiniPlayer_F12_ShowSpectrum(object? sender, EventArgs e)
     {
-        ShowFullPlayer(); tcMain.SelectedIndex = 6;
+        ShowFullPlayer();
+        tcMain.SelectedIndex = 6;
     }
+
     private void MiniPlayer_StationChanged(object? sender, EventArgs e)
     {
+        if (_suppressStationEvents) { return; }
+        var selectedText = miniPlayer.MpCmBxStations.Text;
+        if (string.IsNullOrEmpty(selectedText)) { return; }
         for (var i = 0; i < stationSum; i++)
         {
-            if (dgvStations.Rows[i].Cells[0].Value != null)
+            var station = ReadStationFromDgv(i + 1);
+            if (station.IsValid && station.LongName == selectedText)
             {
-                if (miniPlayer.MpCmBxStations.Text != null && miniPlayer.MpCmBxStations.Text == Utilities.StationLong(dgvStations.Rows[i].Cells[0].Value.ToString()))
-                {
-                    var btnName = "rbtn" + (i + 1).ToString().PadLeft(2, '0');
-                    var controls = tcMain.TabPages[0].Controls.Find(btnName, true);
-                    if (controls.Length == 1 && controls[0] is RadioButton rb) { rb.Checked = true; } // löst StartPlaying aus (BtnReset_Click in RadioButton_CheckedChanged)
-                    break;
-                }
+                SelectStation(station);
+                return;
             }
         }
     }
@@ -1051,11 +1017,13 @@ public partial class FrmMain : Form
                             if (await Utilities.PingGoogleSuccessAsync(Bass.BASS_GetConfig(BASSConfig.BASS_CONFIG_NET_TIMEOUT))) { foo = true; }
                             await Task.Delay(1000).ConfigureAwait(false);
                             if (foo) { break; }
-                            else if (i == max)
+                            else if (i == max && _selectedStation != null)
                             {
                                 Invoke(new Action(() =>
                                 {
-                                    if (tcMain.TabPages[0].Controls["rbtn" + (_currentButtonNum - 1).ToString("D2")] is RadioButton rb) { rb.Checked = false; }
+                                    _suppressStationEvents = true;
+                                    _stationButtons[_selectedStation.Number - 1].Checked = false;
+                                    _suppressStationEvents = false;
                                 }));
                                 _playWakeFromSleep = false;
                                 return;
@@ -1072,7 +1040,7 @@ public partial class FrmMain : Form
                             if (devices > 0) // intOutputDevice wurde mit Wert 0 definiert
                             {
                                 LogEvent("PowerMode_Changed: Start playing station no. " + _currentButtonNum);
-                                Invoke(new Action(() => StartPlaying(dgvStations.Rows[_currentButtonNum - 1].Cells[1].Value.ToString(), _currentButtonNum))); // switch to the UI thread in an async method
+                                RestartCurrentStationOnUiThread();
                                 _playWakeFromSleep = false;
                                 return;
                             }
@@ -1086,6 +1054,52 @@ public partial class FrmMain : Form
         }
     }
 
+    private void RestartCurrentStationOnUiThread()
+    {
+        Invoke(() =>
+        {
+            if (_selectedStation is { IsValid: true } s) { StartPlaying(s.Url, s.Number); }
+        });
+    }
+
+    private void InitializeTaskbarButtons()
+    {
+        try
+        {
+            var clsid = new Guid("56FDF344-FD6D-11d0-958A-006097C9A090");
+            var iid = new Guid("ea1afb91-9e28-4b86-90e9-9e9f8a5eefaf");
+            _ = NativeMethods.CoCreateInstance(in clsid, nint.Zero, 1, in iid, out _taskbarList);  // Objekt via nativer API erstellen
+            if (_taskbarList != null)
+            {
+                _taskbarList.HrInit();
+                var isPlaying = Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PLAYING;
+                var iconHandle = isPlaying ? _pauseIcon.Handle : _playIcon.Handle;
+                var button = new THUMBBUTTON
+                {
+                    dwMask = THUMBBUTTONMASK.THB_ICON | THUMBBUTTONMASK.THB_TOOLTIP | THUMBBUTTONMASK.THB_FLAGS,
+                    iId = PLAY_BUTTON_ID,
+                    hIcon = iconHandle,
+                    szTip = "Play/Pause",
+                    dwFlags = THUMBBUTTONFLAGS.THBF_ENABLED
+                };
+                var buttons = new[] { button };
+                _taskbarList.ThumbBarAddButtons(Handle, 1, buttons);
+            }
+        }
+        catch (Exception ex) { Console.WriteLine($"Fehler beim Erstellen des Taskbar-Buttons: {ex.Message}"); }
+    }
+
+    public void UpdateTaskbarIcon(bool isPlaying)
+    {
+        if (_taskbarList != null)
+        {
+            var iconHandle = isPlaying ? _pauseIcon.Handle : _playIcon.Handle;
+            var button = new THUMBBUTTON { dwMask = THUMBBUTTONMASK.THB_ICON, iId = PLAY_BUTTON_ID, hIcon = iconHandle };
+            var buttons = new[] { button };
+            _taskbarList.ThumbBarUpdateButtons(Handle, 1, buttons);
+        }
+    }
+
     protected override unsafe void WndProc(ref Message m)
     {
         if (m.Msg == NativeMethods.WM_SHOWNETRADIO)  // 1. Dynamisch vergebene Nachrichten (Laufzeit) müssen per 'if' geprüft werden
@@ -1094,6 +1108,18 @@ public partial class FrmMain : Form
             base.WndProc(ref m);
             return;
         }
+
+        if (m.Msg == _taskbarButtonCreatedMsg) { InitializeTaskbarButtons(); }
+        else if (m.Msg == NativeMethods.WM_COMMAND && _settings.ExperimentalFeatures)
+        {
+            var hiWord = (int)((m.WParam >> 16) & 0xFFFF);
+            var loWord = (int)(m.WParam & 0xFFFF);
+            if (hiWord == NativeMethods.THBN_CLICKED && loWord == PLAY_BUTTON_ID)
+            {
+                if (btnPlayStop.Enabled) { BtnPlayStop_Click(this, EventArgs.Empty); }
+            }
+        }
+
         switch ((uint)m.Msg)  // 2. Alle festen (konstanten) Nachrichten kommen in den schnellen 'switch'
         {
             case NativeMethods.WM_COPYDATA:
@@ -1122,9 +1148,9 @@ public partial class FrmMain : Form
                                     {
                                         rb.Checked = true;
                                         var tagValue = rb.Tag?.ToString();
-                                        if (tagValue != null)
+                                        if (tagValue != null && int.TryParse(tagValue.ToString(), out var tagInt) && tagInt >= 1 && tagInt <= _stationData.Count)
                                         {
-                                            var stationName = dgvStations.Rows[Convert.ToInt32(tagValue) - 1].Cells[0].Value?.ToString();
+                                            var stationName = _stationData[tagInt - 1].Name;
                                             if (stationName != null)
                                             {
                                                 var index = miniPlayer.MpCmBxStations.FindStringExact(Utilities.StationLong(stationName));
@@ -1167,8 +1193,7 @@ public partial class FrmMain : Form
                                 }
                                 else if (cmd.Equals("e", StringComparison.OrdinalIgnoreCase) || cmd.Equals("exit", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    SaveConfig();
-                                    Application.Exit();
+                                    Application.Exit(); // SaveConfig/Cleanup in FrmMain_FormClosing
                                 }
                             }
                         }
@@ -1182,8 +1207,11 @@ public partial class FrmMain : Form
                     var elapsed = keyPressTick - lastHotkeyPress;
                     lastHotkeyPress = keyPressTick;
                     if (!mainShown) { break; }
-                    if (elapsed <= 400) { Close(); }
-                    else if (miniPlayer.Visible && !miniPlayer.Handle.Equals(NativeMethods.GetForegroundWindow())) { miniPlayer.Activate(); }
+                    if (elapsed <= 400)
+                    {
+                        Application.Exit(); // SaveConfig/Cleanup in FrmMain_FormClosing
+                    }
+                    else if (miniPlayer.Visible && miniPlayer.Handle.Equals(NativeMethods.GetForegroundWindow())) { ShowFullPlayer(); }
                     else if (miniPlayer.Visible) { miniPlayer.Activate(); }
                     else if (Visible)
                     {
@@ -1195,7 +1223,7 @@ public partial class FrmMain : Form
                                 Application.Exit();
                                 break;
                             }
-                            if (close2Tray) { miniPlayer.Hide(); }
+                            if (_settings.CloseToTray) { miniPlayer.Hide(); }
                             else { ShowMiniPlayer(); }
                             Hide();
                             tcMain.SelectedIndex = 0;
@@ -1215,32 +1243,22 @@ public partial class FrmMain : Form
                     }
                     break;
                 }
-
-            case NativeMethods.WM_QUERYENDSESSION:
-                {
-                    Close();
-                    break;
-                }
-
             case NativeMethods.WM_NCLBUTTONDBLCLK:
                 {
                     Hide();
                     ShowMiniPlayer();
                     break;
                 }
-
             case NativeMethods.WM_NCLBUTTONDOWN:
                 {
                     if (tcMain.SelectedTab == tpStations) { dgvStations.EndEdit(); }
                     break;
                 }
-
             case NativeMethods.WM_SYSCOMMAND:
                 {
                     if ((int)m.WParam == NativeMethods.IDM_CUSTOMITEM1)
                     {
-                        SaveConfig();
-                        Application.Exit();
+                        Application.Exit(); // SaveConfig/Cleanup in FrmMain_FormClosing
                     }
                     break;
                 }
@@ -1253,7 +1271,7 @@ public partial class FrmMain : Form
         Application.DoEvents(); // für Autostart wichtig, damit GUI im fertigen Zustand angezeigt wird
         miniPlayer.Show();
         miniPlayer.TopMost = true; // make our form jump to the top of everything
-        miniPlayer.TopMost = alwaysOnTop; // set it back to whatever it was
+        miniPlayer.TopMost = _settings.AlwaysOnTop; // set it back to whatever it was
         miniPlayer.BringToFront();
         miniPlayer.Activate();
         LogEvent("ShowMiniPlayer: activated");
@@ -1269,39 +1287,21 @@ public partial class FrmMain : Form
         }
         else if (WindowState == FormWindowState.Minimized) { WindowState = FormWindowState.Normal; } // wahrscheinlich unnötig, kann nicht minimiert werden
         TopMost = true; // make our form jump to the top of everything
-        TopMost = alwaysOnTop; // set it back to whatever it was
+        TopMost = _settings.AlwaysOnTop; // set it back to whatever it was
         BringToFront();
         Activate();
         LogEvent("ShowFullPlayer: activated");
     }
 
     private void RadioButton_CheckedChanged(object sender, EventArgs e)
-    {// the event is fired twice because whenever one RadioButton within a group is checked another will be unchecked
-        var rb = (RadioButton)sender; // sender as RadioButton;
-        var oldId = _currentButtonNum;
-        pbLevel.Image = null;
-        miniPlayer.MpPBLevel.Image = null;
-        timerLevel.Stop();
-        spectrumTimer.Stop();
-        timerResume.Stop();
-        foreach (var vp in tpSectrum.Controls.OfType<VerticalProgressBar>()) { vp.Value = 0; }
-        Application.DoEvents();
-        if (rb.Checked)
-        {
-            rb.ForeColor = Color.White;
-            rb.BackColor = SystemColors.Highlight; //.HotTrack; //.ActiveBorder; //.InactiveCaption; //.ControlDark;
-            _currentButtonNum = Convert.ToInt32(rb.Tag?.ToString());
-        }
-        else
-        {
-            rb.ForeColor = SystemColors.ControlText;
-            rb.BackColor = Color.Transparent;
-        }
-        if (!firstEmptyStart && oldId != _currentButtonNum && _currentButtonNum > 0)
-        {
-            BtnReset_Click(null!, null!); //  StartPlaying(dgvStations.Rows[Convert.ToInt32(rb.Tag) - 1].Cells[1].Value.ToString()); } // Autostart
-            btnReset.Enabled = true; // beim Programmstart deaktiviert
-        }
+    {
+        if (_suppressStationEvents) { return; }  // programmatisches Setzen → ignorieren
+        var rb = (RadioButton)sender;
+        if (!rb.Checked) { return; }  // "Abwählen"-Hälfte des Doppel-Fire → ignorieren
+        var number = Convert.ToInt32(rb.Tag);
+        var station = ReadStationFromDgv(number);
+        SelectStation(station.IsValid ? station : null);
+        btnReset.Enabled = true;
     }
 
     private void BtnIncrease_MouseDown(object sender, MouseEventArgs e)
@@ -1369,55 +1369,7 @@ public partial class FrmMain : Form
 
     private void TcMain_SelectedIndexChanged(object sender, EventArgs e)
     {// 0 = Player, 1 = Stations, 2 = History, 3 = Settings, 4 = Help, 5 = Information
-        if (tcMain.SelectedIndex == 0 && !Utilities.IsDGVEmpty(dgvStations))
-        {
-            if (radioBtnChanged) // d.h. es wurden Änderungen vorgenommen
-            {
-                if (Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PLAYING)
-                {
-                    BASS_CHANNELINFO info = new();
-                    if (Bass.BASS_ChannelGetInfo(_stream, info)) // get current url => info.filename
-                    {
-                        var urlIsStillInFavorites = false;
-                        for (var i = 0; i < stationSum; i++)
-                        {
-                            if (dgvStations.Rows[i].Cells[1].Value != null && info.filename != null && dgvStations.Rows[i].Cells[1].Value.ToString()!.Equals(info.filename, StringComparison.OrdinalIgnoreCase))
-                            {
-                                var controlName = "rbtn" + (i + 1).ToString("D2");
-                                if (tcMain.TabPages[0].Controls[controlName] is RadioButton foundRadioButton)
-                                {
-                                    foundRadioButton.Checked = true;
-                                    urlIsStillInFavorites = true;
-                                }
-                                UpdateCaption_lblD1(dgvStations.Rows[i].Cells[0].Value?.ToString() ?? string.Empty);
-                                break;
-                            }
-                        }
-                        if (!urlIsStillInFavorites) // || deviceChanged)
-                        {
-                            var iTag = 0;
-                            Bass.BASS_ChannelStop(_stream); // wPlayer.controls.stop();
-
-                            foreach (var rb in tcMain.TabPages[0].Controls.OfType<RadioButton>())
-                            {
-                                if (rb.Checked)
-                                {
-                                    var isValid = rb.Tag != null && int.TryParse(rb.Tag.ToString(), out iTag);
-                                    if (!isValid || string.IsNullOrEmpty(dgvStations.Rows[iTag - 1].Cells[1].Value.ToString())) { rb.Checked = false; }
-                                }
-                                else { rb.Checked = false; }
-                            }
-
-                            if (iTag > 0) { StartPlaying(dgvStations.Rows[iTag - 1].Cells[1].Value.ToString(), iTag); }
-                            else { RestorePlayerDefaults(); }
-                        }
-                    }
-                }
-                RewriteButtonText();
-                somethingToSave = true; // => SaveConfig() => radioBtnChanged = false;
-            }
-            foreach (var rb in tcMain.TabPages[0].Controls.OfType<RadioButton>()) { if (rb.Checked) { rb.Focus(); } }
-        }
+        if (tcMain.SelectedIndex == 0 && !Utilities.IsDGVEmpty(dgvStations)) { OnSwitchBackToPlayerTab(); }
         if (tcMain.SelectedIndex == 1)
         {// Stations
             UpdateStatusLabelStationsList();
@@ -1426,7 +1378,7 @@ public partial class FrmMain : Form
         else if (tcMain.SelectedIndex == 2)
         {
             TopMost = false; // Workaround, damit Tooltip in Listview im Vordergrund angezeigt wird
-            loadHistoryBtn.Enabled = delAllHistoriesBtn.Enabled = Directory.GetFiles(Path.GetDirectoryName(xmlPath) ?? "", appName + "_*.csv").Length > 0;
+            loadHistoryBtn.Enabled = delAllHistoriesBtn.Enabled = Directory.GetFiles(Path.GetDirectoryName(settingsPath) ?? "", appName + "_*.csv").Length > 0;
             TPHistory_SetStatusBarText();
             historyLV.Focus();
         }
@@ -1435,10 +1387,7 @@ public partial class FrmMain : Form
             CmbxOutput_CreateContent();
             TPSettings_SetStatusBarText();
         }
-        else if (tcMain.SelectedIndex == 6) // Spectrum
-        {
-            StatusStrip_SingleLabel(false, lblD2.Text);
-        }
+        else if (tcMain.SelectedIndex == 6) { StatusStrip_SingleLabel(false, lblD2.Text); }  // Spectrum
         else if (tcMain.SelectedIndex == 7) // Miniplayer
         {
             Hide(); //ShowInTaskbar = false; verträgt sich nicht mit GlobalHotkey => zerstört Handle
@@ -1447,10 +1396,74 @@ public partial class FrmMain : Form
         }
         else
         {
-            var statusLabelText = tcMain.SelectedIndex == 5 ? appPath : findNewStations;
-            StatusStrip_SingleLabel(statusLabelText.Equals(findNewStations), statusLabelText);
+            var statusLabelText = tcMain.SelectedIndex == 5 ? appPath : Lng.T(findNewStations);
+            StatusStrip_SingleLabel(!statusLabelText.Equals(appPath), statusLabelText);
         }
-        if (somethingToSave) { SaveConfig(); } // siehe 14 Zeilen weiter oben
+        if (somethingToSave) { SaveConfig(); }
+    }
+
+    private void OnSwitchBackToPlayerTab()
+    {
+        if (radioBtnChanged) // nur wenn Stationsdaten seit dem letzten Speichern geändert wurden - sonst ist nichts neu zu beschriften/speichern (F12-Wechsel bleibt dadurch reines Zeichnen)
+        {
+            RefreshStationButtons();              // Buttons aus aktualisiertem DGV neu beschriften
+            somethingToSave = true;               // → SaveConfig() → radioBtnChanged = false
+        }
+        BASS_CHANNELINFO info = new();  // Prüfen, ob die aktuell spielende URL noch in den Favoriten ist
+        if (Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PLAYING && Bass.BASS_ChannelGetInfo(_stream, info))
+        {
+            var playingUrl = info.filename;
+            Station? matchingStation = null;
+            for (var i = 0; i < stationSum; i++)
+            {
+                var s = ReadStationFromDgv(i + 1);
+                if (s.IsValid && s.Url.Equals(playingUrl, StringComparison.OrdinalIgnoreCase))
+                {
+                    matchingStation = s;
+                    break;
+                }
+            }
+            if (matchingStation != null)  // URL noch vorhanden → nur UI-Sync, kein Neustart
+            {
+                _suppressStationEvents = true;
+                _selectedStation = matchingStation;  // für Focus (siehe ein paar Zeilen weiter unten)
+                try { SelectRadioButtonOnly(matchingStation); }
+                finally { _suppressStationEvents = false; }
+                UpdateCaption_lblD1(matchingStation.Name);
+            }
+            else  // URL nicht mehr vorhanden → aktuell ausgewählten Sender neu starten
+            {
+                Bass.BASS_ChannelStop(_stream);
+                if (_selectedStation is { IsValid: true } sel) { SelectStation(ReadStationFromDgv(sel.Number), forcePlay: true); }
+                else { RestorePlayerDefaults(); }
+            }
+        }
+        else if (_selectedStation != null)  // Stream noch nicht aktiv (z. B. verbindet noch) → visuellen Zustand sicherstellen
+        {
+            _suppressStationEvents = true;
+            try { SelectRadioButtonOnly(_selectedStation); }
+            finally { _suppressStationEvents = false; }
+        }
+        if (_selectedStation != null) { _stationButtons[_selectedStation.Number - 1].Focus(); }  // Fokus auf aktiven RadioButton
+        else { FocusStationButton(); } // auch ohne aktive Station soll immer ein Button den Fokus haben (Leertaste = Play)
+    }
+
+    private void FocusStationButton()  // Fokus auf aktiven (checked) Stations-Button, sonst Play-Button; Leertaste soll in jedem Fall Play auslösen (BtnReset-Fallback)
+    {
+        var rb = Array.Find(_stationButtons, static rb => rb is { Checked: true });
+        if (rb is not null) { rb.Focus(); return; } // checked Button: OnEnter setzt Checked=true erneut, kein CheckedChanged
+        if (btnPlayStop.Enabled) { btnPlayStop.Focus(); }
+    }
+
+    private void SelectRadioButtonOnly(Station station)
+    {
+        for (var i = 0; i < stationSum; i++)
+        {
+            var active = station.Number == i + 1;
+            _stationButtons[i].Checked = active;
+            _stationButtons[i].ForeColor = active ? Color.White : SystemColors.ControlText;
+            _stationButtons[i].BackColor = active ? SystemColors.Highlight : Color.Transparent;
+        }
     }
 
     private void StatusStrip_SingleLabel(bool isLink, string text)
@@ -1459,30 +1472,10 @@ public partial class FrmMain : Form
         toolStripStatusLabel.Text = text;
     }
 
-    //private void StatusStrip_TaskInformation()
-    //{
-    //    for (int i = 0; i < tableActions.Rows.Count; i++)
-    //    {
-    //        if (tableActions.Rows[i].Field<bool>("Enabled")) //) && rgxValidTime.Match(tableActions.Rows[i].Field<string>("Time")).Success)
-    //        {
-
-    //            DateTime nowTime = DateTime.Now;
-    //            int jobHour = int.TryParse(tableActions.Rows[i].Field<string>("Time").Split(':').FirstOrDefault(), out int intH) ? intH : -1;
-    //            int jobMinu = int.TryParse(tableActions.Rows[i].Field<string>("Time").Split(':').LastOrDefault(), out int intM) ? intM : -1;
-    //            if (jobHour < 0 || jobMinu < 0) { continue; }
-    //            DateTime jobTime = new(nowTime.Year, nowTime.Month, nowTime.Day, jobHour, jobMinu, 0);
-    //            if (nowTime > jobTime) { jobTime = jobTime.AddDays(1); }
-    //            StatusStrip_SingleLabel(false, tableActions.Rows[i].Field<string>("Task") + " at " + jobTime.ToString("H:mm"));
-    //            break;
-    //        }
-    //    }
-    //}
-
     private void UpdateStatusLabelStationsList()
     {
-        var fullRows = 0;
-        foreach (DataGridViewRow row in dgvStations.Rows) { if (!Utilities.IsDGVRowEmpty(row)) { fullRows++; } }
-        StatusStrip_SingleLabel(false, fullRows.ToString() + " entries");
+        var fullRows = _stationData.Count(r => !r.IsEmpty);
+        StatusStrip_SingleLabel(false, fullRows.ToString() + " " + Lng.T("entries"));
     }
 
     private void BtnPlayStop_Click(object sender, EventArgs e)
@@ -1491,17 +1484,17 @@ public partial class FrmMain : Form
         if (Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PLAYING)
         {
             BASSChannelPause();
-            notifyIcon.Icon = Properties.Resources.NetRadiX;
+            notifyIcon.Icon = _pauseIcon;
         }
         else if (_stream != 0 && Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PAUSED)
         {
             BASSChannelPlay();
-            notifyIcon.Icon = Properties.Resources.NetRadio;
+            notifyIcon.Icon = _playIcon;
         }
         else
         {
             BtnReset_Click(null!, EventArgs.Empty);
-            notifyIcon.Icon = Properties.Resources.NetRadio;
+            notifyIcon.Icon = _playIcon;
         }
     }
 
@@ -1511,13 +1504,14 @@ public partial class FrmMain : Form
         {
             timerLevel.Stop();
             spectrumTimer.Stop();
-            foreach (var vp in tpSectrum.Controls.OfType<VerticalProgressBar>()) { vp.Value = 0; }
+            spectrumDisplay.ClearBars(); // Pause: Balken ausblenden, Peak-Hold-Striche bleiben stehen (wie foobar2000)
             pbLevel.Image = null;
             miniPlayer.MpPBLevel.Image = null;
             btnPlayStop.Image = Properties.Resources.play_white;
+            UpdateTaskbarIcon(false);
             miniPlayer.MpBtnPlay.Image = Properties.Resources.play_white;
             timerPause.Enabled = true;
-            playPauseToolStripMenuItem.Text = "Play"; // btnPlayStop.Text = 
+            playPauseToolStripMenuItem.Text = Lng.T("Play"); // btnPlayStop.Text = 
             playPauseToolStripMenuItem.Image = Properties.Resources.play;
             btnPlayStop.BackColor = Color.Maroon;
             miniPlayer.MpBtnPlay.BackColor = Color.Maroon;
@@ -1529,11 +1523,12 @@ public partial class FrmMain : Form
         if (Bass.BASS_ChannelPlay(_stream, false)) // false: Song beginnt von neuem, true: Spielt von aktueller position weiter
         {
             btnPlayStop.Image = Properties.Resources.pause_white;
+            UpdateTaskbarIcon(true);
             miniPlayer.MpBtnPlay.Image = Properties.Resources.pause_white;
             timerLevel.Start();
             spectrumTimer.Start();
             timerPause.Enabled = false;
-            playPauseToolStripMenuItem.Text = "Pause"; // btnPlayStop.Text = 
+            playPauseToolStripMenuItem.Text = Lng.T("Pause"); // btnPlayStop.Text = 
             playPauseToolStripMenuItem.Image = Properties.Resources.pause;
             btnPlayStop.BackColor = SystemColors.ControlDark;
             miniPlayer.MpBtnPlay.BackColor = SystemColors.ControlDark;
@@ -1594,37 +1589,40 @@ public partial class FrmMain : Form
 
     private void BtnReset_Click(object sender, EventArgs e)
     {
-        timerResume.Stop();
-        RestorePlayerDefaults(_currentButtonNum); // currentButtonNum kann auch 0 sein - macht nichts
-        currPlayingTime = TimeSpan.Zero;
-        playPauseToolStripMenuItem.Enabled = true;
-        if (_stream != 0)
+        var station = _selectedStation ?? ScanForCheckedStation() ?? ScanForFirstValidStation();  // _selectedStation kann null sein (z.B. direkt nach Programmstart ohne Autostart-Station). Dann Fallback auf checked Button, sonst erste gültige Station.
+        if (station is not { IsValid: true })  // Station nicht spielbar → DGV-Daten erneut prüfen (könnten geändert worden sein)
         {
-            Bass.BASS_ChannelGetAttribute(_stream, BASSAttribute.BASS_ATTRIB_VOL, ref channelVolume);
-            Bass.BASS_StreamFree(_stream);
-        }
-        try
-        {
-            foreach (var rb in tcMain.TabPages[0].Controls.OfType<RadioButton>()) // .Where(rb => rb != rbtn00)
+            if (station != null) { station = ReadStationFromDgv(station.Number); }
+
+            if (station is not { IsValid: true })
             {
-                if (rb.Checked)
-                {
-                    var isValid = int.TryParse(rb.Tag?.ToString(), out var iTag);
-                    if (isValid && iTag > 0 && dgvStations?.Rows.Count >= iTag && dgvStations.Rows[iTag - 1].Cells[1].Value is string cellValue && cellValue.Length > 0)
-                    {
-                        UpdateCaption_lblD1(dgvStations.Rows[iTag - 1].Cells[0].Value.ToString() ?? string.Empty);
-                        StartPlaying(dgvStations.Rows[iTag - 1].Cells[1].Value.ToString(), iTag);
-                    }
-                    else
-                    {
-                        lblD1.Text = "ERROR";
-                        lblD4.Text = "No URL is defined.";
-                    }
-                    break;
-                }
+                lblD1.Text = Lng.T("ERROR");
+                lblD4.Text = Lng.T("No URL is defined.");
+                return;
             }
         }
-        catch (InvalidCastException ex) { Utilities.ErrTaskDialog(this, ex); }
+        station = ReadStationFromDgv(station.Number);  // Frisch aus DGV lesen – der Nutzer könnte URL auf dem Stations-Tab geändert haben
+        SelectStation(station, forcePlay: true);
+    }
+
+    private Station? ScanForCheckedStation()
+    {
+        for (var i = 0; i < stationSum; i++)
+        {
+            if (_stationButtons[i].Checked) { return ReadStationFromDgv(i + 1); }
+        }
+        return null;
+    }
+
+    /// <summary>Liefert die erste gültige Station (für Play direkt nach Programmstart, wenn noch nichts checked ist).</summary>
+    private Station? ScanForFirstValidStation()
+    {
+        for (var i = 1; i <= stationSum; i++)
+        {
+            var station = ReadStationFromDgv(i);
+            if (station.IsValid) { return station; }
+        }
+        return null;
     }
 
     private void UpdateCaption_lblD1(string caption) // BtnReset_Click | autoStartRadioButton | TcMain_SelectedIndexChanged | 
@@ -1633,71 +1631,72 @@ public partial class FrmMain : Form
         lblD1.Text = string.IsNullOrEmpty(caption) ? "" : Utilities.StationLong(caption, true); // Regex.Replace(caption, @"\s+", " "); // doppelte Leerzeichen entfernen
     }
 
-    private void RewriteButtonText()
+    private void RefreshStationButtons()
     {
-        miniPlayer.MpCmBxStations.Items.Clear();
-        if (dgvStations == null) { return; }
-        for (var i = 1; i <= stationSum; i++)
+        _suppressStationEvents = true;
+        try
         {
-            var foundControls = tcMain.TabPages[0].Controls.Find($"rbtn{i:D2}", true); // Schutz vor IndexOutOfRange beim Button-Array
-            if (foundControls.Length == 0) { continue; } // Button fehlt auf der Form -> ignorieren
-            var foundBtn = (RadioButton)foundControls[0];
-            var rowIndex = i - 1;
-            if (rowIndex < dgvStations.Rows.Count && dgvStations.Rows[rowIndex].Cells[1].Value is string url && url.Length > 0)
+            miniPlayer.MpCmBxStations.Items.Clear();
+            for (var i = 0; i < stationSum; i++)
             {
-                var cellValue = dgvStations.Rows[rowIndex].Cells[0].Value;
-                var stationName = cellValue?.ToString() ?? "-"; // Null-Coalescing
-                foundBtn.Text = Utilities.StationShort(stationName, true);
-                toolTip.SetToolTip(foundBtn, $"{Utilities.StationLong(stationName)} ({i})");
-                miniPlayer.MpCmBxStations.Items.Add(Utilities.StationLong(stationName));
-                foundBtn.Enabled = true;
+                var rb = _stationButtons[i];
+                var station = ReadStationFromDgv(i + 1);
+
+                if (station.IsValid)
+                {
+                    rb.Text = station.ShortName;
+                    rb.Enabled = true;
+                    toolTip.SetToolTip(rb, $"{station.LongName} ({station.Number})");
+                    miniPlayer.MpCmBxStations.Items.Add(station.LongName);
+                }
+                else
+                {
+                    rb.Text = "-";
+                    rb.Enabled = false;
+                    toolTip.SetToolTip(rb, string.Empty);
+                }
             }
-            else
+            SyncMiniPlayerComboBox(_selectedStation);  // Nach dem Neuaufbau der Items den aktuellen Sender wieder markieren
+
+            // Player-Buttons aktivieren, sobald mindestens eine gültige Station existiert - sonst lässt sich
+            // die Wiedergabe nach dem Programmstart (ohne Autostart-Station) nicht per Play-Button starten.
+            if (!btnPlayStop.Enabled && Enumerable.Range(1, stationSum).Any(n => ReadStationFromDgv(n).IsValid))
             {
-                foundBtn.Text = "-";
-                foundBtn.Enabled = false;
+                miniPlayer.MpBtnPlay.Enabled = btnPlayStop.Enabled = btnIncrease.Enabled = btnDecrease.Enabled = btnReset.Enabled = btnRecord.Enabled = true;
             }
         }
-        var index = miniPlayer.MpCmBxStations.FindStringExact(lblD1.Text.Replace("&&", "&"));
-        if (index >= 0 && miniPlayer.MpCmBxStations.SelectedIndex != index) { miniPlayer.MpCmBxStations.SelectedIndex = index; }
+        finally { _suppressStationEvents = false; }
     }
 
-    //private void RewriteButtonText() // initial FrmMain_Load und dann TcMain_SelectedIndexChanged 
-    //{
-    //    miniPlayer.MpCmBxStations.Items.Clear();
-    //    if (dgvStations == null || dgvStations.Rows.Count == 0)
-    //    for (var i = 1; i <= stationSum; i++)
-    //    {
-    //        var foundBtn = (RadioButton)tcMain.TabPages[0].Controls.Find("rbtn" + i.ToString("D2"), true)[0]; // CAVE: Using führt dazu, dass Buttons von GUI verschwinden!
-    //        if (dgvStations.Rows[i - 1].Cells[1].Value is string text && text.Length > 0) // column "URL"
-    //        {
-    //            if (dgvStations.Rows[i - 1].Cells[0].Value != null)
-    //            {
-    //                foundBtn.Text = Utilities.StationShort(dgvStations.Rows[i - 1].Cells[0].Value.ToString(), true); // true = button
-    //                toolTip.SetToolTip(foundBtn, Utilities.StationLong(dgvStations.Rows[i - 1].Cells[0].Value.ToString()) + " (" + i + ")");
-    //                miniPlayer.MpCmBxStations.Items.Add(Utilities.StationLong(dgvStations.Rows[i - 1].Cells[0].Value.ToString()));
-    //            }
-    //            foundBtn.Enabled = true;
-    //        }
-    //        else
-    //        {
-    //            foundBtn.Text = "-";
-    //            foundBtn.Enabled = false;
-    //        }
-    //    }
-    //    var index = miniPlayer.MpCmBxStations.FindStringExact(lblD1.Text.Replace("&&", "&"));
-    //    if (index >= 0 && miniPlayer.MpCmBxStations.SelectedIndex != index) { miniPlayer.MpCmBxStations.SelectedIndex = index; } // erforderlich nach Veränderungen an dgvStations.Rows[i - 1].Cells[0]
-    //}
+    private string GetStreamFormatName()  // Streamformatkurzname; ersetzt "???" in Kanalinfo (lblD3), wenn Bass.Net den Typ nicht kennt (z. B. OPUS, FLAC-in-OGG, HLS).
+    {
+        if (_stream == 0 || Bass.BASS_ChannelGetInfo(_stream) is not { } info) { return string.Empty; }
+        return info.ctype switch
+        {
+            BASSChannelType.BASS_CTYPE_STREAM_MP3 => "MP3",
+            BASSChannelType.BASS_CTYPE_STREAM_MP2 => "MP2",
+            BASSChannelType.BASS_CTYPE_STREAM_MP1 => "MP1",
+            BASSChannelType.BASS_CTYPE_STREAM_OGG => "OGG",
+            BASSChannelType.BASS_CTYPE_STREAM_OPUS => "OPUS",
+            BASSChannelType.BASS_CTYPE_STREAM_FLAC => "FLAC",
+            BASSChannelType.BASS_CTYPE_STREAM_FLAC_OGG => "FLAC",
+            _ when (int)info.ctype == 0x10300 => "HLS", // basshls (Enum-Name je nach Bass.Net-Version nicht vorhanden)
+            _ => info.ctype.ToString().Replace("BASS_CTYPE_STREAM_", string.Empty),
+        };
+    }
 
-    //private static string DistillButtonText(string s)
-    //{
-    //    s = Regex.Replace(s, @"[\[{]([^\]|}]*)\|.*[]}]", "$1"); // innerhalb geschweifter Klammern wird Part1 genommen
-    //    s = Regex.Replace(s, @"[\[{][^\]|}]*[]}]", string.Empty); // Text innerhalb eckiger Klammern wird entfernt, Zwischebereich darf keine schließende Klammer enthalten [^\]]*; [ muss maskiert werden, ] nicht
-    //    s = Regex.Replace(s, @"\s+", " "); // doppelte Leerzeichen entfernen
-    //    Match m = Regex.Match(s, @"(.+? .+?) ");
-    //    if (m.Success) { s = m.Groups[1].Value; } // Text nach dem 2. Leerzeichen wird abgeschnitten
-    //    return s.Trim();
-    //}
+    private void TpPlayer_MouseDown(object? sender, MouseEventArgs e)  // Klicks auf deaktivierte (leere) Stations-Buttons abfangen
+    {
+        if (e.Button != MouseButtons.Left || sender is not Control parent) { return; }
+        if (parent.GetChildAtPoint(e.Location, GetChildAtPointSkip.None) is not RadioButton { Enabled: false } rb) { return; }
+        var idx = Array.IndexOf(_stationButtons, rb); // rbtn N <-> dgv-Zeile N-1
+        if (idx < 0 || idx >= dgvStations.Rows.Count) { return; }
+        tcMain.SelectedTab = tpStations;
+        dgvStations.ClearSelection();
+        dgvStations.CurrentCell = dgvStations.Rows[idx].Cells[0]; // setzt die aktuelle Zelle und scrollt die Zeile in den sichtbaren Bereich
+        dgvStations.Rows[idx].Selected = true;
+        dgvStations.Focus();
+    }
 
     private void RadioButton_Paint(object sender, PaintEventArgs e)
     {
@@ -1728,9 +1727,22 @@ public partial class FrmMain : Form
                 LineAlignment = StringAlignment.Center // vertikale Ausrichtung der Zeichenfolge
             };
             var headerBounds = new Rectangle(e.RowBounds.Left, e.RowBounds.Top, dGrid.RowHeadersWidth, e.RowBounds.Height);
+            var font = e.InheritedRowStyle.Font ?? dGrid.Font;
             var rhForeColor = dgvStations.Rows[e.RowIndex].Index >= stationSum ? SystemColors.ControlLightLight : dGrid.RowHeadersDefaultCellStyle.ForeColor;
             using SolidBrush sBrush = new(rhForeColor);
-            e.Graphics.DrawString(rowText, e.InheritedRowStyle.Font, sBrush, headerBounds, centerFormat);
+            e.Graphics.DrawString(rowText, font, sBrush, headerBounds, centerFormat);
+        }
+        if (e.RowIndex == _dropIndicatorRowIndex)   // Einfügelinie beim Drag&Drop
+        {
+            const int arrowSize = 5;
+            var lineY = e.RowBounds.Top + 1;
+            var left = e.RowBounds.Left;
+            var right = e.RowBounds.Right;
+            using var pen = new Pen(SystemColors.GradientActiveCaption, 2);
+            e.Graphics.DrawLine(pen, left + arrowSize + 1, lineY, right - arrowSize - 1, lineY);
+            using var brush = new SolidBrush(SystemColors.Highlight);
+            e.Graphics.FillPolygon(brush, (Point[])[new(left, lineY - arrowSize), new(left, lineY + arrowSize), new(left + arrowSize + 1, lineY)]);
+            e.Graphics.FillPolygon(brush, (Point[])[new(right, lineY - arrowSize), new(right, lineY + arrowSize), new(right - arrowSize - 1, lineY)]);
         }
     }
 
@@ -1753,7 +1765,7 @@ public partial class FrmMain : Form
                 if (!Utilities.IsAutoStartEnabled(appName, "\"" + appPath + "\"" + " -min"))
                 {
                     Utilities.SetAutoStart(appName, "\"" + appPath + "\"" + " -min");
-                    StatusStrip_SingleLabel(false, "Autorun written to Registy");
+                    StatusStrip_SingleLabel(false, Lng.T("Autorun written to Registry"));
                 }
             }
             else
@@ -1761,7 +1773,7 @@ public partial class FrmMain : Form
                 if (Utilities.IsAutoStartEnabled(appName, "\"" + appPath + "\"" + " -min"))
                 {
                     Utilities.UnSetAutoStart(appName);
-                    StatusStrip_SingleLabel(false, "Autorun deleted from Registry");
+                    StatusStrip_SingleLabel(false, Lng.T("Autorun deleted from Registry"));
                 }
             }
             somethingToSave = true;
@@ -1786,7 +1798,7 @@ public partial class FrmMain : Form
             {
                 if (!string.IsNullOrEmpty(hkLetter) && cmbxHotkey.Enabled && NativeMethods.UnregisterHotKey(Handle, NativeMethods.HOTKEY_ID))
                 {
-                    StatusStrip_SingleLabel(false, "Hotkey unregistered");
+                    StatusStrip_SingleLabel(false, Lng.T("Hotkey unregistered"));
                     hkLetter = string.Empty;
                 }
                 lblHotkey.Enabled = false;
@@ -1802,7 +1814,7 @@ public partial class FrmMain : Form
         {
             if (!string.IsNullOrEmpty(hkLetter) && NativeMethods.UnregisterHotKey(Handle, NativeMethods.HOTKEY_ID))
             { // 1. Schritt: vorhanden Hotkey löschen
-                StatusStrip_SingleLabel(false, "Hotkey unregistered");
+                StatusStrip_SingleLabel(false, Lng.T("Hotkey unregistered"));
                 hkLetter = string.Empty;
             }
             if (string.IsNullOrEmpty(hkLetter) && cbHotkey.Checked && HotkeyLettersRegex().IsMatch(cmbxHotkey.Text))
@@ -1827,7 +1839,7 @@ public partial class FrmMain : Form
     {
         if (NativeMethods.RegisterHotKey(Handle, NativeMethods.HOTKEY_ID, (uint)(NativeMethods.Modifiers.Control | NativeMethods.Modifiers.Win), (uint)(Keys)Convert.ToChar(hkString)) == true)
         {
-            StatusStrip_SingleLabel(false, "Hotkey registered (Ctrl+Win+" + hkString + ")");
+            StatusStrip_SingleLabel(false, Lng.T("Hotkey registered") + " (Ctrl+Win+" + hkString + ")");
             toolStripStatusLabel.IsLink = false;
             hkLetter = hkString;
         }
@@ -1837,7 +1849,7 @@ public partial class FrmMain : Form
             cbHotkey.Checked = false;
             cmbxHotkey.SelectedIndex = 0;
             tcMain.SelectedIndex = 3; // Hotkey-Dialog anzeigen
-            StatusStrip_SingleLabel(false, "Sorry, another application is using this hotkey!");
+            StatusStrip_SingleLabel(false, Lng.T("Sorry, another application is using this hotkey!"));
             cmbxHotkey.Enabled = false;
             lblHotkey.Enabled = false;
         }
@@ -1848,10 +1860,10 @@ public partial class FrmMain : Form
         List<string> devicelist = [];
         BASS_DEVICEINFO info; // = new BASS_DEVICEINFO();
         for (var n = 0; (info = Bass.BASS_GetDeviceInfo(n)) != null; n++) { if (info.IsEnabled) { devicelist.Add(info.ToString()); } }
-        if (devicelist[0].Contains("No sound")) { devicelist.RemoveAt(0); } // 0: No sound
+        if (devicelist.Count > 0 && devicelist[0].Contains("No sound")) { devicelist.RemoveAt(0); } // 0: No sound
         if (devicelist.Count != 0) // if (!list.Any())
         {
-            devicelist[0] += " (recommended)";
+            devicelist[0] += " " + Lng.T("(recommended)");
             cmbxOutput.Items.Clear();
             cmbxOutput.Items.AddRange([.. devicelist]);
             if (_stream != 0)
@@ -1859,7 +1871,7 @@ public partial class FrmMain : Form
                 var device = Bass.BASS_ChannelGetDevice(_stream); // 0 = no sound, 1 = default
                 intOutputDevice = device <= 1 || device == 0x20000 ? 0 : device - 1; // const int bass_nodevice = 0x20000;
             }
-            else { intOutputDevice = cmbxOutput.FindString(strOutputDevice); } // Index des Elements, das mit der Zeichenfolge beginnt...
+            else { intOutputDevice = cmbxOutput.FindString(_settings.OutputDevice); } // Index des Elements, das mit der Zeichenfolge beginnt...
             cmbxOutput.SelectedIndex = intOutputDevice > 0 && devicelist.Count >= intOutputDevice ? intOutputDevice : 0;
         }
     }
@@ -1869,10 +1881,10 @@ public partial class FrmMain : Form
         if (changeOutputDevice && cmbxOutput.Visible && cmbxOutput.Focused)
         {
             intOutputDevice = cmbxOutput.SelectedIndex;
-            strOutputDevice = cmbxOutput.Items[cmbxOutput.SelectedIndex]?.ToString() ?? string.Empty;
-            strOutputDevice = strOutputDevice.StartsWith("Default") ? "Default" : strOutputDevice; // (recommended) entfernen
-            if (prevOutputDevice != strOutputDevice) { somethingToSave = true; }
-            LogEvent("CmbxOutput_SelectedIndexChanged: " + strOutputDevice + " (" + intOutputDevice + ") is selected");
+            _settings.OutputDevice = cmbxOutput.Items[cmbxOutput.SelectedIndex]?.ToString() ?? string.Empty;
+            _settings.OutputDevice = _settings.OutputDevice.StartsWith("Default") ? "Default" : _settings.OutputDevice; // (recommended) entfernen
+            if (prevOutputDevice != _settings.OutputDevice) { somethingToSave = true; }
+            LogEvent("CmbxOutput_SelectedIndexChanged: " + _settings.OutputDevice + " (" + intOutputDevice + ") is selected");
             if (Bass.BASS_ChannelIsActive(_stream) == BASSActive.BASS_ACTIVE_PLAYING)
             {
                 var info = Bass.BASS_ChannelGetInfo(_stream);
@@ -1884,7 +1896,7 @@ public partial class FrmMain : Form
                     TPSettings_SetStatusBarText();
                 }
             }
-            prevOutputDevice = strOutputDevice; //somethingToSave = false; s. o.
+            prevOutputDevice = _settings.OutputDevice; //somethingToSave = false; s. o.
         }
     }
 
@@ -1901,15 +1913,8 @@ public partial class FrmMain : Form
 
     private void TPHistory_SetStatusBarText()
     {
-        //string statusStripText = string.Empty;
         var count = historyLV.Items.Count;
-        if (count > 0)
-        {
-            //DateTime min = (from m in historyListView.Items.Cast<ListViewItem>() select DateTime.Parse(m.Tag.ToString(), null, DateTimeStyles.RoundtripKind)).Min(); // Tag enthält DateTime (Tag und Zeit)
-            //DateTime max = (from m in historyListView.Items.Cast<ListViewItem>() select DateTime.Parse(m.Tag.ToString(), null, DateTimeStyles.RoundtripKind)).Max(); // dadurch stimmt Anzeige auch um 24:00 Uhr
-            //StatusStrip_SingleLabel(false, count + (count == 1 ? " entry (" : " entries (") + (max - min).ToString(@"hh\:mm\:ss") + ")");
-            StatusStrip_SingleLabel(false, count + (count == 1 ? " entry (" : " entries (") + totalPlayingTime.ToString(@"hh\:mm\:ss") + ")");
-        }
+        if (count > 0) { StatusStrip_SingleLabel(false, count + " " + (count == 1 ? Lng.T("entry") : Lng.T("entries")) + " (" + totalPlayingTime.ToString(@"hh\:mm\:ss") + ")"); }
         else { StatusStrip_SingleLabel(false, string.Empty); }
     }
 
@@ -1919,7 +1924,7 @@ public partial class FrmMain : Form
         BASS_DEVICEINFO info; // = new BASS_DEVICEINFO();
         for (var n = 1; (info = Bass.BASS_GetDeviceInfo(n)) != null; n++) // n = 1 => Default
         {
-            if (n == intOutputDevice + 1) { statusStripText = "Current output: " + info.ToString() + (n == 1 ? " (adjusted by system settings, press F8)" : ""); break; } // info.IsInitialized funkt nicht
+            if (n == intOutputDevice + 1) { statusStripText = Lng.T("Current output: ") + info.ToString() + (n == 1 ? " " + Lng.T("(adjusted by system settings, press F8)") : ""); break; } // info.IsInitialized funkt nicht
         }
         StatusStrip_SingleLabel(false, statusStripText);
     }
@@ -1928,9 +1933,9 @@ public partial class FrmMain : Form
     {
         if (cbAlwaysOnTop.Focused)
         {
-            miniPlayer.TopMost = TopMost = alwaysOnTop = cbAlwaysOnTop.Checked;
-            miniPlayer.MpBtnAOT.Image = alwaysOnTop ? Properties.Resources.pinpush : Properties.Resources.pinout;
-            miniPlayer.MpBtnAOT.BackColor = alwaysOnTop ? Color.Maroon : SystemColors.ControlDark;
+            miniPlayer.TopMost = TopMost = _settings.AlwaysOnTop = cbAlwaysOnTop.Checked;
+            miniPlayer.MpBtnAOT.Image = _settings.AlwaysOnTop ? Properties.Resources.pinpush : Properties.Resources.pinout;
+            miniPlayer.MpBtnAOT.BackColor = _settings.AlwaysOnTop ? Color.Maroon : SystemColors.ControlDark;
             somethingToSave = true;
             Activate();
         }
@@ -1940,8 +1945,8 @@ public partial class FrmMain : Form
     {
         if (cbAutoStopRecording.Focused)
         {
-            if (cbAutoStopRecording.Checked) { autoStopRecording = true; }
-            else { autoStopRecording = false; }
+            if (cbAutoStopRecording.Checked) { _settings.AutoStopRecording = true; }
+            else { _settings.AutoStopRecording = false; }
             somethingToSave = true;
         }
     }
@@ -1950,9 +1955,47 @@ public partial class FrmMain : Form
     {
         if (cbShowBalloonTip.Focused)
         {
-            if (cbShowBalloonTip.Checked) { showBalloonTip = true; }
-            else { showBalloonTip = false; }
+            if (cbShowBalloonTip.Checked) { _settings.BalloonTips = true; }
+            else { _settings.BalloonTips = false; }
             somethingToSave = true;
+        }
+    }
+
+    /// <summary>Liest "/l xx" bzw. "/language xx" (auch mit Bindestrich) aus der Kommandozeile; xx = en/de/es/fr.
+    /// Der Installer übergibt so die Setup-Sprachauswahl, der Schalter taugt aber auch für Verknüpfungen/Skripte.</summary>
+    private static string? GetCmdLineLanguage()
+    {
+        var args = Environment.GetCommandLineArgs();
+        for (var i = 1; i < args.Length - 1; i++)
+        {
+            if (CmdLanguageRegex().IsMatch(args[i]))
+            {
+                var code = args[i + 1].ToLowerInvariant();
+                if (Array.IndexOf(_languageCodes, code) >= 0) { return code; }
+            }
+        }
+        return null;
+    }
+
+    /// <summary>Windows-Anzeigesprache als en/de/es/fr, sofern unterstützt — sonst null (Englisch bleibt).
+    /// Wird nur beim allerersten Start ohne Konfiguration herangezogen; "/l" hat Vorrang.</summary>
+    private static string? GetSystemLanguage()
+    {
+        var code = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.ToLowerInvariant();
+        return Array.IndexOf(_languageCodes, code) >= 0 ? code : null;
+    }
+
+    private void CbUiLanguage_SelectionChangeCommitted(object sender, EventArgs e)
+    {
+        var code = _languageCodes[Math.Max(0, cbUiLanguage.SelectedIndex)];
+        if (code == _settings.Language) { return; }
+        _settings.Language = code;
+        somethingToSave = true;
+        if (Utilities.YesNo_TaskDialog(this, Lng.T("The language change takes effect after restarting the program."), Lng.T("Restart now?")).IsYes)
+        {
+            if (_setupVersion) { Environment.SetEnvironmentVariable("NETRADIO_SETUPMODE", "1"); } // vererbt sich auf den Neustart-Prozess und hält ihn im Setup-Modus (wichtig für per Debugger gestartete Instanzen)
+            Program.ReleaseSingleInstanceMutex(); // sonst hält sich die neue Instanz für eine Zweitinstanz und beendet sich sofort
+            Application.Restart(); // löst FormClosing aus, die Einstellungen werden dort gespeichert
         }
     }
 
@@ -1965,23 +2008,16 @@ public partial class FrmMain : Form
         {
             Hide();
             Opacity = 1; // nach Hide //notifyIcon.ShowBalloonTip(1, Text, "Autostart", ToolTipIcon.Info);
-            if (int.TryParse(autoStartRadioButton?.Tag?.ToString(), out var i) && i > 0 && dgvStations?.Rows.Count >= i && dgvStations.Rows[i - 1].Cells[0].Value is string captionText)
-            {
-                UpdateCaption_lblD1(captionText);
-            }
         }
-        if (alwaysOnTop) { miniPlayer.TopMost = TopMost = true; }
+        if (_settings.AlwaysOnTop) { miniPlayer.TopMost = TopMost = true; }
         if (startMiniCmd) { ShowMiniPlayer(); }
-        Application.DoEvents();
-        if (autoStartRadioButton != null)
-        {
-            autoStartRadioButton.Checked = true;
-            autoStartRadioButton.Focus();
-        }
+        ExecuteAutoStart();   // statt: autoStartRadioButton.Checked = true;
+        if (_autoStartStationNumber < 1) { FocusStationButton(); } // Es soll nie vorkommen, dass kein Button den Fokus hat (Leertaste = Play)
 
-        if (updateIndex == 0 && (DateTime.UtcNow - lastUpdateTime).TotalDays > 1 ||
-            updateIndex == 1 && (DateTime.UtcNow - lastUpdateTime).TotalDays > 7 ||
-            updateIndex == 2 && (DateTime.UtcNow - lastUpdateTime).TotalDays > 30)
+
+        if (_settings.UpdateIndex == 0 && (DateTime.UtcNow - _settings.LastUpdateSearch).TotalDays > 1 ||
+            _settings.UpdateIndex == 1 && (DateTime.UtcNow - _settings.LastUpdateSearch).TotalDays > 7 ||
+            _settings.UpdateIndex == 2 && (DateTime.UtcNow - _settings.LastUpdateSearch).TotalDays > 30)
         {
             BtnUpdate_Click(btnUpdate, EventArgs.Empty);
             if (updateAvailable)
@@ -1990,7 +2026,7 @@ public partial class FrmMain : Form
                 tcMain.SelectedTab = tpInfo;
 
             }
-            else { lblUpdate.Text = "Current version: " + strVersion; }
+            else { lblUpdate.Text = Lng.T("Current version:") + " " + strVersion; }
         }
         mainShown = true;
 
@@ -2000,16 +2036,16 @@ public partial class FrmMain : Form
             {
                 if (r.Field<string>("Task") == Utilities.TaskNames[6] && r.Field<bool>("Enabled") &&
                     (DateTime.TryParse(r.Field<string>("Time"), out var parsedTime) &&
-                    (parsedTime - DateTime.Now > TimeSpan.Zero || repeatActionsDaily)))
+                    (parsedTime - DateTime.Now > TimeSpan.Zero || _settings.RepeatActionsDaily)))
                 {
                     var btnCancel = TaskDialogButton.Continue;
-                    TaskDialogButton btnAction = new TaskDialogCommandLinkButton("Check the settings");
+                    TaskDialogButton btnAction = new TaskDialogCommandLinkButton(Lng.T("Check the settings"));
                     TaskDialogPage taskDialogPage = new()
                     {
                         Icon = TaskDialogIcon.ShieldWarningYellowBar,
                         Caption = appName,
-                        Heading = "Following task is active!",
-                        Text = "The computer will shutdown at " + r.Field<string>("Time") + ".",
+                        Heading = Lng.T("Following task is active!"),
+                        Text = string.Format(Lng.T("The computer will shut down at {0}."), r.Field<string>("Time")),
                         AllowCancel = true,
                         Buttons = { btnCancel, btnAction },
                         DefaultButton = btnCancel
@@ -2024,6 +2060,21 @@ public partial class FrmMain : Form
             }
         }
     }
+
+    private void ExecuteAutoStart()
+    {
+        if (_autoStartStationNumber < 1) { return; }
+        LogEvent($"ExecuteAutoStart: station no. {_autoStartStationNumber} (settings: {_settings.AutostartStation}, per Kommandozeile übersteuerbar)");
+        var station = ReadStationFromDgv(_autoStartStationNumber);
+        if (!string.IsNullOrEmpty(station.Name))
+        {
+            lblD1.Text = station.LabelName;  // Label vorab setzen (für Mini/Tray-Modus – sichtbar bevor StartPlaying abgeschlossen ist)
+            miniPlayer.MpCmBxStations.Text = station.LongName;
+        }
+        SelectStation(station.IsValid ? station : null);
+        if (_autoStartStationNumber >= 1 && _autoStartStationNumber <= stationSum) { _stationButtons[_autoStartStationNumber - 1].Focus(); }
+    }
+
 
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
     {
@@ -2045,7 +2096,7 @@ public partial class FrmMain : Form
                         {
                             Hide(); //ShowInTaskbar = false; verträgt sich nicht mit GlobalHotkey => zerstört Handle
                             tcMain.SelectedIndex = 0;
-                            if (close2Tray) { miniPlayer.Hide(); }
+                            if (_settings.CloseToTray) { miniPlayer.Hide(); }
                             else { ShowMiniPlayer(); }
                             if (NativeMethods.IsKeyDown(Keys.Escape)) { miniPlayer.MpToolTip.Active = false; } // Workaround for persistent ToolTip display
                             else { miniPlayer.MpToolTip.Active = true; }
@@ -2055,15 +2106,18 @@ public partial class FrmMain : Form
                 }
             case Keys.Space:
                 {
-                    if (tcMain.SelectedIndex == 0 && !btnPlayStop.Focused)
+                    if ((tcMain.SelectedIndex is 0 or 6) && !btnPlayStop.Focused) // Player- und Spectrum-Tab: Leertaste = Play/Pause
                     {
-                        btnPlayStop.PerformClick(); NativeMethods.SetFocus(btnPlayStop.Handle); return true;
+                        if (btnPlayStop.Enabled) { BtnPlayStop_Click(btnPlayStop, EventArgs.Empty); } // direkter Aufruf: PerformClick wirkt nicht auf unsichtbarer TabPage
+                        if (tcMain.SelectedIndex == 0) { NativeMethods.SetFocus(btnPlayStop.Handle); }
+                        return true;
                     }
                     else { return false; }
                 }
-            case Keys.Q | Keys.Control: { Close(); return true; } // exitFlag = true;
-            case Keys.F1 | Keys.Control | Keys.Shift: { helpRequested = false; Utilities.StartFile(this, xmlPath); return true; }
-            case Keys.F2 | Keys.Control | Keys.Shift: { Utilities.StartFile(this, logPath); return true; }
+            case Keys.Q | Keys.Control: { Application.Exit(); return true; } // beendet immer, auch bei close2Tray (SaveConfig/Cleanup in FrmMain_FormClosing)
+            case Keys.F1 | Keys.Control | Keys.Shift: { helpRequested = false; Utilities.StartFile(this, settingsPath); return true; }
+            case Keys.F2 | Keys.Control | Keys.Shift: { Utilities.StartFile(this, stationsPath); return true; }
+            case Keys.F3 | Keys.Control | Keys.Shift: { Utilities.StartFile(this, logPath); return true; }
             case Keys.F4 | Keys.Control:
                 {
                     if (Visible && NativeMethods.HitTest(Bounds, Handle, PointToScreen(Point.Empty))) { Hide(); } // "Tray-Modus"
@@ -2183,29 +2237,37 @@ public partial class FrmMain : Form
                     }
                     return true;
                 }
+            // Hinweis: PerformClick()/Focus() wirken nur auf SICHTBARE Buttons (CanSelect) - auf dem Spectrum-Tab
+            // liegen die Player-Buttons auf der unsichtbaren tpPlayer. Deshalb werden die Click-Handler direkt
+            // aufgerufen (mit Enabled-Guard) und der Fokus nur auf dem Player-Tab gesetzt.
             case Keys.Oemplus:
+            case Keys.Add:
                 {
-                    if (tcMain.SelectedIndex == 0) { btnIncrease.PerformClick(); btnIncrease.Focus(); return true; }
+                    if (tcMain.SelectedIndex is 0 or 6)
+                    {
+                        if (btnIncrease.Enabled) { BtnIncrease_Click(btnIncrease, EventArgs.Empty); }
+                        if (tcMain.SelectedIndex == 0) { btnIncrease.Focus(); }
+                    }
                     return true;
                 }
             case Keys.OemMinus:
-                {
-                    if (tcMain.SelectedIndex == 0) { btnDecrease.PerformClick(); btnDecrease.Focus(); return true; }
-                    return true;
-                }
-            case Keys.Add:
-                {
-                    if (tcMain.SelectedIndex == 0) { btnIncrease.PerformClick(); btnIncrease.Focus(); return true; }
-                    return true;
-                }
             case Keys.Subtract:
                 {
-                    if (tcMain.SelectedIndex == 0) { btnDecrease.PerformClick(); btnDecrease.Focus(); return true; }
+                    if (tcMain.SelectedIndex is 0 or 6)
+                    {
+                        if (btnDecrease.Enabled) { BtnDecrease_Click(btnDecrease, EventArgs.Empty); }
+                        if (tcMain.SelectedIndex == 0) { btnDecrease.Focus(); }
+                    }
                     return true;
                 }
             case Keys.Back:
                 {
-                    if (tcMain.SelectedIndex == 0) { btnReset.PerformClick(); btnReset.Focus(); return true; }
+                    if (tcMain.SelectedIndex is 0 or 6)
+                    {
+                        if (btnReset.Enabled) { BtnReset_Click(btnReset, EventArgs.Empty); }
+                        if (tcMain.SelectedIndex == 0) { btnReset.Focus(); }
+                        return true;
+                    }
                     return false;
                 }
             case Keys.Insert:
@@ -2257,7 +2319,7 @@ public partial class FrmMain : Form
         if (File.Exists(pdfPath)) { Utilities.StartFile(null, pdfPath); }
         else
         {
-            var (isYes, _, _) = Utilities.YesNo_TaskDialog(null, $"{Path.GetFileName(pdfPath)} was not found in the program directory.", "Would you like to download it from the Internet?");
+            var (isYes, _, _) = Utilities.YesNo_TaskDialog(null, string.Format(Lng.T("{0} was not found in the program directory."), Path.GetFileName(pdfPath)), Lng.T("Would you like to download it from the Internet?"));
             if (isYes)
             {
                 try
@@ -2281,13 +2343,14 @@ public partial class FrmMain : Form
     }
 
     private void FrmMain_FormClosing(object sender, FormClosingEventArgs e)
-    {// Application.Exit() => e.CloseReason == CloseReason.ApplicationExitCall
-        if (e.CloseReason == CloseReason.UserClosing && close2Tray && (ModifierKeys & Keys.Shift) == 0)
+    {
+        if (e.CloseReason == CloseReason.UserClosing && _settings.CloseToTray && (ModifierKeys & Keys.Shift) == 0)
         {
             e.Cancel = true;
             Hide();
             return;
         }
+        LogEvent($"FrmMain_FormClosing: CloseReason={e.CloseReason}"); // kritisch für die Diagnose der Beenden-Pfade
         NativeMethods.UnregisterMediaKeys();
         SystemEvents.PowerModeChanged -= new PowerModeChangedEventHandler(PowerMode_Changed);
         timerLevel.Stop();
@@ -2296,138 +2359,82 @@ public partial class FrmMain : Form
         RecordingStop(); // enthält BASS_StreamFree! - channelVolume muss vorher gespeichert werden!
         notifyIcon.Visible = false; // keine komische Meldungen an Windows-Nachrichtenzentrale
         if (!string.IsNullOrEmpty(hkLetter)) { NativeMethods.UnregisterHotKey(Handle, NativeMethods.HOTKEY_ID); }
-
         Bass.BASS_PluginFree(_hlsPlugIn);
         Bass.BASS_PluginFree(_flacPlugIn);
         Bass.BASS_PluginFree(_opusPlugIn);
         Bass.BASS_Stop();
         Bass.BASS_Free();
         if (somethingToSave || radioBtnChanged) { SaveConfig(); }
-        //if (numUpDnSaveHistory.Value > 0) { SaveHistory(true); }
-        SaveHistory(true);
+        // History-CSV nur schreiben, wenn der Anwender das aktiv eingestellt hat (Wert > 0)
+        // und es überhaupt Einträge gibt. Bestehende Dateien bleiben unangetastet (Löschen über delAllHistoriesBtn).
+        if (numUpDnSaveHistory.Value > 0 && historyLV.Items.Count > 0) { SaveHistoryFile(true); }
+    }
+
+    private void FrmMain_FormClosed(object sender, FormClosedEventArgs e)
+    {
+        _playIcon.Dispose();  // siehe auch "notifyIcon.Visible = false;" in FrmMain_FormClosing, dort kann
+        _pauseIcon.Dispose();  // NotifyIcon kann beim Ausblenden noch sicher auf die Handles zugreifen
     }
 
     private void SaveConfig() // FrmMain_FormClosing | TcMain_SelectedIndexChanged
     {
-        var strVolume = ((int)(channelVolume * 100f)).ToString();
-        XmlWriterSettings xwSettings = new()
-        {
-            IndentChars = "\t",
-            NewLineHandling = NewLineHandling.Entitize,
-            Indent = true,
-            NewLineChars = "\n"
-        };
         try
         {
-            using var xw = XmlWriter.Create(xmlPath, xwSettings);
-            xw.WriteStartDocument();
-            xw.WriteStartElement("NetRadio");
-
-            xw.WriteStartElement("Hotkey");
-            xw.WriteAttributeString("Enabled", cbHotkey.Checked == true ? "1" : "0");
-            xw.WriteAttributeString("Letter", hkLetter); // HIER FEHLT NOCH WAS
-            xw.WriteEndElement(); // für HotkeynotifyIcon
-
-            xw.WriteStartElement("Output");
-            xw.WriteAttributeString("Device", strOutputDevice);
-            xw.WriteEndElement(); // für Output
-
-            xw.WriteStartElement("AlwaysOnTop");
-            xw.WriteAttributeString("Enabled", alwaysOnTop == true ? "1" : "0");
-            xw.WriteEndElement(); // für AlwaysOnTop
-
-            xw.WriteStartElement("CloseToTray");
-            xw.WriteAttributeString("Enabled", close2Tray == true ? "1" : "0");
-            xw.WriteEndElement(); // für CloseToTray
-
-            xw.WriteStartElement("BalloonTips");
-            xw.WriteAttributeString("Enabled", showBalloonTip == true ? "1" : "0");
-            xw.WriteEndElement(); // für MiniPlayer
-
-            xw.WriteStartElement("LogHistory");
-            xw.WriteAttributeString("Enabled", logHistory == true ? "1" : "0");
-            xw.WriteEndElement(); // für LogHistory
-
-            xw.WriteStartElement("ShowTrayInfo");
-            xw.WriteAttributeString("Enabled", showTrayInfo == true ? "1" : "0");
-            xw.WriteEndElement(); // für ShowTrayInfo
-
-            xw.WriteStartElement("AutoStopRecording");
-            xw.WriteAttributeString("Enabled", autoStopRecording == true ? "1" : "0");
-            xw.WriteEndElement(); // für AutoStopRecording
-
-            xw.WriteStartElement("Volume");
-            xw.WriteAttributeString("Value", strVolume);
-            xw.WriteEndElement(); // für Volume
-
-            xw.WriteStartElement("SaveHistory");
-            xw.WriteAttributeString("Value", Convert.ToInt32(numUpDnSaveHistory.Value).ToString());
-            xw.WriteEndElement();
-
-            xw.WriteStartElement("StartMode");
-            xw.WriteAttributeString("Value", startMode.ToString());
-            xw.WriteEndElement();
-
-            xw.WriteStartElement("UpdateIndex");
-            xw.WriteAttributeString("Value", updateIndex.ToString());
-            xw.WriteEndElement(); // für UpdateIndex
-
-            xw.WriteStartElement("UpdateSearch");
-            xw.WriteAttributeString("DateTime", lastUpdateTime.ToString(longDateFormat, CultureInfo.InvariantCulture));
-            xw.WriteEndElement(); // für UpdateSearch
-
-            var formBounds = Bounds;
-            xw.WriteStartElement("FormLocation"); // RestoreBounds.Location funktioniert nicht richtig
-            xw.WriteAttributeString("PosX", formBounds.X.ToString());
-            xw.WriteAttributeString("PosY", formBounds.Y.ToString());
-            xw.WriteAttributeString("Width", formBounds.Width.ToString());
-            xw.WriteAttributeString("Height", formBounds.Height.ToString());
-            xw.WriteEndElement(); // für InitialLocation
-
-            xw.WriteStartElement("MiniLocation"); // RestoreBounds.Location funktioniert nicht richtig
-            xw.WriteAttributeString("PosX", miniPlayer.Location.X.ToString());
-            xw.WriteAttributeString("PosY", miniPlayer.Location.Y.ToString());
-            xw.WriteEndElement(); // für InitialLocation
-
-            xw.WriteStartElement("Autostart");
-            xw.WriteAttributeString("Station", autostartStation);
-            xw.WriteEndElement(); // für Autostart
-
-            xw.WriteStartElement("RepeatActionsDaily");
-            xw.WriteAttributeString("Enabled", repeatActionsDaily == true ? "1" : "0");
-            xw.WriteEndElement(); // für RepeatActionsDaily
-
-            for (var i = 0; i < tableActions?.Rows.Count; ++i)
-            {
-                xw.WriteStartElement("Action");
-                xw.WriteAttributeString("Enabled", tableActions.Rows[i].Field<bool>("Enabled").ToString());
-                xw.WriteAttributeString("Task", tableActions.Rows[i].Field<string>("Task"));
-                xw.WriteAttributeString("Station", tableActions.Rows[i].Field<string>("Station"));
-                xw.WriteAttributeString("Time", tableActions.Rows[i].Field<string>("Time"));
-                xw.WriteEndElement(); // für Action
-            }
-
-            for (var i = 0; i < dgvStations.RowCount; ++i)
-            {
-                xw.WriteStartElement("Station");
-                var v = dgvStations.Rows[i].Cells[0].Value;
-                xw.WriteAttributeString("Name", v != null ? dgvStations.Rows[i].Cells[0].Value.ToString() : "");
-                v = dgvStations.Rows[i].Cells[1].Value;
-                xw.WriteAttributeString("URL", v != null ? dgvStations.Rows[i].Cells[1].Value.ToString() : "");
-                xw.WriteEndElement(); // für Radio
-            }
-
-            xw.WriteEndElement(); // für NetRadio
-            xw.WriteEndDocument();
+            JsonConfig.Save(settingsPath, CollectSettings()); // atomar (Temp + File.Replace)
+            if (radioBtnChanged) { JsonConfig.Save(stationsPath, CollectStations()); } // Stationen nur schreiben, wenn geändert
+            LogEvent("SaveConfig: settings" + (radioBtnChanged ? " + stations" : "") + " saved");
         }
-        catch (ArgumentNullException ex) { Utilities.ErrTaskDialog(this, ex); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+        {
+            LogEvent($"SaveConfig FAILED: {ex.GetType().Name} - {ex.Message}");
+            Utilities.ErrTaskDialog(this, ex);
+        }
         somethingToSave = false;
+        radioBtnChanged = false;
     }
 
-    private void SaveHistory(bool deleteFiles = false) // LoadHistoryBtn_Click und FrmMain_FormClosing
+    private AppSettings CollectSettings() // ergänzt in _settings nur die Werte, die nicht ohnehin direkt dort gepflegt werden
+    {
+        _settings.HotkeyEnabled = cbHotkey.Checked;
+        _settings.HotkeyLetter = hkLetter;
+        _settings.Volume = (int)(channelVolume * 100f);
+        _settings.SaveHistory = Convert.ToInt32(numUpDnSaveHistory.Value);
+        _settings.FormPosX = Bounds.X; // RestoreBounds.Location funktioniert nicht richtig
+        _settings.FormPosY = Bounds.Y;
+        _settings.FormWidth = Bounds.Width;
+        _settings.FormHeight = Bounds.Height;
+        _settings.MiniPosX = miniPlayer.Location.X;
+        _settings.MiniPosY = miniPlayer.Location.Y;
+        _settings.Actions = tableActions is null ? [] : [.. tableActions.AsEnumerable().Select(static row => new ActionTask
+        {
+            Enabled = row.Field<bool>("Enabled"),
+            Task = row.Field<string>("Task") ?? string.Empty,
+            Station = row.Field<string>("Station") ?? string.Empty,
+            Time = row.Field<string>("Time") ?? string.Empty,
+        })];
+        return _settings;
+    }
+
+    /// <summary>Nur belegte Stationen mit ihrer 1-basierten Nummer - leere Positionen landen nicht in stations.json.</summary>
+    private List<StationEntry> CollectStations() => [.. _stationData
+        .Select(static (row, i) => new StationEntry { Number = i + 1, Name = row.Name, Url = row.Url })
+        .Where(static st => st.Name.Length > 0 || st.Url.Length > 0)];
+
+    private void BackupDaily(string filePath) // tägliche Sicherungskopie (.bak)
+    {
+        var bakPath = Path.ChangeExtension(filePath, ".bak");
+        if (File.Exists(filePath) && (!File.Exists(bakPath) || File.GetLastWriteTime(bakPath).Date < File.GetLastWriteTime(filePath).Date.AddDays(-1)))
+        {
+            File.Copy(filePath, bakPath, true);
+            File.SetLastWriteTime(bakPath, DateTime.Now);
+            LogEvent("BackupDaily: " + bakPath);
+        }
+    }
+
+    private void SaveHistoryFile(bool deleteFiles = false) // LoadHistoryBtn_Click und FrmMain_FormClosing
     {
         Utilities.SortHistoryNormal(historyLV, lviComparer, lvSortOrderArray);
-        var folderPath = Path.GetDirectoryName(xmlPath) ?? "";
+        var folderPath = Path.GetDirectoryName(settingsPath) ?? "";
         var filePath = Path.Combine(folderPath, appName + "_" + DateTime.Now.ToString(shortDateFormat) + ".csv");
         HistoryListView2CsvFile(filePath);
         if (deleteFiles)
@@ -2493,11 +2500,8 @@ public partial class FrmMain : Form
         }
     }
 
-    private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
-    {
-        SaveConfig();
-        Application.Exit();
-    }
+    private void ExitToolStripMenuItem_Click(object sender, EventArgs e) =>
+        Application.Exit(); // SaveConfig/Cleanup in FrmMain_FormClosing (CloseReason.ApplicationExitCall)
 
     internal void BtnSearch_Click(object sender, EventArgs e)
     {
@@ -2521,81 +2525,84 @@ public partial class FrmMain : Form
             var currRow = (dgvStations.SelectedRows[0].Index + 1).ToString();
             string currName;
             if (dgvCellName.Value != null && !string.IsNullOrEmpty(dgvCellName.Value.ToString())) { currName = Utilities.StationShort(dgvCellName.Value.ToString()); }
-            else { currName = "[empty]"; }
+            else { currName = Lng.T("[empty]"); }
             tcMain.SelectedIndex = 1; // Sendertabelle
             using FrmSearch frmSearch = new(currRow, currName);
-            if (alwaysOnTop) { frmSearch.TopMost = true; }
+            if (_settings.AlwaysOnTop) { frmSearch.TopMost = true; }
             if (frmSearch.ShowDialog() == DialogResult.OK)
             {
                 var searchString = frmSearch.TbString.Text;
                 if (searchString.Length > 0)
                 {
                     using FrmBrowser frmBrowser = new(searchString.Trim(), Location, curVersion);
-                    if (alwaysOnTop) { frmBrowser.TopMost = true; }
+                    if (_settings.AlwaysOnTop) { frmBrowser.TopMost = true; }
                     var result = frmBrowser.ShowDialog();
                     if (result == DialogResult.OK)
                     {
-                        currName = string.IsNullOrEmpty(currName) ? $"{dgvStations.SelectedRows[0].Index + 1}. row" : currName;
+                        currName = string.IsNullOrEmpty(currName) ? string.Format(Lng.T("row {0}"), dgvStations.SelectedRows[0].Index + 1) : currName;
 
                         // Prüfen, ob bereits eine URL existiert
-                        if (dgvStations.SelectedRows[0].Cells[1].Value != null && !string.IsNullOrEmpty(dgvStations.SelectedRows[0].Cells[1].Value.ToString()) &&
-                            !Utilities.YesNo_TaskDialog(this, $"Overwrite {currName}?", "This entry already contains a URL. Do you want to replace it?").IsYes)
+                        if (!string.IsNullOrEmpty(_stationData[dgvStations.SelectedRows[0].Index].Url) &&
+                            !Utilities.YesNo_TaskDialog(this, string.Format(Lng.T("Overwrite {0}?"), currName), Lng.T("This entry already contains a URL. Do you want to replace it?")).IsYes)
                         {
                             return;
                         }
-                        dgvStations.SelectedRows[0].Cells[0].Value = frmBrowser.SelectedStation;
-                        dgvStations.SelectedRows[0].Cells[1].Value = frmBrowser.SelectedURL;
+                        dgvStations.EndEdit(); // laufende Bearbeitung abschliessen
+                        var rowIdx = dgvStations.SelectedRows[0].Index;
+                        _stationData[rowIdx].Name = frmBrowser.SelectedStation ?? string.Empty;
+                        _stationData[rowIdx].Url = frmBrowser.SelectedURL ?? string.Empty;
                     }
                 }
                 if (firstEmptyStart)  // für ein schnelles Erfolgselebnis
                 {
-                    var url = dgvStations.Rows[0].Cells[1].Value.ToString();
+                    var url = _stationData[0].Url;
                     if (currRow == "1" && !string.IsNullOrEmpty(url))
                     {
                         tcMain.SelectedIndex = 0; // nach StartPlaying 
-                        BeginInvoke(() => { if (tcMain.TabPages[0].Controls["rbtn01"] is RadioButton rb) { rb.Checked = true; } }); // Workaround weil sonst timer nicht funktionieren =>  StartPlaying(url, 1);
+                        StartFirstStationAfterImport();
                     }
                     firstEmptyStart = false;
                 }
             }
         }
-        else { Utilities.MsgTaskDialog(this, "Target not selected!"); }
+        else { Utilities.MsgTaskDialog(this, Lng.T("Target not selected!")); }
 
+    }
+
+    private void StartFirstStationAfterImport()
+    {
+        var station = ReadStationFromDgv(1);
+        if (station.IsValid)
+        {
+            firstEmptyStart = false;
+            SelectStation(station);
+        }
     }
 
     private void BtnUp_Click(object sender, EventArgs e)
     {
-        var idx = dgvStations.SelectedCells[0].OwningRow.Index;
-        if (idx != 0)
-        {
-            var rows = dgvStations.Rows;
-            var row = rows[idx];
-            rows.Remove(row);
-            rows.Insert(idx - 1, row);
-            dgvStations.ClearSelection();
-            dgvStations.CurrentCell = dgvStations.Rows[idx - 1].Cells[0];
-            dgvStations.Rows[idx - 1].Selected = true;
-        }
+        if (dgvStations.SelectedCells.Count == 0) { return; }
+        var idx = dgvStations.SelectedCells[0].OwningRow?.Index ?? 0;
+        if (idx < 1) { return; }
+        MoveStationData(idx, idx - 1);
+        dgvStations.ClearSelection();
+        dgvStations.Rows[idx - 1].Selected = true;
+        dgvStations.CurrentCell = dgvStations.Rows[idx - 1].Cells[0];
         dgvStations.Focus();
     }
 
     private void BtnDown_Click(object sender, EventArgs e)
     {
-        var totalRows = dgvStations.Rows.Count;
-        var idx = dgvStations.SelectedCells[0].OwningRow.Index;
-        if (idx != totalRows - 1)
-        {// int col = dgvStations.SelectedCells[0].OwningColumn.Index;
-            var rows = dgvStations.Rows;
-            var row = rows[idx];
-            rows.Remove(row);
-            rows.Insert(idx + 1, row);
-            dgvStations.ClearSelection();
-            dgvStations.CurrentCell = dgvStations.Rows[idx + 1].Cells[0];
-            dgvStations.Rows[idx + 1].Selected = true;
-            //if (dgvStations.FirstDisplayedScrollingRowIndex < idx - 6) { dgvStations.FirstDisplayedScrollingRowIndex = idx - 6; }
-        }
+        if (dgvStations.SelectedCells.Count == 0) { return; }
+        var idx = dgvStations.SelectedCells[0].OwningRow?.Index ?? dgvStations.Rows.Count;
+        if (idx >= dgvStations.Rows.Count - 1) { return; }
+        MoveStationData(idx, idx + 1);
+        dgvStations.ClearSelection();
+        dgvStations.Rows[idx + 1].Selected = true;
+        dgvStations.CurrentCell = dgvStations.Rows[idx + 1].Cells[0];
         dgvStations.Focus();
     }
+
 
     private void DgvStations_KeyDown(object sender, KeyEventArgs e)
     {
@@ -2638,12 +2645,19 @@ public partial class FrmMain : Form
     {
         if (kEA != null) { kEA.Handled = true; kEA.SuppressKeyPress = true; }
         var idx = dgvStations.SelectedRows[0].Index;
-        var rows = dgvStations.Rows;
-        var row = rows[idx];
-        dgvStations.Rows.RemoveAt(idx);
-        dgvStations.Rows.Insert(rowIndex, row);
+        MoveStationData(idx, rowIndex);
         dgvStations.Rows[rowIndex].Selected = true;
-        dgvStations.CurrentCell = dgvStations.Rows[rowIndex].Cells[0]; // bewirkt Scroll
+        dgvStations.CurrentCell = dgvStations.Rows[rowIndex].Cells[0];
+    }
+
+    private void MoveStationData(int from, int to)  // ListChanged feuert automatisch → radioBtnChanged wird gesetzt
+    {
+        if (from == to || from < 0 || to < 0 || from >= _stationData.Count || to >= _stationData.Count) { return; }
+        var (name, url) = (_stationData[from].Name, _stationData[from].Url);
+        if (from < to) { for (var i = from; i < to; i++) { _stationData[i].CopyFrom(_stationData[i + 1]); } }
+        else { for (var i = from; i > to; i--) { _stationData[i].CopyFrom(_stationData[i - 1]); } }
+        _stationData[to].Name = name;
+        _stationData[to].Url = url;
     }
 
     private void DgvStations_SelectionChanged(object sender, EventArgs e)
@@ -2651,10 +2665,7 @@ public partial class FrmMain : Form
         if (sender is DataGridView dgv)
         {
             var ri = -1;
-            foreach (DataGridViewCell cell in dgv.SelectedCells)
-            {
-                ri = cell.RowIndex;
-            }
+            foreach (DataGridViewCell cell in dgv.SelectedCells) { ri = cell.RowIndex; }
             if (ri == 0)
             {
                 btnUp.Enabled = false;
@@ -2674,19 +2685,18 @@ public partial class FrmMain : Form
     }
 
     private void DgvStations_MouseMove(object sender, MouseEventArgs e)
-    {// if (e.Button == MouseButtons.Left)
+    {
         if ((e.Button & MouseButtons.Left) == MouseButtons.Left)
-        {// If the mouse moves outside the rectangle, start the drag.
+        { //If the mouse moves outside the rectangle, start the drag.
             if (dragBoxFromMouseDown != Rectangle.Empty && !dragBoxFromMouseDown.Contains(e.X, e.Y))
             {
-                //DragDropEffects dropEffect = 
-                dgvStations.DoDragDrop(dgvStations.Rows[rowIndexFromMouseDown], DragDropEffects.Move);
+                dgvStations.DoDragDrop(rowIndexFromMouseDown, DragDropEffects.Move);
             }
         }
     }
 
     private void DgvStations_MouseDown(object sender, MouseEventArgs e)
-    {// Get the index of the item the mouse is below
+    { //Get the index of the item the mouse is below
         rowIndexFromMouseDown = dgvStations.HitTest(e.X, e.Y).RowIndex;
         colIndexFromMouseDown = dgvStations.HitTest(e.X, e.Y).ColumnIndex;
         if (e.Button == MouseButtons.Right)
@@ -2697,14 +2707,11 @@ public partial class FrmMain : Form
         else
         {
             if (rowIndexFromMouseDown != -1)
-            {// Remember the point where the mouse down occurred. The DragSize indicates the size that the mouse can move before a drag event should be started.
+            { //Remember the point where the mouse down occurred. The DragSize indicates the size that the mouse can move before a drag event should be started.
                 var dragSize = SystemInformation.DragSize;
                 dragBoxFromMouseDown = new Rectangle(new Point(e.X - (dragSize.Width / 2), e.Y - (dragSize.Height / 2)), dragSize);
             }
-            else
-            {// Reset the rectangle if the mouse is not over an item
-                dragBoxFromMouseDown = Rectangle.Empty;
-            }
+            else { dragBoxFromMouseDown = Rectangle.Empty; }  // Reset the rectangle if the mouse is not over an item
         }
     }
 
@@ -2721,49 +2728,67 @@ public partial class FrmMain : Form
         {// Maus nach unten
             if (dgvStations.FirstDisplayedScrollingRowIndex <= dgvStations.RowCount) { dgvStations.FirstDisplayedScrollingRowIndex += 1; }
         }
+
+        var clientPt = dgvStations.PointToClient(new Point(e.X, e.Y));  // Einfügelinie: Zielzeile ermitteln und bei Änderung neu zeichnen
+        var newTarget = e.Effect == DragDropEffects.Move ? dgvStations.HitTest(clientPt.X, clientPt.Y).RowIndex : -1;
+        if (newTarget != _dropIndicatorRowIndex)
+        {
+            if (_dropIndicatorRowIndex >= 0) { dgvStations.InvalidateRow(_dropIndicatorRowIndex); }
+            _dropIndicatorRowIndex = newTarget;
+            if (_dropIndicatorRowIndex >= 0) { dgvStations.InvalidateRow(_dropIndicatorRowIndex); }
+        }
     }
 
     private void DgvStations_DragDrop(object sender, DragEventArgs e)
     {
+        if (_dropIndicatorRowIndex >= 0) { dgvStations.InvalidateRow(_dropIndicatorRowIndex); }
+        _dropIndicatorRowIndex = -1;  // Einfügelinie entfernen
         var clientPoint = dgvStations.PointToClient(new Point(e.X, e.Y));
         rowIndexOfItemUnderMouseToDrop = dgvStations.HitTest(clientPoint.X, clientPoint.Y).RowIndex;
-        if (e.Effect == DragDropEffects.Move)
-        {
-            if (rowIndexOfItemUnderMouseToDrop < 0) { return; }
-            if (e.Data is not null && e.Data.GetData(typeof(DataGridViewRow)) is DataGridViewRow rowToMove)
-            {
-                dgvStations.Rows.RemoveAt(rowIndexFromMouseDown);
-                if (rowIndexFromMouseDown < rowIndexOfItemUnderMouseToDrop)
-                {
-                    dgvStations.Rows.Insert(rowIndexOfItemUnderMouseToDrop - 1, rowToMove);
-                    rowIndexOfItemUnderMouseToDrop--;
-                }
-                else { dgvStations.Rows.Insert(rowIndexOfItemUnderMouseToDrop, rowToMove); }
-                if (rowIndexOfItemUnderMouseToDrop > 16) { dgvStations.FirstDisplayedScrollingRowIndex += 1; }
-                dgvStations.ClearSelection();
-                dgvStations.Rows[rowIndexOfItemUnderMouseToDrop].Selected = true;
-                dgvStations.CurrentCell = dgvStations.Rows[rowIndexOfItemUnderMouseToDrop].Cells[0];
-            }
-        }
+        if (e.Effect != DragDropEffects.Move || rowIndexOfItemUnderMouseToDrop < 0) { return; }
+        if (rowIndexFromMouseDown < rowIndexOfItemUnderMouseToDrop) { rowIndexOfItemUnderMouseToDrop--; }
+        MoveStationData(rowIndexFromMouseDown, rowIndexOfItemUnderMouseToDrop);
+        if (rowIndexOfItemUnderMouseToDrop > 16) { dgvStations.FirstDisplayedScrollingRowIndex += 1; }
+        dgvStations.ClearSelection();
+        dgvStations.Rows[rowIndexOfItemUnderMouseToDrop].Selected = true;
+        dgvStations.CurrentCell = dgvStations.Rows[rowIndexOfItemUnderMouseToDrop].Cells[0];
+    }
+
+    private void DgvStations_DragLeave(object sender, EventArgs e)
+    {
+        if (_dropIndicatorRowIndex >= 0) { dgvStations.InvalidateRow(_dropIndicatorRowIndex); }
+        _dropIndicatorRowIndex = -1;
     }
 
     private void DeleteToolStripMenuItem_Click(object sender, EventArgs e)
     {
-        if (dgvStations.SelectedRows.Count > 0)
+        if (dgvStations.SelectedRows.Count == 0) { return; }
+        var row = dgvStations.SelectedRows[0];
+        if (!_stationData[row.Index].IsEmpty)
         {
-            if (!Utilities.IsDGVRowEmpty(dgvStations.SelectedRows[0]))
-            {
-                using var dgvc = dgvStations.SelectedRows[0].Cells[0];
-                string currName;
-                if (dgvc.Value != null && !string.IsNullOrEmpty(dgvc.Value.ToString())) { currName = dgvc.Value.ToString()!; }
-                else { currName = (dgvStations.SelectedRows[0].Index + 1) + ". row"; }
-                if (!Utilities.YesNo_TaskDialog(this, $"Delete {currName}?", "Are you sure you want to delete this entry?").IsYes) { return; }
-            }
-            dgvStations.Rows.RemoveAt(dgvStations.SelectedRows[0].Index);
-            dgvStations.Rows.Insert(dgvStations.Rows.Count); // -1 entfällt, weil eine Zeile gelöscht wurde!
-            dgvStations.CurrentCell = dgvStations.Rows[dgvStations.SelectedRows[0].Index].Cells[0]; // scrollt! //dgvStations.FirstDisplayedScrollingRowIndex = dgvStations.SelectedRows[0].Index;
+            var name = _stationData[row.Index].Name is { Length: > 0 } n
+                ? n : string.Format(Lng.T("row {0}"), row.Index + 1);
+            if (!Utilities.YesNo_TaskDialog(this,
+                    string.Format(Lng.T("Delete {0}?"), name),
+                    Lng.T("Are you sure you want to delete this entry?")).IsYes) { return; }
         }
+        var selectedIdx = row.Index;
+        DeleteStationData(selectedIdx);
+        var newSel = Math.Min(selectedIdx, dgvStations.Rows.Count - 1);
+        dgvStations.Rows[newSel].Selected = true;
+        dgvStations.CurrentCell = dgvStations.Rows[newSel].Cells[0];
     }
+
+    private void DeleteStationData(int index)
+    {
+        if (index < 0 || index >= _stationData.Count) { return; }
+        for (var i = index; i < _stationData.Count - 1; i++)
+        {
+            _stationData[i].CopyFrom(_stationData[i + 1]);
+        }
+        _stationData[^1].Clear();
+    }
+
 
     private void SearchStationToolStripMenuItem_Click(object sender, EventArgs e)
     {
@@ -2772,89 +2797,40 @@ public partial class FrmMain : Form
 
     private void AddToolStripMenuItem_Click(object sender, EventArgs e)
     {
-        var isAdded = false;
-        for (var row = dgvStations.RowCount - 1; row >= dgvStations.SelectedRows[0].Index; row--)
-        {
-            if (Utilities.IsDGVRowEmpty(dgvStations.Rows[row]))
-            {
-                if (dgvStations.SelectedRows[0].Index != row)
-                {
-                    dgvStations.Rows.RemoveAt(row--); // deincrement (after the call) since we are removing the row
-                    dgvStations.Rows.Insert(dgvStations.SelectedRows[0].Index);
-                    dgvStations.Rows[dgvStations.SelectedRows[0].Index - 1].Selected = true;
-                    dgvStations.CurrentCell = dgvStations.Rows[dgvStations.SelectedRows[0].Index].Cells[0]; // scrollt! 
-                    isAdded = true;
-                    break;
-                }
-            }
-        }
-        if (!isAdded) { Console.Beep(); } // MessageBox.Show("Sorry!"); }
+        if (dgvStations.SelectedRows.Count == 0) { return; }
+        InsertStationData(dgvStations.SelectedRows[0].Index);
     }
 
-    private void Row1ToolStripMenuItem_Click(object sender, EventArgs e)
+    private void InsertStationData(int at)
     {
-        KeyDown_MoveRowAt(0);
+        var emptyIdx = -1;
+        for (var i = _stationData.Count - 1; i >= at; i--)
+        {
+            if (_stationData[i].IsEmpty) { emptyIdx = i; break; }
+        }
+        if (emptyIdx < 0) { Console.Beep(); return; } // kein Platz
+
+        for (var i = emptyIdx; i > at; i--) { _stationData[i].CopyFrom(_stationData[i - 1]); }
+        _stationData[at].Clear();
     }
-    private void Row2ToolStripMenuItem_Click(object sender, EventArgs e)
-    {
-        KeyDown_MoveRowAt(1);
-    }
-    private void Row3ToolStripMenuItem_Click(object sender, EventArgs e)
-    {
-        KeyDown_MoveRowAt(2);
-    }
-    private void Row4ToolStripMenuItem_Click(object sender, EventArgs e)
-    {
-        KeyDown_MoveRowAt(3);
-    }
-    private void Row5ToolStripMenuItem_Click(object sender, EventArgs e)
-    {
-        KeyDown_MoveRowAt(4);
-    }
-    private void Row6ToolStripMenuItem_Click(object sender, EventArgs e)
-    {
-        KeyDown_MoveRowAt(5);
-    }
-    private void Row7ToolStripMenuItem_Click(object sender, EventArgs e)
-    {
-        KeyDown_MoveRowAt(6);
-    }
-    private void Row8ToolStripMenuItem_Click(object sender, EventArgs e)
-    {
-        KeyDown_MoveRowAt(7);
-    }
-    private void Row9ToolStripMenuItem_Click(object sender, EventArgs e)
-    {
-        KeyDown_MoveRowAt(8);
-    }
-    private void Row10ToolStripMenuItem_Click(object sender, EventArgs e)
-    {
-        KeyDown_MoveRowAt(9);
-    }
-    private void Row11ToolStripMenuItem_Click(object sender, EventArgs e)
-    {
-        KeyDown_MoveRowAt(10);
-    }
-    private void Row12ToolStripMenuItem_Click(object sender, EventArgs e)
-    {
-        KeyDown_MoveRowAt(11);
-    }
-    private void UpToolStripMenuItem_Click(object sender, EventArgs e)
-    {
-        BtnUp_Click(null!, null!);
-    }
-    private void DownToolStripMenuItem_Click(object sender, EventArgs e)
-    {
-        BtnDown_Click(null!, null!);
-    }
-    private void TopToolStripMenuItem_Click(object sender, EventArgs e)
-    {
-        KeyDown_MoveRowAt(0);
-    }
-    private void EndToolStripMenuItem_Click(object sender, EventArgs e)
-    {
-        KeyDown_MoveRowAt(dgvStations.RowCount - 1);
-    }
+
+
+    private void Row1ToolStripMenuItem_Click(object sender, EventArgs e) => KeyDown_MoveRowAt(0);
+    private void Row2ToolStripMenuItem_Click(object sender, EventArgs e) => KeyDown_MoveRowAt(1);
+    private void Row3ToolStripMenuItem_Click(object sender, EventArgs e) => KeyDown_MoveRowAt(2);
+    private void Row4ToolStripMenuItem_Click(object sender, EventArgs e) => KeyDown_MoveRowAt(3);
+    private void Row5ToolStripMenuItem_Click(object sender, EventArgs e) => KeyDown_MoveRowAt(4);
+    private void Row6ToolStripMenuItem_Click(object sender, EventArgs e) => KeyDown_MoveRowAt(5);
+    private void Row7ToolStripMenuItem_Click(object sender, EventArgs e) => KeyDown_MoveRowAt(6);
+    private void Row8ToolStripMenuItem_Click(object sender, EventArgs e) => KeyDown_MoveRowAt(7);
+    private void Row9ToolStripMenuItem_Click(object sender, EventArgs e) => KeyDown_MoveRowAt(8);
+    private void Row10ToolStripMenuItem_Click(object sender, EventArgs e) => KeyDown_MoveRowAt(9);
+    private void Row11ToolStripMenuItem_Click(object sender, EventArgs e) => KeyDown_MoveRowAt(10);
+    private void Row12ToolStripMenuItem_Click(object sender, EventArgs e) => KeyDown_MoveRowAt(11);
+    private void UpToolStripMenuItem_Click(object sender, EventArgs e) => BtnUp_Click(null!, null!);
+    private void DownToolStripMenuItem_Click(object sender, EventArgs e) => BtnDown_Click(null!, null!);
+    private void TopToolStripMenuItem_Click(object sender, EventArgs e) => KeyDown_MoveRowAt(0);
+    private void EndToolStripMenuItem_Click(object sender, EventArgs e) => KeyDown_MoveRowAt(dgvStations.RowCount - 1);
 
     private void PgUpToolStripMenuItem_Click(object sender, EventArgs e)
     {
@@ -2898,7 +2874,7 @@ public partial class FrmMain : Form
     {
         if (cmbxStation.Visible && cmbxStation.Focused)
         {
-            autostartStation = cmbxStation.Text;
+            _settings.AutostartStation = int.TryParse(cmbxStation.Text, out var autoNum) ? autoNum : 0;
             somethingToSave = true;
         }
         somethingToSave = true;
@@ -2906,14 +2882,8 @@ public partial class FrmMain : Form
 
     private void PicBoxPayPal_Click(object sender, EventArgs e) => Utilities.StartLink(this, "https://www.paypal.com/donate/?hosted_button_id=3HRQZCUW37BQ6");
 
-    private void PicBoxPayPal_MouseEnter(object sender, EventArgs e)
-    {
-        picBoxPayPal.Cursor = Cursors.Hand;
-    }
-    private void PicBoxPayPal_MouseLeave(object sender, EventArgs e)
-    {
-        picBoxPayPal.Cursor = Cursors.Default;
-    }
+    private void PicBoxPayPal_MouseEnter(object sender, EventArgs e) => picBoxPayPal.Cursor = Cursors.Hand;
+    private void PicBoxPayPal_MouseLeave(object sender, EventArgs e) => picBoxPayPal.Cursor = Cursors.Default;
 
     private void EditStationToolStripMenuItem_Click(object sender, EventArgs e)
     {
@@ -2980,13 +2950,13 @@ public partial class FrmMain : Form
             // _stream ist bereits 0, BASS_StreamFree(_stream) ist hier nicht mehr nötig
             RestorePlayerDefaults(tagID);
 
-            TaskDialogButton btnSettings = new("Settings…");
+            TaskDialogButton btnSettings = new(Lng.T("NetworkSettings", "Settings…")); // eigener Schlüssel: im Dialog darf die Übersetzung länger sein als auf btnActions
             TaskDialogPage page = new()
             {
                 Caption = appName,
                 SizeToContent = true,
-                Heading = "No Internet Connection!",
-                Text = "Check the network connection status.",
+                Heading = Lng.T("No Internet Connection!"),
+                Text = Lng.T("Check the network connection status."),
                 Icon = TaskDialogIcon.ShieldWarningYellowBar,
                 Buttons = { btnSettings, TaskDialogButton.Close }
             };
@@ -3034,8 +3004,8 @@ public partial class FrmMain : Form
             }
         }
 
-        lblD3.Text = "⌛Connecting...";
-        MiniPlayer.MpLblD2_Text("⌛Connecting...");
+        lblD3.Text = "⌛" + Lng.T("Connecting...");
+        MiniPlayer.MpLblD2_Text("⌛" + Lng.T("Connecting..."));
 
         var windowHandle = Handle;
 
@@ -3086,7 +3056,7 @@ public partial class FrmMain : Form
                 var errorDescription = Utilities.GetErrorDescription(Bass.BASS_ErrorGetCode());
                 RestorePlayerDefaults(tagID);
                 Bass.BASS_Free();
-                Utilities.MsgTaskDialog(this, "Stream creation failed", errorDescription);
+                Utilities.MsgTaskDialog(this, Lng.T("Stream creation failed"), errorDescription);
                 LogEvent("StartPlaying (BASS_StreamCreateURL): " + errorDescription);
                 return;
             }
@@ -3094,7 +3064,8 @@ public partial class FrmMain : Form
             _tagInfo = new TAG_INFO(_url);
             if (_tagInfo != null && BassTags.BASS_TAG_GetFromURL(_stream, _tagInfo))
             {
-                lblD3.Text = _tagInfo.channelinfo.ToString().Replace("48000Hz", "48kHz").Replace("44100Hz", "44.1kHz").Replace("???, ", _tagInfo.channelinfo.ctype == BASSChannelType.BASS_CTYPE_STREAM_FLAC_OGG ? "FLAC, " : "");
+                var streamFormat = GetStreamFormatName(); // ersetzt "???", wenn Bass.Net den Channeltype nicht kennt (OPUS, FLAC-in-OGG, HLS, ...)
+                lblD3.Text = _tagInfo.channelinfo.ToString().Replace("48000Hz", "48kHz").Replace("44100Hz", "44.1kHz").Replace("???, ", streamFormat.Length > 0 ? streamFormat + ", " : "");
 
                 lblD3.Text = AudioFormatSpacingRegex().Replace(lblD3.Text, "$1 $2");
 
@@ -3118,25 +3089,25 @@ public partial class FrmMain : Form
             }
 
             if (tcMain.SelectedTab == tpSectrum) { StatusStrip_SingleLabel(false, lblD2.Text); }
-            if (logHistory) { AddToHistory(lblD2.Text); }
+            if (_settings.LogHistory) { AddToHistory(lblD2.Text); }
 
             // Syncs setzen
             _connectFail = new SYNCPROC(ConnectionSync);
             if (Bass.BASS_ChannelSetSync(_stream, BASSSync.BASS_SYNC_DOWNLOAD | BASSSync.BASS_SYNC_ONETIME, 0, _connectFail, IntPtr.Zero) == 0)
             {
-                Utilities.MsgTaskDialog(this, "Setting up a download synchronizer failed.", "", TaskDialogIcon.Warning);
+                Utilities.MsgTaskDialog(this, Lng.T("Setting up a download synchronizer failed."), "", TaskDialogIcon.Warning);
             }
 
             _deviceFail = new SYNCPROC(DeviceSync);
             if (Bass.BASS_ChannelSetSync(_stream, BASSSync.BASS_SYNC_DEV_FAIL | BASSSync.BASS_SYNC_ONETIME, 0, _deviceFail, IntPtr.Zero) == 0)
             {
-                Utilities.MsgTaskDialog(this, "Setting up a device synchronizer failed.", "", TaskDialogIcon.Warning);
+                Utilities.MsgTaskDialog(this, Lng.T("Setting up a device synchronizer failed."), "", TaskDialogIcon.Warning);
             }
 
             _metaSync = new SYNCPROC(MetaSync);
             if (Bass.BASS_ChannelSetSync(_stream, BASSSync.BASS_SYNC_META, 0, _metaSync, IntPtr.Zero) == 0)
             {
-                Utilities.MsgTaskDialog(this, "Setting up a meta synchronizer failed.", "", TaskDialogIcon.Warning);
+                Utilities.MsgTaskDialog(this, Lng.T("Setting up a meta synchronizer failed."), "", TaskDialogIcon.Warning);
             }
 
             // Playback starten
@@ -3152,28 +3123,34 @@ public partial class FrmMain : Form
 
             // GUI Updates nach erfolgreichem Start
             var info = new BASS_CHANNELINFO();
-            if (tagID > 0 && Bass.BASS_ChannelGetInfo(_stream, info) && !string.IsNullOrEmpty(info.filename))
+            if (tagID > 0 && tagID <= _stationData.Count && Bass.BASS_ChannelGetInfo(_stream, info) && !string.IsNullOrEmpty(info.filename))
             {
-                dgvStations.Rows[tagID - 1].Cells[1].Value = info.filename;
+                //dgvStations.Rows[tagID - 1].Cells[1].Value = info.filename;
+                _stationData[tagID - 1].Url = info.filename;
 
-                if (lblD3.Text.Length <= 1)
+                if (lblD3.Text.Length <= 1 || lblD3.Text == "00:00:00") // BASS_TAG_GetFromURL lieferte nichts (z. B. OPUS/AAC-Streams ohne ICY-Tags) -> Kanalinfo aus BASS_CHANNELINFO aufbauen
                 {
-                    lblD3.Text = HzRegex().Replace(info.ToString(), ((double)info.freq / 1000).ToString() + "kHz").Replace("???, ", info.ctype == BASSChannelType.BASS_CTYPE_STREAM_FLAC_OGG ? "FLAC, " : "");
+                    var streamFormat = GetStreamFormatName(); // ersetzt "???", wenn Bass.Net den Channeltype nicht kennt (OPUS, FLAC-in-OGG, HLS, ...)
+                    lblD3.Text = HzRegex().Replace(info.ToString(), ((double)info.freq / 1000).ToString() + "kHz").Replace("???, ", streamFormat.Length > 0 ? streamFormat + ", " : "");
 
                     lblD3.Text = AudioFormatSpacingRegex().Replace(lblD3.Text, "$1 $2");
+
+                    if (info.ctype == BASSChannelType.BASS_CTYPE_STREAM_MF &&
+                        Marshal.PtrToStructure<WAVEFORMATEX>(Bass.BASS_ChannelGetTags(_stream, BASSTag.BASS_TAG_WAVEFORMAT))?.wFormatTag == WAVEFormatTag.MPEG_HEAAC)
+                    {
+                        lblD3.Text = lblD3.Text.Replace("MF", "AAC"); // Media-Foundation-Decoder = AAC (wie im TagInfo-Zweig)
+                    }
 
                     lblD3.Text += ", 00:00:00";
                 }
 
-                if (lblD4.Text.EndsWith(" OK"))
-                {
-                    lblD4.Text = info.filename;
-                }
+                if (lblD4.Text.EndsWith(" OK")) { lblD4.Text = info.filename; }
             }
 
             btnPlayStop.Image = Properties.Resources.pause_white;
+            UpdateTaskbarIcon(true);
             miniPlayer.MpBtnPlay.Image = Properties.Resources.pause_white;
-            playPauseToolStripMenuItem.Text = "Pause";
+            playPauseToolStripMenuItem.Text = Lng.T("Pause");
             playPauseToolStripMenuItem.Image = Properties.Resources.pause;
         }
         catch (OperationCanceledException)
@@ -3202,12 +3179,13 @@ public partial class FrmMain : Form
             RecordingStop(false, Color.Blue); // false = !BASS_StreamFree; recording = false; // muss hier so früh wie möglich erfolgen
             timerLevel.Stop();
             spectrumTimer.Stop();
-            foreach (var vp in tpSectrum.Controls.OfType<VerticalProgressBar>()) { vp.Value = 0; }
+            spectrumDisplay.Clear();
             pbLevel.Image = null;
             miniPlayer.MpPBLevel.Image = null;
             Bass.BASS_ChannelPause(_stream);
-            playPauseToolStripMenuItem.Text = "Play"; // btnPlayStop.Text = 
+            playPauseToolStripMenuItem.Text = Lng.T("Play"); // btnPlayStop.Text = 
             btnPlayStop.Image = Properties.Resources.play_white;
+            UpdateTaskbarIcon(false);
             miniPlayer.MpBtnPlay.Image = Properties.Resources.play_white;
             lblD4.Text = _downloadFileName;
             lblD4.Cursor = Cursors.Hand;
@@ -3270,9 +3248,11 @@ public partial class FrmMain : Form
             tcMain.SelectedIndex = 1;
             if (_currentButtonNum > 0)
             {
-                dgvStations.Rows[_currentButtonNum - 1].Selected = true;
-                dgvStations.CurrentCell = dgvStations.Rows[_currentButtonNum - 1].Cells[0]; // wg. F2, öffnet sonst 1. Zeile
-                if (_currentButtonNum > 12) { dgvStations.FirstDisplayedScrollingRowIndex = dgvStations.SelectedRows[0].Index; }
+                if (_selectedStation == null) { return; }
+                var rowIndex = _selectedStation.Number - 1;
+                dgvStations.Rows[rowIndex].Selected = true;
+                dgvStations.CurrentCell = dgvStations.Rows[rowIndex].Cells[0];
+                if (_selectedStation.Number > 12) { dgvStations.FirstDisplayedScrollingRowIndex = dgvStations.SelectedRows[0].Index; }
             }
             BtnSearch_Click(null!, null!);
         }
@@ -3340,7 +3320,7 @@ public partial class FrmMain : Form
             {
                 miniPlayer.MpVolProgBar.Value = volProgressBar.Value = 100;
                 lblVolume.Text = "100";
-                System.Threading.Thread.Sleep(timerLevel.Interval / 2);
+                Thread.Sleep(timerLevel.Interval / 2);
                 miniPlayer.MpVolProgBar.ForeColor = volProgressBar.ForeColor = SystemColors.ActiveCaption;
                 Bass.BASS_ChannelGetAttribute(_stream, BASSAttribute.BASS_ATTRIB_VOL, ref channelVolume);
                 miniPlayer.MpVolProgBar.Value = volProgressBar.Value = (int)(channelVolume * 100f);
@@ -3355,7 +3335,7 @@ public partial class FrmMain : Form
     {
         timerLevel.Stop();
         spectrumTimer.Stop();
-        foreach (var vp in tpSectrum.Controls.OfType<VerticalProgressBar>()) { vp.Value = 0; }
+        spectrumDisplay.Clear();
         if (currBtnNum == 0)
         {
             foreach (var rb in tcMain.TabPages[0].Controls.OfType<RadioButton>().Where(rb => rb.Checked)) { rb.Checked = false; } // cave: aändert currentButtonNum
@@ -3373,10 +3353,11 @@ public partial class FrmMain : Form
         pbLevel.Image = null; // LevelMeter löschen
         miniPlayer.MpPBLevel.Image = null;
         btnPlayStop.Image = Properties.Resources.play_white;
+        UpdateTaskbarIcon(false);
         btnPlayStop.BackColor = SystemColors.ControlDark;
         miniPlayer.MpBtnPlay.Image = Properties.Resources.play_white;
         miniPlayer.MpBtnPlay.BackColor = SystemColors.ControlDark;
-        playPauseToolStripMenuItem.Text = "Play"; // btnPlayStop.Text = 
+        playPauseToolStripMenuItem.Text = Lng.T("Play"); // btnPlayStop.Text = 
         playPauseToolStripMenuItem.Image = Properties.Resources.play;
 
         pbVolIcon.Image = Properties.Resources.volume;
@@ -3402,7 +3383,7 @@ public partial class FrmMain : Form
     {
         if (updateAvailable)
         {
-            if (Path.GetDirectoryName(xmlPath) != Path.GetDirectoryName(appPath)) // (Utilities.IsInnoSetupValid(Path.GetDirectoryName(appPath)))
+            if (Path.GetDirectoryName(settingsPath) != Path.GetDirectoryName(appPath)) // (Utilities.IsInnoSetupValid(Path.GetDirectoryName(appPath)))
             {
                 try
                 {
@@ -3449,12 +3430,12 @@ public partial class FrmMain : Form
                     {
                         updateVersion = new Version(x.Element("version")?.Value ?? "0.0.0");
                         downloadUpdateURL = x.Element("url64")?.Value ?? string.Empty;
-                        lastUpdateTime = DateTime.UtcNow;
+                        _settings.LastUpdateSearch = DateTime.UtcNow;
                         somethingToSave = true;
                     }
                     else
                     {
-                        Utilities.MsgTaskDialog(this, "No update information.", appName, TaskDialogIcon.Information);
+                        Utilities.MsgTaskDialog(this, Lng.T("No update information."), appName, TaskDialogIcon.Information);
                         return;
                     }
                 }
@@ -3469,14 +3450,14 @@ public partial class FrmMain : Form
             // Ab hier Logik wie gehabt (Versionsvergleich)
             if (updateVersion == null || updateVersion == new Version(0, 0, 0) || curVersion == null)
             {
-                Utilities.MsgTaskDialog(this, "No update information.", "", TaskDialogIcon.Information);
+                Utilities.MsgTaskDialog(this, Lng.T("No update information."), "", TaskDialogIcon.Information);
             }
             else
             {
                 if (updateVersion.CompareTo(curVersion) > 0)
                 {
-                    lblUpdate.Text = "Update available: v" + updateVersion.ToString();
-                    btnUpdate.Text = "Download & Install";
+                    lblUpdate.Text = Lng.T("Update available:") + " v" + updateVersion.ToString();
+                    btnUpdate.Text = Lng.T("Download & Install");
                     updateAvailable = true;
                     btnUpdate.BackColor = SystemColors.MenuHighlight;
                     btnUpdate.ForeColor = SystemColors.Info;
@@ -3484,11 +3465,11 @@ public partial class FrmMain : Form
                 }
                 else
                 {
-                    lblUpdate.Text = lblUpdate.Text.Equals("No update available") ? "Current version: " + strVersion : "No update available";
+                    lblUpdate.Text = lblUpdate.Text.Equals(Lng.T("No update available")) ? Lng.T("Current version:") + " " + strVersion : Lng.T("No update available");
                 }
             }
         }
-        else { Utilities.MsgTaskDialog(this, "No internet connection.", "", TaskDialogIcon.ShieldWarningYellowBar); }
+        else { Utilities.MsgTaskDialog(this, Lng.T("No internet connection."), "", TaskDialogIcon.ShieldWarningYellowBar); }
     }
 
     private void BtnUpdate_Paint(object sender, PaintEventArgs e)
@@ -3523,7 +3504,7 @@ public partial class FrmMain : Form
 
     private void FrmMain_Deactivate(object sender, EventArgs e)
     {
-        if (alwaysOnTop) { TopMost = true; }
+        if (_settings.AlwaysOnTop) { TopMost = true; }
     }
 
     private void ToolStripStatusLabel1_Click(object sender, EventArgs e)
@@ -3579,10 +3560,10 @@ public partial class FrmMain : Form
     {
         if (cbLogHistory.Focused)
         {
-            if (cbLogHistory.Checked) { logHistory = true; }
+            if (cbLogHistory.Checked) { _settings.LogHistory = true; }
             else
             {
-                logHistory = false;
+                _settings.LogHistory = false;
                 numUpDnSaveHistory.Value = 0;
             }
             somethingToSave = true;
@@ -3651,7 +3632,7 @@ public partial class FrmMain : Form
 
     private void TpHistory_Leave(object sender, EventArgs e)
     {
-        if (logHistory && historyLV.Items.Count > 0) { Utilities.SortHistoryNormal(historyLV, lviComparer, lvSortOrderArray); }
+        if (_settings.LogHistory && historyLV.Items.Count > 0) { Utilities.SortHistoryNormal(historyLV, lviComparer, lvSortOrderArray); }
     }
     private void TSMItemListViewDeleteEntry_Click(object sender, EventArgs e)
     {
@@ -3708,18 +3689,19 @@ public partial class FrmMain : Form
     private void BtnActions_Click(object sender, EventArgs e)
     {
         using FrmSchedule frmSchedules = new();
-        if (alwaysOnTop) { frmSchedules.TopMost = true; }
+        if (_settings.AlwaysOnTop) { frmSchedules.TopMost = true; }
         for (var i = 0; i < stationSum; i++)
         {
-            if (dgvStations.Rows[i].Cells[0].Value != null && !string.IsNullOrEmpty(dgvStations.Rows[i].Cells[0].Value.ToString()))
+            if (dgvStations.Rows[i].Cells[0].Value != null && !string.IsNullOrEmpty(dgvStations.Rows[i].Cells[0].Value?.ToString()))
             {
-                frmSchedules.StationsList.Add(Utilities.StationShort(dgvStations.Rows[i].Cells[0].Value.ToString()));
+                frmSchedules.StationsList.Add(Utilities.StationShort(dgvStations.Rows[i].Cells[0].Value?.ToString()));
             }
         }
         frmSchedules.ActionListView.Items.Clear();
         for (var j = 0; j < tableActions?.Rows.Count; j++)
         {
-            frmSchedules.ActionListView.Items.Add(new ListViewItem(["", tableActions.Rows[j][1].ToString() ?? "", tableActions.Rows[j][2].ToString() ?? "", tableActions.Rows[j][3].ToString() ?? ""]));
+            frmSchedules.ActionListView.Items.Add(new ListViewItem(["", Lng.T(tableActions.Rows[j][1].ToString() ?? ""), tableActions.Rows[j][2].ToString() ?? "", tableActions.Rows[j][3].ToString() ?? ""])); // Task-Namen übersetzt anzeigen, gespeichert wird englisch
+
             frmSchedules.ActionListView.Items[j].Checked = tableActions.Rows[j].Field<bool>("Enabled");
         }
         for (var l = frmSchedules.ActionListView.Items.Count; l < 9; l++) // mit Leerzeilen auffüllen - erspart Butte "Add" für neue Einträge
@@ -3727,13 +3709,13 @@ public partial class FrmMain : Form
             frmSchedules.ActionListView.Items.Add(new ListViewItem(["", "", "", ""]));
         }
         frmSchedules.ActionListView.Items[0].Selected = true;
-        frmSchedules.RepeatActionsDaily.Checked = repeatActionsDaily && (tableActions?.AsEnumerable().Any(row => row.Field<bool>("Enabled")) ?? false);
+        frmSchedules.RepeatActionsDaily.Checked = _settings.RepeatActionsDaily && (tableActions?.AsEnumerable().Any(row => row.Field<bool>("Enabled")) ?? false);
         if (frmSchedules.ShowDialog() == DialogResult.OK)
         {
             StopActions(); // erst jetzt weil alle Zeilen in tableActions auf not enabled (False) gesetzt werden
             tableActions?.Rows.Clear();
             cbActions.Checked = false;
-            repeatActionsDaily = frmSchedules.RepeatActionsDaily.Checked;
+            _settings.RepeatActionsDaily = frmSchedules.RepeatActionsDaily.Checked;
             foreach (ListViewItem item in frmSchedules.ActionListView.Items) //for (int i = 0; i < frmSchedules.ActionListView.Items.Count; i++)
             {
                 var columns = frmSchedules.ActionListView.Columns.Count;
@@ -3748,7 +3730,7 @@ public partial class FrmMain : Form
                     }
                     else
                     {
-                        if (!string.IsNullOrEmpty(item.SubItems[j].Text)) { cells[j] = item.SubItems[j].Text; }
+                        if (!string.IsNullOrEmpty(item.SubItems[j].Text)) { cells[j] = j == 1 ? Utilities.TaskNameFromDisplay(item.SubItems[j].Text) : item.SubItems[j].Text; } // Task-Spalte: übersetzte Anzeige auf den englischen Speichernamen zurückführen
                         if (cells[j] != null) { notEmpty = true; }
                     }
                 }
@@ -3779,7 +3761,7 @@ public partial class FrmMain : Form
                     var jobMinu = int.TryParse(timeField.Split(':').LastOrDefault(), out var intM) ? intM : -1;
                     if (jobHour < 0 || jobMinu < 0)
                     {
-                        Utilities.MsgTaskDialog(this, "Task #" + i + " is not executed because the time specification is incorrect.");
+                        Utilities.MsgTaskDialog(this, string.Format(Lng.T("Task #{0} is not executed because the time specification is incorrect."), i));
                         continue;
                     }
                     DateTime jobTime = new(nowTime.Year, nowTime.Month, nowTime.Day, jobHour, jobMinu, 0);
@@ -3844,7 +3826,7 @@ public partial class FrmMain : Form
         else if (sender == timerAction8) { num = 7; }
         else if (sender == timerAction9) { num = 8; }
 
-        if (!repeatActionsDaily) { tableActions.Rows[num][0] = false; } // Aufgabe deaktivieren
+        if (!_settings.RepeatActionsDaily) { tableActions.Rows[num][0] = false; } // Aufgabe deaktivieren
         if (!tableActions.AsEnumerable().Any(row => row.Field<bool>("Enabled") == true)) { cbActions.Checked = false; }
 
         if (tcMain.SelectedIndex != 0) { tcMain.SelectedIndex = 0; }
@@ -3856,7 +3838,7 @@ public partial class FrmMain : Form
             {
                 using var button = tcMain.TabPages[0].Controls.OfType<RadioButton>().FirstOrDefault(y => y.Text.Equals(tableActions.Rows[num][2].ToString(), StringComparison.Ordinal));
                 if (button != null) { button.Checked = true; }
-                else { Utilities.MsgTaskDialog(this, "Station not found."); }
+                else { Utilities.MsgTaskDialog(this, Lng.T("Station not found.")); }
             }
             else if (tableAction.Equals(Utilities.TaskNames[1])) // "Stop playing"
             {
@@ -3867,7 +3849,7 @@ public partial class FrmMain : Form
                 if (!_recording)
                 {
                     var button = tcMain.TabPages[0].Controls.OfType<RadioButton>().FirstOrDefault(y => y.Text.Equals(tableActions.Rows[num][2].ToString()));
-                    if (button != null) { button.Checked = true; } // löst StartPlaying aus
+                    button?.Checked = true; // löst StartPlaying aus
                     BtnRecord_Click(null!, null!);
                 }
             }
@@ -3882,13 +3864,7 @@ public partial class FrmMain : Form
                     BtnPlayStop_Click(null!, null!);
                     _playWakeFromSleep = true;
                 }
-                //if (NativeMethods.MessageBoxTimeout(Handle, $"The PC will go into sleep mode.", $"NetRadio - Task No. " + num + 1, 0x00000001 | 0x00010000 | 0x00000100 | 0x00000000, 0, 10000) == 2)
-                //{
-                //    if (_playWakeFromSleep) { BtnPlayStop_Click(null!, null!); }
-                //    _playWakeFromSleep = false;
-                //    return; // 2: Schaltfläche Cancel wurde ausgewählt
-                //}
-                if (Utilities.IsActionCancelled(this, $"NetRadio - Task No. {num + 1}", "The PC will go into sleep mode.", 10))
+                if (Utilities.IsActionCancelled(this, string.Format(Lng.T("NetRadio - Task No. {0}"), num + 1), Lng.T("The PC will go into sleep mode."), 10))
                 {
                     if (_playWakeFromSleep) { BtnPlayStop_Click(null!, null!); }
                     _playWakeFromSleep = false;
@@ -3903,13 +3879,7 @@ public partial class FrmMain : Form
                     BtnPlayStop_Click(null!, null!);
                     _playWakeFromSleep = true;
                 }
-                //if (NativeMethods.MessageBoxTimeout(Handle, $"The PC will go into hibernation mode.", $"NetRadio - Task No. " + num + 1, 0x00000001 | 0x00010000 | 0x00000100 | 0x00000040, 0, 10000) == 2)
-                //{
-                //    if (_playWakeFromSleep) { BtnPlayStop_Click(null!, null!); }
-                //    _playWakeFromSleep = false;
-                //    return; // 2 = Cancel
-                //}
-                if (Utilities.IsActionCancelled(this, $"NetRadio - Task No. {num + 1}", "The PC will go into hibernation mode.", 10))
+                if (Utilities.IsActionCancelled(this, string.Format(Lng.T("NetRadio - Task No. {0}"), num + 1), Lng.T("The PC will go into hibernation mode."), 10))
                 {
                     if (_playWakeFromSleep) { BtnPlayStop_Click(null!, null!); }
                     _playWakeFromSleep = false;
@@ -3924,13 +3894,7 @@ public partial class FrmMain : Form
                     BtnPlayStop_Click(null!, null!);
                     _playWakeFromSleep = true;
                 }
-                //if (NativeMethods.MessageBoxTimeout(Handle, $"The computer will shut down.", $"NetRadio - Task No. " + num + 1, 0x00000001 | 0x00010000 | 0x00000100 | 0x00000030, 0, 10000) == 2)
-                //{
-                //    if (_playWakeFromSleep) { BtnPlayStop_Click(null!, null!); }
-                //    _playWakeFromSleep = false;
-                //    return; // 2 = Cancel
-                //}
-                if (Utilities.IsActionCancelled(this, $"NetRadio - Task No. {num + 1}", "The computer will shut down.", 10, TaskDialogIcon.Warning))
+                if (Utilities.IsActionCancelled(this, string.Format(Lng.T("NetRadio - Task No. {0}"), num + 1), Lng.T("The computer will shut down."), 10, TaskDialogIcon.Warning))
                 {
                     if (_playWakeFromSleep) { BtnPlayStop_Click(null!, null!); }
                     _playWakeFromSleep = false;
@@ -3941,7 +3905,7 @@ public partial class FrmMain : Form
                     CreateNoWindow = true,
                     UseShellExecute = false
                 });
-                Close(); // Application.Exit(); //  if (somethingToSave || radioBtnChanged) { SaveConfig(); }
+                Application.Exit(); // nicht Close(): das ergäbe CloseReason.UserClosing und bliebe bei close2Tray im Tray hängen
             }
         }
     }
@@ -3979,19 +3943,16 @@ public partial class FrmMain : Form
 
     private void DgvStations_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
     {
-        strCellValue = dgvStations.Rows[e.RowIndex].Cells[e.ColumnIndex].Value?.ToString() ?? string.Empty; // DgvStations_CellValueChanged funktioniert unzuverlässig bzw. zu spät
         if (e.ColumnIndex == 0 && frmSplash == null)
         {
             frmSplash = new(this) { TopMost = true }; // using geht nur mit ShowDialog
             frmSplash.SplashActivated += new EventHandler(SplashForm_Activated);
-
             NativeMethods.ShowWindow(frmSplash.Handle, NativeMethods.SW_SHOWNOACTIVATE); // ohne TopMost!
         }
     }
 
     private void DgvStations_CellEndEdit(object sender, DataGridViewCellEventArgs e)
     {
-        radioBtnChanged = true || strCellValue != dgvStations.Rows[e.RowIndex].Cells[e.ColumnIndex].Value.ToString();
         if (e.ColumnIndex == 0 && frmSplash != null)
         {
             frmSplash.Close();
@@ -4000,14 +3961,16 @@ public partial class FrmMain : Form
         }
     }
 
-    private void DgvStations_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+    private void StationData_ListChanged(object? sender, ListChangedEventArgs e)  // statt radioBtnChanged
     {
-        if (ActiveControl != null && ActiveControl == dgvStations && dgvStations.ContainsFocus && !radioBtnChanged)
-        {
-            radioBtnChanged = true;
-            UpdateStatusLabelStationsList();
-        }
+        if (e.ListChangedType != ListChangedType.ItemChanged) { return; }
+        radioBtnChanged = true;
+        somethingToSave = true;
+        UpdateStatusLabelStationsList();
+        if (e.NewIndex < stationSum && e.PropertyDescriptor?.Name == nameof(StationRow.Name)) { RefreshStationButtons(); }  // nicht bei URL-Normalisierung durch StartPlaying
     }
+
+
     private void SplashForm_Activated(object? sender, EventArgs e) => dgvStations.EndEdit();
 
     private void DgvStations_MouseClick(object sender, MouseEventArgs e)
@@ -4062,58 +4025,58 @@ public partial class FrmMain : Form
         {
             if (cbClose2Tray.Checked)
             {
-                close2Tray = true;
-                if (showTrayInfo)
+                _settings.CloseToTray = true;
+                if (_settings.ShowTrayInfo)
                 {
                     TaskDialogPage page = new()
                     {
-                        Heading = "You still have the following options to exit:",
-                        Text = "1. Right-click on the NetRadio icon in the system tray and Exit.\n\n2. Press the Shift key while clicking on the Close button [🗙].",
-                        Caption = appName + " - Tray mode",
+                        Heading = Lng.T("You still have the following options to exit:"),
+                        Text = Lng.T("TrayModeOptions", "1. Right-click on the NetRadio icon in the system tray and Exit.\n\n2. Press the Shift key while clicking on the Close button [🗙]."),
+                        Caption = appName + " - " + Lng.T("Tray mode"),
                         Icon = TaskDialogIcon.None,
                         AllowCancel = true,
-                        Verification = new TaskDialogVerificationCheckBox() { Text = "Do not show again" },
+                        Verification = new TaskDialogVerificationCheckBox() { Text = Lng.T("Do not show again") },
                         Buttons = { TaskDialogButton.OK },
                         Footnote = new TaskDialogFootnote()
                         {
-                            Text = "If the NetRadio icon is unvisible: Click on the ˄ arrow in the taskbar to show all icons and drag the icon to the system tray.\nIn this mode, pressing the Escape key in the main window minimizes the program to the taskbar.",
+                            Text = Lng.T("TrayModeFootnote", "If the NetRadio icon is unvisible: Click on the ˄ arrow in the taskbar to show all icons and drag the icon to the system tray.\nIn this mode, pressing the Escape key in the main window minimizes the program to the taskbar."),
                         }
                     };
                     if (TaskDialog.ShowDialog(this, page) == TaskDialogButton.OK)
                     {
-                        if (page.Verification.Checked) { showTrayInfo = false; }
+                        if (page.Verification.Checked) { _settings.ShowTrayInfo = false; }
                     }
                 }
             }
-            else { close2Tray = false; }
+            else { _settings.CloseToTray = false; }
             somethingToSave = true;
         }
     }
 
     private void BtnUpdateSettings_Click(object sender, EventArgs e)
     {
-        var prevUpdateIndex = updateIndex;
+        var prevUpdateIndex = _settings.UpdateIndex;
         TaskDialogPage pageUpdate = new()
         {
             Caption = appName,
-            Heading = "Automatic Updates",
-            Text = "You will be notified that an update is available to download.\n\nDetection frequency:",
+            Heading = Lng.T("Automatic Updates"),
+            Text = Lng.T("AutomaticUpdatesText", "You will be notified that an update is available to download.\n\nDetection frequency:"),
             AllowCancel = true,
             SizeToContent = true,
             Buttons = { TaskDialogButton.OK, TaskDialogButton.Cancel },
         };
-        var rbn0 = pageUpdate.RadioButtons.Add("Every day");
-        var rbn1 = pageUpdate.RadioButtons.Add("Every week");
-        var rbn2 = pageUpdate.RadioButtons.Add("Every month");
-        var rbn3 = pageUpdate.RadioButtons.Add("Never");
-        if (updateIndex == 1) { rbn1.Checked = true; }
-        else if (updateIndex == 2) { rbn2.Checked = true; }
-        else if (updateIndex == 3) { rbn3.Checked = true; }
+        var rbn0 = pageUpdate.RadioButtons.Add(Lng.T("Every day"));
+        var rbn1 = pageUpdate.RadioButtons.Add(Lng.T("Every week"));
+        var rbn2 = pageUpdate.RadioButtons.Add(Lng.T("Every month"));
+        var rbn3 = pageUpdate.RadioButtons.Add(Lng.T("Never"));
+        if (_settings.UpdateIndex == 1) { rbn1.Checked = true; }
+        else if (_settings.UpdateIndex == 2) { rbn2.Checked = true; }
+        else if (_settings.UpdateIndex == 3) { rbn3.Checked = true; }
         else { rbn0.Checked = true; }
         if (TaskDialog.ShowDialog(this, pageUpdate) == TaskDialogButton.OK)
         {
-            updateIndex = rbn3.Checked ? 3 : rbn2.Checked ? 2 : rbn1.Checked ? 1 : 0;
-            if (updateIndex != prevUpdateIndex) { somethingToSave = true; }
+            _settings.UpdateIndex = rbn3.Checked ? 3 : rbn2.Checked ? 2 : rbn1.Checked ? 1 : 0;
+            if (_settings.UpdateIndex != prevUpdateIndex) { somethingToSave = true; }
         }
     }
 
@@ -4121,36 +4084,40 @@ public partial class FrmMain : Form
     {
         if (rbStartModeMain.Focused || rbStartModeMini.Focused || rbStartModeTray.Focused)
         {
-            startMode = rbStartModeTray.Checked ? 2 : rbStartModeMini.Checked ? 1 : 0;
+            _settings.StartMode = rbStartModeTray.Checked ? 2 : rbStartModeMini.Checked ? 1 : 0;
             somethingToSave = true;
         }
     }
+
+    private static readonly Lock _logLock = new(); // LogEvent wird auch aus BASS-Callbacks/async-Kontexten aufgerufen
 
     public void CreateLogFile()
     {
         try
         {
-            using StreamWriter writer = new(logPath);
-            writer.Write(""); // Datei leeren
+            Directory.CreateDirectory(Path.GetDirectoryName(logPath) ?? "");
+            if (File.Exists(logPath)) { File.Copy(logPath, Path.ChangeExtension(logPath, ".log.bak"), true); } // Log der letzten Sitzung aufheben
+            File.WriteAllText(logPath, string.Empty, Encoding.UTF8); // Datei leeren/anlegen
         }
-        catch { }
+        catch { /* Logging darf das Programm nie beeinträchtigen */ }
     }
 
     public void LogEvent(string message)
     {
         try
         {
-            using StreamWriter writer = new(logPath, true, Encoding.UTF8); // Datei erstellen oder öffnen
-            writer.WriteLine(DateTime.Now.ToString(shortDateFormat) + " | " + message); // Ereignisprotokollieren
-            writer.Flush();
+            lock (_logLock) // parallele Aufrufe (UI-Thread, BASS-Callbacks, PowerMode-Events) serialisieren
+            {
+                File.AppendAllText(logPath, $"{DateTime.Now:yyyyMMdd-HHmmss.fff} | {message}{Environment.NewLine}", Encoding.UTF8);
+            }
         }
-        catch { }
+        catch { /* Logging darf das Programm nie beeinträchtigen */ }
     }
 
     private void LoadHistoryBtn_Click(object sender, EventArgs e)
     {
         //SaveHistory(); // Sortiert Liste normal (nach Datum)
-        openFileDialog.InitialDirectory = Path.GetDirectoryName(xmlPath);
+        openFileDialog.InitialDirectory = Path.GetDirectoryName(settingsPath);
         if (openFileDialog.ShowDialog() == DialogResult.OK)
         {
             try
@@ -4180,11 +4147,11 @@ public partial class FrmMain : Form
     {
         try
         {
-            var files = Directory.GetFiles(Path.GetDirectoryName(xmlPath) ?? "", appName + "_*.csv");
+            var files = Directory.GetFiles(Path.GetDirectoryName(settingsPath) ?? "", appName + "_*.csv");
             if (files.Length > 0)
             {
-                TaskDialogButton deleteButton = new("&Delete");
-                var heading = "Do you want to delete " + (files.Length > 1 ? "these files?" : "this file?");
+                TaskDialogButton deleteButton = new(Lng.T("&Delete"));
+                var heading = files.Length > 1 ? Lng.T("Do you want to delete these files?") : Lng.T("Do you want to delete this file?");
                 if (TaskDialog.ShowDialog(this, new TaskDialogPage()
                 {
                     Caption = appName,
@@ -4204,7 +4171,7 @@ public partial class FrmMain : Form
     private void NumUpDnSaveHistory_ValueChanged(object sender, EventArgs e)
     {
         if (numUpDnSaveHistory.Focused) { somethingToSave = true; }
-        if (numUpDnSaveHistory.Value > 0) { cbLogHistory.Checked = logHistory = true; }
+        if (numUpDnSaveHistory.Value > 0) { cbLogHistory.Checked = _settings.LogHistory = true; }
     }
 
     private void LinkLblUn4Seen_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) => Utilities.StartLink(this, "https://www.un4seen.com/");
@@ -4237,4 +4204,5 @@ public partial class FrmMain : Form
         timerNotifyIcon.Stop();
         if (!doubleClickOccurred) { BtnPlayStop_Click(null!, EventArgs.Empty); }
     }
+
 }

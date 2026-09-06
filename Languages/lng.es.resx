@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- Spanische Übersetzungen. Der Schlüssel ("name") ist der englische Originaltext;
+       Zeilenumbrüche im Schlüssel stehen als literales \n (siehe Lng.T). -->
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- Tab-Tooltips -->
+  <data name="Player (F4)" xml:space="preserve"><value>Reproductor (F4)</value></data>
+  <data name="Stations (F2)" xml:space="preserve"><value>Emisoras (F2)</value></data>
+  <data name="History (F5)" xml:space="preserve"><value>Historial (F5)</value></data>
+  <data name="Settings (F8)" xml:space="preserve"><value>Ajustes (F8)</value></data>
+  <data name="Help (F9)" xml:space="preserve"><value>Ayuda (F9)</value></data>
+  <data name="Information (F11)" xml:space="preserve"><value>Información (F11)</value></data>
+  <data name="Visualization (F12)" xml:space="preserve"><value>Visualización (F12)</value></data>
+
+  <!-- Player-Tab -->
+  <data name="Record (Ins)" xml:space="preserve"><value>Grabar (Ins)</value></data>
+  <data name="Reload (Backspace)" xml:space="preserve"><value>Recargar (Retroceso)</value></data>
+  <data name="Decrease Volume (-)" xml:space="preserve"><value>Bajar volumen (-)</value></data>
+  <data name="Increase Volume (+)" xml:space="preserve"><value>Subir volumen (+)</value></data>
+  <data name="Play/Pause (Space)" xml:space="preserve"><value>Reproducir/Pausa (Espacio)</value></data>
+  <data name="Edit station button" xml:space="preserve"><value>Editar botón de emisora</value></data>
+  <data name="Search new station" xml:space="preserve"><value>Buscar nueva emisora</value></data>
+
+  <!-- Sender-Tab -->
+  <data name="Search..." xml:space="preserve"><value>Buscar...</value></data>
+  <data name="Internet search for the URL\nof a favorite radio station" xml:space="preserve"><value>Búsqueda en Internet de la URL
+de una emisora favorita</value></data>
+  <data name="▼ Move Down" xml:space="preserve"><value>▼ Bajar</value></data>
+  <data name="▲ Move Up" xml:space="preserve"><value>▲ Subir</value></data>
+  <data name="Move Row Down" xml:space="preserve"><value>Bajar la fila</value></data>
+  <data name="move row up" xml:space="preserve"><value>Subir la fila</value></data>
+  <data name="Station Name" xml:space="preserve"><value>Nombre de la emisora</value></data>
+  <data name="Edit" xml:space="preserve"><value>Editar</value></data>
+  <data name="Add" xml:space="preserve"><value>Añadir</value></data>
+  <data name="Delete" xml:space="preserve"><value>Borrar</value></data>
+  <data name="Move to..." xml:space="preserve"><value>Mover a...</value></data>
+  <data name="Up" xml:space="preserve"><value>Arriba</value></data>
+  <data name="Down" xml:space="preserve"><value>Abajo</value></data>
+  <data name="Page up" xml:space="preserve"><value>Página arriba</value></data>
+  <data name="Page down" xml:space="preserve"><value>Página abajo</value></data>
+  <data name="Top" xml:space="preserve"><value>Inicio</value></data>
+  <data name="End" xml:space="preserve"><value>Final</value></data>
+  <data name="Search" xml:space="preserve"><value>Buscar</value></data>
+  <data name="Press &lt;Ctrl+F> to find new radio stations." xml:space="preserve"><value>Pulsa &lt;Ctrl+F&gt; para buscar nuevas emisoras.</value></data>
+  <data name="entries" xml:space="preserve"><value>entradas</value></data>
+  <data name="entry" xml:space="preserve"><value>entrada</value></data>
+  <data name="[empty]" xml:space="preserve"><value>[vacío]</value></data>
+  <data name="row {0}" xml:space="preserve"><value>fila {0}</value></data>
+  <data name="Overwrite {0}?" xml:space="preserve"><value>¿Sobrescribir {0}?</value></data>
+  <data name="This entry already contains a URL. Do you want to replace it?" xml:space="preserve"><value>Esta entrada ya contiene una URL. ¿Quieres reemplazarla?</value></data>
+  <data name="Target not selected!" xml:space="preserve"><value>¡No se ha elegido destino!</value></data>
+  <data name="Delete {0}?" xml:space="preserve"><value>¿Borrar {0}?</value></data>
+  <data name="Are you sure you want to delete this entry?" xml:space="preserve"><value>¿Seguro que quieres borrar esta entrada?</value></data>
+
+  <!-- Verlauf-Tab -->
+  <data name="Time" xml:space="preserve"><value>Hora</value></data>
+  <data name="Station" xml:space="preserve"><value>Emisora</value></data>
+  <data name="Song" xml:space="preserve"><value>Canción</value></data>
+  <data name="Google Songtitle" xml:space="preserve"><value>Buscar título en Google</value></data>
+  <data name="Copy to Clipboard" xml:space="preserve"><value>Copiar al portapapeles</value></data>
+  <data name="Remove Entry" xml:space="preserve"><value>Quitar entrada</value></data>
+  <data name="Load history…" xml:space="preserve"><value>Cargar historial…</value></data>
+  <data name="Delete all files…" xml:space="preserve"><value>Borrar archivos…</value></data>
+  <data name="Export to CSV" xml:space="preserve"><value>Exportar a CSV</value></data>
+  <data name="Clear all entries" xml:space="preserve"><value>Vaciar la lista</value></data>
+  <data name="Log song history" xml:space="preserve"><value>Registrar el historial</value></data>
+  <data name="Autosave" xml:space="preserve"><value>Guardar</value></data>
+  <data name="logs" xml:space="preserve"><value>registros</value></data>
+  <data name="CSV Files (*.csv)|*.csv|All Files (*.*)|*.*" xml:space="preserve"><value>Archivos CSV (*.csv)|*.csv|Todos los archivos (*.*)|*.*</value></data>
+  <data name="CSV Files|*.csv" xml:space="preserve"><value>Archivos CSV|*.csv</value></data>
+  <data name="&amp;Delete" xml:space="preserve"><value>&amp;Borrar</value></data>
+  <data name="Do you want to delete these files?" xml:space="preserve"><value>¿Quieres borrar estos archivos?</value></data>
+  <data name="Do you want to delete this file?" xml:space="preserve"><value>¿Quieres borrar este archivo?</value></data>
+
+  <!-- Einstellungen-Tab -->
+  <data name="Mode" xml:space="preserve"><value>Modo</value></data>
+  <data name="Close button minimizes to tray instead of terminating" xml:space="preserve"><value>El botón Cerrar minimiza a la bandeja, no cierra</value></data>
+  <data name="Start:" xml:space="preserve"><value>Inicio:</value></data>
+  <data name="Main window" xml:space="preserve"><value>Principal</value></data>
+  <data name="Tray mode" xml:space="preserve"><value>Bandeja</value></data>
+  <data name="Scheduled tasks" xml:space="preserve"><value>Programación</value></data>
+  <data name="Settings…" xml:space="preserve"><value>Ajustes…</value></data>
+  <data name="Output device" xml:space="preserve"><value>Dispositivo de salida</value></data>
+  <data name="Miscellaneous" xml:space="preserve"><value>Varios</value></data>
+  <data name="Automatically stop recording when song changes" xml:space="preserve"><value>Detener la grabación al cambiar de canción</value></data>
+  <data name="Display song title as a balloon tip in the taskbar" xml:space="preserve"><value>Mostrar el título como aviso en la barra de tareas</value></data>
+  <data name="Stay always on top of all other windows" xml:space="preserve"><value>Mantener siempre delante de las demás ventanas</value></data>
+  <data name="Autostart" xml:space="preserve"><value>Autoinicio</value></data>
+  <data name="At user login" xml:space="preserve"><value>Al iniciar</value></data>
+  <data name="Autoplay" xml:space="preserve"><value>Autoplay</value></data>
+  <data name="Station:" xml:space="preserve"><value>Emisora:</value></data>
+  <data name="Global hotkey" xml:space="preserve"><value>Tecla de acceso global</value></data>
+  <data name="Use system wide key:" xml:space="preserve"><value>Tecla global:</value></data>
+  <data name="Brings this window to front. Switches between miniplayer\nand main gui. Double key press terminates application." xml:space="preserve"><value>Trae esta ventana al frente. Cambia entre el minirreproductor
+y la ventana principal. Pulsarla dos veces cierra el programa.</value></data>
+  <data name="Language" xml:space="preserve"><value>Idioma</value></data>
+  <data name="(recommended)" xml:space="preserve"><value>(recomendado)</value></data>
+  <data name="Current output: " xml:space="preserve"><value>Salida actual: </value></data>
+  <data name="(adjusted by system settings, press F8)" xml:space="preserve"><value>(según ajustes del sistema, pulsa F8)</value></data>
+  <data name="Autorun written to Registry" xml:space="preserve"><value>Inicio automático añadido al Registro</value></data>
+  <data name="Autorun deleted from Registry" xml:space="preserve"><value>Inicio automático eliminado del Registro</value></data>
+  <data name="Hotkey unregistered" xml:space="preserve"><value>Tecla global desactivada</value></data>
+  <data name="Hotkey registered" xml:space="preserve"><value>Tecla global activada</value></data>
+  <data name="Sorry, another application is using this hotkey!" xml:space="preserve"><value>¡Otra aplicación ya usa esta tecla!</value></data>
+  <data name="The language change takes effect after restarting the program." xml:space="preserve"><value>El cambio de idioma se aplicará tras reiniciar el programa.</value></data>
+  <data name="Restart now?" xml:space="preserve"><value>¿Reiniciar ahora?</value></data>
+
+  <!-- Hilfe-Tab -->
+  <data name="Action" xml:space="preserve"><value>Acción</value></data>
+  <data name="Shortcut" xml:space="preserve"><value>Atajo</value></data>
+  <data name="Player shortcuts" xml:space="preserve"><value>Atajos del reproductor</value></data>
+  <data name="Stations shortcuts" xml:space="preserve"><value>Atajos de emisoras</value></data>
+  <data name="Space\n+/-\n1-9\nBackspace\nInsert\nF2" xml:space="preserve"><value>Espacio
++/-
+1-9
+Retroceso
+Insert
+F2</value></data>
+  <data name="Play/Pause\nChange volume\nSelect station\nReset connection\nRecord stream\nEdit button text" xml:space="preserve"><value>Reproducir/Pausa
+Cambiar volumen
+Elegir emisora
+Reiniciar conexión
+Grabar la emisión
+Editar texto del botón</value></data>
+  <data name="Current row to position n\nMove row up/down\nMove row far up/down\nMove row to new position" xml:space="preserve"><value>Fila actual a la posición n
+Subir/bajar la fila
+Mover la fila mucho más
+Fila a una nueva posición</value></data>
+  <data name="Alt and 1-9\nAlt and Up/Down\nAlt and PgUp/PgDn\nDrag 'n drop (mouse)" xml:space="preserve"><value>Alt y 1-9
+Alt y ↑/↓
+Alt y RePág/AvPág
+Arrastrar y soltar (ratón)</value></data>
+  <data name="Use the Esc key to switch between main and miniplayer.\nEsc + Shift terminates (even if &quot;Close to Tray&quot; is active)." xml:space="preserve"><value>Esc alterna entre la ventana principal y el minirreproductor.
+Esc + Mayús cierra el programa (incluso en modo bandeja).</value></data>
+
+  <!-- Info-Tab -->
+  <data name="Update Notification" xml:space="preserve"><value>Aviso de actualizaciones</value></data>
+  <data name="The program is distributed under the terms of the\nGeneral Public License version 3 or later." xml:space="preserve"><value>Distribuido bajo la Licencia Pública General
+(GPL), versión 3 o posterior.</value></data>
+  <data name="Open Source:" xml:space="preserve"><value>Código abierto:</value></data>
+  <data name="Installed version:" xml:space="preserve"><value>Versión instalada:</value></data>
+  <data name="Current version:" xml:space="preserve"><value>Versión actual:</value></data>
+  <data name="Check for updates" xml:space="preserve"><value>Buscar actualizaciones</value></data>
+  <data name="Download &amp; Install" xml:space="preserve"><value>Descargar e instalar</value></data>
+  <data name="Update available:" xml:space="preserve"><value>Nueva versión:</value></data>
+  <data name="No update available" xml:space="preserve"><value>No hay actualizaciones</value></data>
+  <data name="No update information." xml:space="preserve"><value>No hay información de actualizaciones.</value></data>
+  <data name="Developing high quality applications takes a lot of time.\nYou can show your appreciation by making a donation." xml:space="preserve"><value>Desarrollar aplicaciones de calidad lleva mucho tiempo.
+Puedes mostrar tu aprecio haciendo una donación.</value></data>
+  <data name="Acknowledgments\nNetRadio uses libraries for streaming and audio playback:\nbass.dll © Un4seen Dev. Ltd.,\nbass.net.dll © radio42," xml:space="preserve"><value>Agradecimientos
+Bibliotecas usadas para streaming y reproducción de audio:
+bass.dll © Un4seen Dev. Ltd.,
+bass.net.dll © radio42,</value></data>
+  <data name="Author/Copyright:" xml:space="preserve"><value>Autor/Copyright:</value></data>
+  <data name="Project Website:" xml:space="preserve"><value>Sitio del proyecto:</value></data>
+  <data name="Donate with PayPal:" xml:space="preserve"><value>Donar con PayPal:</value></data>
+  <data name="Automatic Updates" xml:space="preserve"><value>Actualizaciones automáticas</value></data>
+  <data name="AutomaticUpdatesText" xml:space="preserve"><value>Se te avisará cuando haya una actualización disponible para descargar.
+
+Frecuencia de comprobación:</value></data>
+  <data name="Every day" xml:space="preserve"><value>Cada día</value></data>
+  <data name="Every week" xml:space="preserve"><value>Cada semana</value></data>
+  <data name="Every month" xml:space="preserve"><value>Cada mes</value></data>
+  <data name="Never" xml:space="preserve"><value>Nunca</value></data>
+
+  <!-- Statusleiste / Tray -->
+  <data name="Ready" xml:space="preserve"><value>Listo</value></data>
+  <data name="PlayPause" xml:space="preserve"><value>Reproducir/Pausa</value></data>
+  <data name="Sound" xml:space="preserve"><value>Sonido</value></data>
+  <data name="Show" xml:space="preserve"><value>Mostrar</value></data>
+  <data name="Exit" xml:space="preserve"><value>Salir</value></data>
+  <data name="Close" xml:space="preserve"><value>Cerrar</value></data>
+  <data name="Now playing: " xml:space="preserve"><value>Sonando ahora: </value></data>
+
+  <!-- Player-Laufzeittexte -->
+  <data name="Play" xml:space="preserve"><value>Reproducir</value></data>
+  <data name="Pause" xml:space="preserve"><value>Pausa</value></data>
+  <data name="Connecting..." xml:space="preserve"><value>Conectando...</value></data>
+  <data name="Trying to reconnect..." xml:space="preserve"><value>Reintentando conexión...</value></data>
+  <data name="Downloading" xml:space="preserve"><value>Descargando</value></data>
+  <data name="ERROR" xml:space="preserve"><value>ERROR</value></data>
+  <data name="No URL is defined." xml:space="preserve"><value>No hay ninguna URL definida.</value></data>
+  <data name="Output device is disconnected or disabled." xml:space="preserve"><value>El dispositivo de salida está desconectado o desactivado.</value></data>
+  <data name="Format not supported" xml:space="preserve"><value>Formato no compatible</value></data>
+  <data name="Recording is only available for MP3 and AAC streams." xml:space="preserve"><value>La grabación solo está disponible para emisiones MP3 y AAC.</value></data>
+  <data name="Stream creation failed" xml:space="preserve"><value>No se pudo crear la transmisión</value></data>
+  <data name="Setting up a download synchronizer failed." xml:space="preserve"><value>No se pudo configurar el sincronizador de descarga.</value></data>
+  <data name="Setting up a device synchronizer failed." xml:space="preserve"><value>No se pudo configurar el sincronizador del dispositivo.</value></data>
+  <data name="Setting up a meta synchronizer failed." xml:space="preserve"><value>No se pudo configurar el sincronizador de metadatos.</value></data>
+  <data name="No Internet Connection!" xml:space="preserve"><value>¡Sin conexión a Internet!</value></data>
+  <data name="Check the network connection status." xml:space="preserve"><value>Comprueba el estado de la conexión de red.</value></data>
+  <data name="NetworkSettings" xml:space="preserve"><value>Ajustes…</value></data>
+  <data name="No internet connection." xml:space="preserve"><value>Sin conexión a Internet.</value></data>
+
+  <!-- Aufgaben -->
+  <data name="Start playing" xml:space="preserve"><value>Reproducir</value></data>
+  <data name="Stop playing" xml:space="preserve"><value>Detener</value></data>
+  <data name="Start recording" xml:space="preserve"><value>Grabar</value></data>
+  <data name="Stop recording" xml:space="preserve"><value>Dejar de grabar</value></data>
+  <data name="Put PC to sleep" xml:space="preserve"><value>Suspender PC</value></data>
+  <data name="Hibernate PC" xml:space="preserve"><value>Hibernar PC</value></data>
+  <data name="Shut down PC" xml:space="preserve"><value>Apagar PC</value></data>
+  <data name="Task" xml:space="preserve"><value>Tarea</value></data>
+  <data name="Schedule" xml:space="preserve"><value>Programación</value></data>
+  <data name="Save" xml:space="preserve"><value>Guardar</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="You can set up tasks and NetRadio will auto-\nmatically perform the selected actions at the\ntime you choose, provided it is running." xml:space="preserve"><value>Puedes crear tareas y NetRadio realizará las
+acciones elegidas a la hora indicada,
+siempre que esté en ejecución.</value></data>
+  <data name="Repeat all tasks daily" xml:space="preserve"><value>Repetir las tareas cada día</value></data>
+  <data name="Caution: The computer is shut down every day!" xml:space="preserve"><value>¡Atención: el equipo se apagará cada día!</value></data>
+  <data name="Caution: The computer hibernates every day!" xml:space="preserve"><value>¡Atención: el equipo hibernará cada día!</value></data>
+  <data name="Task #{0} is not executed because the time specification is incorrect." xml:space="preserve"><value>La tarea {0} no se ejecuta porque la hora indicada no es válida.</value></data>
+  <data name="Station not found." xml:space="preserve"><value>Emisora no encontrada.</value></data>
+  <data name="NetRadio - Task No. {0}" xml:space="preserve"><value>NetRadio – Tarea n.º {0}</value></data>
+  <data name="The PC will go into sleep mode." xml:space="preserve"><value>El equipo entrará en suspensión.</value></data>
+  <data name="The PC will go into hibernation mode." xml:space="preserve"><value>El equipo entrará en hibernación.</value></data>
+  <data name="The computer will shut down." xml:space="preserve"><value>El equipo se apagará.</value></data>
+  <data name="The computer will shut down at {0}." xml:space="preserve"><value>El equipo se apagará a las {0}.</value></data>
+  <data name="Following task is active!" xml:space="preserve"><value>¡Hay una tarea activa!</value></data>
+  <data name="Check the settings" xml:space="preserve"><value>Revisar los ajustes</value></data>
+
+  <!-- Tray-Modus-Hinweis -->
+  <data name="You still have the following options to exit:" xml:space="preserve"><value>Aún puedes salir de estas maneras:</value></data>
+  <data name="TrayModeOptions" xml:space="preserve"><value>1. Clic derecho en el icono de NetRadio en la bandeja del sistema y «Salir».
+
+2. Mantén pulsada la tecla Mayús al hacer clic en el botón Cerrar [🗙].</value></data>
+  <data name="TrayModeFootnote" xml:space="preserve"><value>Si el icono de NetRadio no está visible: haz clic en la flecha ˄ de la barra de tareas para ver todos los iconos y arrastra el icono a la bandeja del sistema.
+En este modo, la tecla Esc en la ventana principal minimiza el programa a la barra de tareas.</value></data>
+  <data name="Do not show again" xml:space="preserve"><value>No volver a mostrar</value></data>
+
+  <!-- Hilfe-PDF -->
+  <data name="{0} was not found in the program directory." xml:space="preserve"><value>No se encontró {0} en la carpeta del programa.</value></data>
+  <data name="Would you like to download it from the Internet?" xml:space="preserve"><value>¿Quieres descargarlo de Internet?</value></data>
+
+  <!-- MiniPlayer -->
+  <data name="Main Window (Esc)" xml:space="preserve"><value>Ventana principal (Esc)</value></data>
+  <data name="Quit Application" xml:space="preserve"><value>Salir del programa</value></data>
+  <data name="Volume(+/–)" xml:space="preserve"><value>Volumen (+/–)</value></data>
+  <data name="Volume" xml:space="preserve"><value>Volumen</value></data>
+  <data name="List (F2)" xml:space="preserve"><value>Lista (F2)</value></data>
+  <data name="Always on Top (Pos1)" xml:space="preserve"><value>Siempre visible (Inicio)</value></data>
+
+  <!-- Sendersuche (frmSearch/frmBrowser/frmStationInfo/frmWait) -->
+  <data name="Search radio station by name:" xml:space="preserve"><value>Buscar emisora de radio por nombre:</value></data>
+  <data name="The search is done on" xml:space="preserve"><value>Se busca en</value></data>
+  <data name="Selected Row:" xml:space="preserve"><value>Fila elegida:</value></data>
+  <data name="Current Name:" xml:space="preserve"><value>Nombre:</value></data>
+  <data name="Search results" xml:space="preserve"><value>Resultados de búsqueda</value></data>
+  <data name="Name" xml:space="preserve"><value>Nombre</value></data>
+  <data name="Accept" xml:space="preserve"><value>Aceptar</value></data>
+  <data name="Properties" xml:space="preserve"><value>Propiedades</value></data>
+  <data name="Edit Name" xml:space="preserve"><value>Editar nombre</value></data>
+  <data name="item" xml:space="preserve"><value>resultado</value></data>
+  <data name="items" xml:space="preserve"><value>resultados</value></data>
+  <data name="found. Press &lt;Alt+Enter> or &lt;F4> for details." xml:space="preserve"><value>encontrados. &lt;Alt+Entrar&gt; o &lt;F4&gt;: detalles.</value></data>
+  <data name="Connecting to:" xml:space="preserve"><value>Conectando con:</value></data>
+  <data name="No results found!" xml:space="preserve"><value>¡Sin resultados!</value></data>
+  <data name="No stations matching '{0}' were found." xml:space="preserve"><value>No se encontraron emisoras que coincidan con '{0}'.</value></data>
+  <data name="Please wait..." xml:space="preserve"><value>Espera, por favor...</value></data>
+  <data name="Country:" xml:space="preserve"><value>País:</value></data>
+  <data name="Language:" xml:space="preserve"><value>Idioma:</value></data>
+  <data name="Votes:" xml:space="preserve"><value>Votos:</value></data>
+  <data name="Codec:" xml:space="preserve"><value>Códec:</value></data>
+  <data name="Bitrate:" xml:space="preserve"><value>Tasa de bits:</value></data>
+  <data name="Close (Esc/Enter)" xml:space="preserve"><value>Cerrar (Esc/Ent)</value></data>
+  <data name="&amp;Next (PgDn)" xml:space="preserve"><value>&amp;Siguiente (Av Pág)</value></data>
+  <data name="&amp;Previous (PgUp)" xml:space="preserve"><value>&amp;Anterior (RePág)</value></data>
+  <data name="unknown" xml:space="preserve"><value>desconocido</value></data>
+  <data name="Text enclosed in square brackets is hidden on Player buttons.\nYou can also insert a pipe symbol, with the »button text« be-\nfore and the »display text« after it. Example: Radio [1|One live]\nResult button text: Radio 1 | Result display text: Radio One live" xml:space="preserve"><value>El texto entre corchetes se oculta en los botones del re-
+productor. Una barra vertical separa el »texto del botón«
+del »texto mostrado«. Ejemplo: Radio [1|Uno en vivo]
+Botón: Radio 1 | Texto mostrado: Radio Uno en vivo</value></data>
+
+  <!-- Utilities-Dialoge -->
+  <data name="(Closing in {0} s)" xml:space="preserve"><value>(Se cierra en {0} s)</value></data>
+  <data name="(Auto-confirm in {0} s)" xml:space="preserve"><value>(Confirmación automática en {0} s)</value></data>
+  <data name="Copy Details" xml:space="preserve"><value>Copiar detalles</value></data>
+  <data name="Show technical details" xml:space="preserve"><value>Mostrar detalles técnicos</value></data>
+  <data name="Hide details" xml:space="preserve"><value>Ocultar detalles</value></data>
+  <data name="Invalid link!" xml:space="preserve"><value>¡Enlace no válido!</value></data>
+  <data name="'{0}' is not a valid URL." xml:space="preserve"><value>'{0}' no es una URL válida.</value></data>
+
+  <!-- BASS-Fehler (praxisrelevante Auswahl) -->
+  <data name="No internet connection could be opened." xml:space="preserve"><value>No se pudo abrir una conexión a Internet.</value></data>
+  <data name="The server did not respond to the request." xml:space="preserve"><value>El servidor no respondió a la solicitud.</value></data>
+  <data name="The protocol in url is not supported" xml:space="preserve"><value>El protocolo de la URL no es compatible</value></data>
+  <data name="The file could not be opened." xml:space="preserve"><value>No se pudo abrir el archivo.</value></data>
+  <data name="The file's format is not recognised/supported." xml:space="preserve"><value>El formato del archivo no se reconoce o no es compatible.</value></data>
+  <data name="Unknown Error!" xml:space="preserve"><value>¡Error desconocido!</value></data>
+  <data name="Unknown Error" xml:space="preserve"><value>Error desconocido</value></data>
+  <data name="The device is busy (eg. in exclusive use by another process)" xml:space="preserve"><value>El dispositivo está ocupado (p. ej., en uso exclusivo por otro proceso)</value></data>
+  <data name="There is no available device driver... the device may already be in use." xml:space="preserve"><value>No hay controlador disponible; puede que el dispositivo ya esté en uso.</value></data>
+</root>

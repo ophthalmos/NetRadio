@@ -2,56 +2,67 @@
 using NetRadio.cls;
 using System;
 using System.Windows.Forms;
+using System.ComponentModel;
 
 namespace NetRadio;
 
 public partial class FrmTask : Form
 {
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     internal RadioButton RBtnPlay
     {
         set => rbPlay = value;
         get => rbPlay;
     }
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     internal RadioButton RBtnStop
     {
         set => rbStop = value;
         get => rbStop;
     }
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     internal RadioButton RBtnRecord
     {
         set => rbRecord = value;
         get => rbRecord;
     }
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     internal RadioButton RBtnRecStop
     {
         set => rbRecStop = value;
         get => rbRecStop;
     }
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     internal RadioButton RBtnShutdown
     {
         set => rbShutdown = value;
         get => rbShutdown;
     }
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     internal RadioButton RBtnSleep
     {
         set => rbSleep = value;
         get => rbSleep;
     }
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     internal RadioButton RBtnHibernate
     {
         set => rbHibernate = value;
         get => rbHibernate;
     }
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     internal ComboBox CmBxStations
     {
         set => cmBxStations = value;
         get => cmBxStations;
     }
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     internal NumericUpDown00 NUDHH
     {
         set => nudHH = value;
         get => nudHH;
     }
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     internal NumericUpDown00 NUDMM
     {
         set => nudMM = value;
@@ -72,6 +83,7 @@ public partial class FrmTask : Form
         rbSleep.Text = Utilities.TaskNames[4];
         rbHibernate.Text = Utilities.TaskNames[5];
         rbShutdown.Text = Utilities.TaskNames[6];
+        Lng.Apply(this); // übersetzt alle Designer-Texte samt der eben gesetzten Task-Namen, falls nicht Englisch eingestellt ist
         station = cmBxStations.Text;
         var hibernateNew = Convert.ToInt32(Registry.GetValue(@"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Power", "HibernateEnabledDefault", -1)); // -1 if name does not exist
         var hibernateOld = Convert.ToInt32(Registry.GetValue(@"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Power", "HibernateEnabled", -1)); // -1 if name does not exist

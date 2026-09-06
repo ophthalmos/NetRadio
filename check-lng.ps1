@@ -1,14 +1,17 @@
 ﻿# Prüft die Übersetzungs-Konsistenz des Lng-Systems (ENGLISCHER Text = resx-Schlüssel):
 # LNG001: Ein übersetzbarer englischer Text (Lng.T im Code, Text/ToolTipText/HeaderText-Zuweisungen,
-#         SetToolTip-Aufrufe, Combo-Listen) hat in einer Sprachdatei keinen Eintrag — vermutlich
+#         SetToolTip-Aufrufe, Combo-Listen, Texte aus den Form-resx) hat in einer Sprachdatei keinen Eintrag — vermutlich
 #         wurde englischer Text geändert, ohne die Schlüssel nachzuziehen.
 # LNG002: Ein resx-Schlüssel kommt im Code nicht mehr vor — Altlast nach einer Umformulierung.
 # Besonderheit: Mehrzeilige Texte sind als Schlüssel erlaubt — Lng.T normalisiert Zeilenumbrüche
 # zu einem sichtbaren "\n" (so stehen sie auch in den resx-Schlüsseln).
 # Grenzen: String-Konstanten sieht der Scanner nicht (siehe Ignorierliste). Ausgabe im
-# MSBuild-Warnungsformat; läuft als Build-Target im Debug (s. NetRadio.csproj) und jederzeit
+# MSBuild-Warnungsformat; läuft als Build-Target nach jedem Build (s. NetRadio.csproj) und jederzeit
 # manuell:  powershell -ExecutionPolicy Bypass -File check-lng.ps1
 
+# -Strict (Release-Build): Funde als Fehler statt Warnungen melden und mit Exit-Code 1 abbrechen
+param([switch]$Strict)
+$severity = if ($Strict) { "error" } else { "warning" }
 $root = $PSScriptRoot
 $languages = "de", "fr", "es"
 
@@ -86,6 +89,17 @@ foreach ($file in $sources) {
     }
 }
 
+# 7) Texte, die der Designer statt in die .Designer.cs in die Form-resx ausgelagert hat (z. B. splashLabel.Text
+#    in frmSplash.resx) — Lng.Apply übersetzt sie zur Laufzeit genauso; Zeilenumbrüche wie in Lng.T zu "\n"
+foreach ($file in Get-ChildItem $root -Recurse -Include *.resx -File | Where-Object { $_.FullName -notmatch '\\(obj|bin|\.claude|Languages)\\' }) {
+    [xml]$xml = Get-Content $file.FullName -Raw -Encoding UTF8
+    foreach ($data in $xml.root.data) {
+        if ([string]$data.name -notmatch '\.(Text|ToolTipText|HeaderText)$') { continue }
+        $value = ([string]$data.value) -replace "`r`n", '\n' -replace "`n", '\n'
+        if ($value) { [void]$used.Add($value) }
+    }
+}
+
 # ---------------------------------------------------------------- LNG001: fehlende Übersetzungen
 $findings = 0
 foreach ($key in $used | Sort-Object) {
@@ -94,7 +108,7 @@ foreach ($key in $used | Sort-Object) {
     if ($key -match '^(F\d+|Alt\+.+|Ctrl\+.+|Strg\+.+|[A-Z]|Del|Ins|Enter|Esc|Shift\+Esc|DoubleClick|\(Shift \+\) Ctrl \+ Win \+)$') { continue } # sprachneutrale Kürzel und Hotkey-Tasten
     if ($ignore -contains $key) { continue }
     foreach ($code in ($languages | Where-Object { -not $langKeys[$_].Contains($key) })) {
-        Write-Output "Languages\lng.$code.resx : warning LNG001: Übersetzung fehlt für Schlüssel: `"$key`""
+        Write-Output "Languages\lng.$code.resx : $severity LNG001: Übersetzung fehlt für Schlüssel: `"$key`""
         $findings++
     }
 }
@@ -104,11 +118,12 @@ foreach ($code in $languages) {
     foreach ($key in $langKeys[$code] | Sort-Object) {
         if ($ignore -contains $key) { continue }
         if (-not $used.Contains($key)) {
-            Write-Output "Languages\lng.$code.resx : warning LNG002: Verwaister Schlüssel (im Code nicht gefunden): `"$key`""
+            Write-Output "Languages\lng.$code.resx : $severity LNG002: Verwaister Schlüssel (im Code nicht gefunden): `"$key`""
             $findings++
         }
     }
 }
 
 if ($findings -eq 0) { Write-Output "check-lng: Alle Übersetzungen konsistent ($($used.Count) Schlüssel geprüft)." }
+if ($Strict -and $findings -gt 0) { exit 1 }
 exit 0

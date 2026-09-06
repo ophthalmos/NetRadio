@@ -11,12 +11,25 @@ using Un4seen.Bass;
 
 namespace NetRadio;
 
-internal static class Program
+internal static partial class Program
 {
+    static partial void RegisterBass();
+
+    private static Mutex? _singleMutex; // hält die Single-Instance-Sperre bis zum Prozessende (das OS räumt das Handle beim Beenden ab)
+
+    /// <summary>Gibt den Single-Instance-Mutex frei — nötig vor Application.Restart(), denn die neue
+    /// Instanz startet, bevor der alte Prozess (und damit der Mutex) verschwunden ist; sie würde sich
+    /// sonst für eine Zweitinstanz halten und sofort wieder beenden.</summary>
+    internal static void ReleaseSingleInstanceMutex()
+    {
+        _singleMutex?.Dispose();
+        _singleMutex = null;
+    }
+
     [STAThread]
     private static void Main()
     {
-        using Mutex singleMutex = new(true, "{8F4J0AC4-WH29-57GD-A8CF-72F04E6BDE8F}", out var isNewInstance);
+        _singleMutex = new Mutex(true, "{8F4J0AC4-WH29-57GD-A8CF-72F04E6BDE8F}", out var isNewInstance);
         if (isNewInstance)
         {
             Application.EnableVisualStyles();
@@ -26,11 +39,14 @@ internal static class Program
             {
                 if (File.Exists(dllPath))
                 {
-                    BassNet.Registration("happe.kiel@web.de", "2X313517322323");
+                    RegisterBass();  // BassNet.Registration("abc@xyz.com", "01234567890");
                     if (Utils.HighWord(Bass.BASS_GetVersion()) < Bass.BASSVERSION) { Utilities.MsgTaskDialog(null, "Wrong Bass Version!"); }
                     Application.Run(new FrmMain());
                 }
-                else { Utilities.MsgTaskDialog(null, dllPath, "The required BASS library file is missing from the application folder." + Environment.NewLine + "Please reinstall NetRadio to fix this issue.", TaskDialogIcon.Error); }
+                else
+                {
+                    Utilities.MsgTaskDialog(null, dllPath, "The required BASS library file is missing from the application folder." + Environment.NewLine + "Please reinstall NetRadio to fix this issue.", TaskDialogIcon.Error);
+                }
             }
             catch (ArgumentException ex) { Utilities.ErrTaskDialog(null, ex); }
             catch (DllNotFoundException ex) { Utilities.ErrTaskDialog(null, ex); }

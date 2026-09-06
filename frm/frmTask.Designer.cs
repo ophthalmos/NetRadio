@@ -103,7 +103,7 @@ namespace NetRadio
             rbSleep.Size = new System.Drawing.Size(99, 23);
             rbSleep.TabIndex = 5;
             rbSleep.TabStop = true;
-            rbSleep.Text = "Sleep Mode";
+            rbSleep.Text = "Put PC to sleep";
             rbSleep.UseVisualStyleBackColor = true;
             rbSleep.CheckedChanged += RbSleep_CheckedChanged;
             // 

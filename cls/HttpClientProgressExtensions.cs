@@ -8,6 +8,7 @@ namespace NetRadio.cls;
 
 public static class HttpClientProgressExtensions
 {
+    private const int BufferSize = 81920;
     public static async Task DownloadDataAsync(this HttpClient client, string requestUrl, Stream destination, IProgress<float>? progress = null, CancellationToken cancellationToken = default)
     {
         // ResponseHeadersRead ist wichtig für Performance: Wir wollen nicht erst warten, bis alles im RAM ist
@@ -36,7 +37,7 @@ public static class HttpClientProgressExtensions
             }
         });
 
-        await download.CopyToAsync(destination, 81920, progressWrapper, cancellationToken);
+        await download.CopyToAsync(destination, BufferSize, progressWrapper, cancellationToken);
     }
 
     /// <summary>

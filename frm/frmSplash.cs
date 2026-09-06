@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
+using NetRadio.cls;
 
 namespace NetRadio;
 
@@ -13,6 +14,7 @@ public partial class SplashForm : Form
     public SplashForm(Form ownerForm)
     {
         InitializeComponent();
+        Lng.Apply(this); // übersetzt alle Designer-Texte, falls nicht Englisch eingestellt ist
         _ownerForm = ownerForm; // Speichern der Referenz
         Location = new Point(_ownerForm.Left + 51, _ownerForm.Top + 22);
     }

@@ -72,7 +72,7 @@
             panelBackground.Dock = System.Windows.Forms.DockStyle.Top;
             panelBackground.Location = new System.Drawing.Point(0, 0);
             panelBackground.Name = "panelBackground";
-            panelBackground.Size = new System.Drawing.Size(363, 225);
+            panelBackground.Size = new System.Drawing.Size(391, 225);
             panelBackground.TabIndex = 1;
             // 
             // tbxURL
@@ -82,7 +82,7 @@
             tbxURL.Name = "tbxURL";
             tbxURL.ReadOnly = true;
             tbxURL.ShortcutsEnabled = false;
-            tbxURL.Size = new System.Drawing.Size(341, 24);
+            tbxURL.Size = new System.Drawing.Size(364, 24);
             tbxURL.TabIndex = 13;
             tbxURL.WordWrap = false;
             // 
@@ -107,41 +107,41 @@
             // 
             // lblBitrate
             // 
-            lblBitrate.Location = new System.Drawing.Point(100, 170);
+            lblBitrate.Location = new System.Drawing.Point(110, 170);
             lblBitrate.Name = "lblBitrate";
-            lblBitrate.Size = new System.Drawing.Size(120, 15);
+            lblBitrate.Size = new System.Drawing.Size(138, 15);
             lblBitrate.TabIndex = 10;
             lblBitrate.Text = "label1";
             // 
             // lblCodec
             // 
-            lblCodec.Location = new System.Drawing.Point(100, 145);
+            lblCodec.Location = new System.Drawing.Point(110, 145);
             lblCodec.Name = "lblCodec";
-            lblCodec.Size = new System.Drawing.Size(120, 15);
+            lblCodec.Size = new System.Drawing.Size(138, 15);
             lblCodec.TabIndex = 9;
             lblCodec.Text = "label1";
             // 
             // lblVotes
             // 
-            lblVotes.Location = new System.Drawing.Point(100, 120);
+            lblVotes.Location = new System.Drawing.Point(110, 120);
             lblVotes.Name = "lblVotes";
-            lblVotes.Size = new System.Drawing.Size(120, 15);
+            lblVotes.Size = new System.Drawing.Size(138, 15);
             lblVotes.TabIndex = 8;
             lblVotes.Text = "label1";
             // 
             // lblLanguage
             // 
-            lblLanguage.Location = new System.Drawing.Point(100, 95);
+            lblLanguage.Location = new System.Drawing.Point(110, 95);
             lblLanguage.Name = "lblLanguage";
-            lblLanguage.Size = new System.Drawing.Size(120, 15);
+            lblLanguage.Size = new System.Drawing.Size(138, 15);
             lblLanguage.TabIndex = 7;
             lblLanguage.Text = "label1";
             // 
             // lblCountry
             // 
-            lblCountry.Location = new System.Drawing.Point(100, 70);
+            lblCountry.Location = new System.Drawing.Point(110, 70);
             lblCountry.Name = "lblCountry";
-            lblCountry.Size = new System.Drawing.Size(120, 15);
+            lblCountry.Size = new System.Drawing.Size(138, 15);
             lblCountry.TabIndex = 6;
             lblCountry.Text = "label1";
             // 
@@ -149,7 +149,7 @@
             // 
             pictureBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             pictureBox.InitialImage = Properties.Resources.epul;
-            pictureBox.Location = new System.Drawing.Point(231, 67);
+            pictureBox.Location = new System.Drawing.Point(254, 67);
             pictureBox.Name = "pictureBox";
             pictureBox.Size = new System.Drawing.Size(125, 125);
             pictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
@@ -204,9 +204,9 @@
             // btnClose
             // 
             btnClose.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            btnClose.Location = new System.Drawing.Point(242, 231);
+            btnClose.Location = new System.Drawing.Point(260, 231);
             btnClose.Name = "btnClose";
-            btnClose.Size = new System.Drawing.Size(114, 25);
+            btnClose.Size = new System.Drawing.Size(129, 25);
             btnClose.TabIndex = 2;
             btnClose.Text = "Close (Esc/Enter)";
             btnClose.UseVisualStyleBackColor = true;
@@ -214,9 +214,9 @@
             // btnNext
             // 
             btnNext.DialogResult = System.Windows.Forms.DialogResult.Yes;
-            btnNext.Location = new System.Drawing.Point(135, 231);
+            btnNext.Location = new System.Drawing.Point(131, 231);
             btnNext.Name = "btnNext";
-            btnNext.Size = new System.Drawing.Size(101, 25);
+            btnNext.Size = new System.Drawing.Size(122, 25);
             btnNext.TabIndex = 4;
             btnNext.Text = "&Next (PgDn)";
             toolTip.SetToolTip(btnNext, "F4");
@@ -225,9 +225,9 @@
             // btnPrevious
             // 
             btnPrevious.DialogResult = System.Windows.Forms.DialogResult.No;
-            btnPrevious.Location = new System.Drawing.Point(5, 231);
+            btnPrevious.Location = new System.Drawing.Point(2, 231);
             btnPrevious.Name = "btnPrevious";
-            btnPrevious.Size = new System.Drawing.Size(124, 25);
+            btnPrevious.Size = new System.Drawing.Size(125, 25);
             btnPrevious.TabIndex = 5;
             btnPrevious.Text = "&Previous (PgUp)";
             toolTip.SetToolTip(btnPrevious, "F3");
@@ -239,7 +239,7 @@
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             CancelButton = btnClose;
-            ClientSize = new System.Drawing.Size(363, 266);
+            ClientSize = new System.Drawing.Size(391, 266);
             Controls.Add(btnPrevious);
             Controls.Add(btnNext);
             Controls.Add(btnClose);

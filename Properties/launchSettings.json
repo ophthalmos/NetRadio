@@ -1,6 +1,9 @@
 {
   "profiles": {
     "NetRadio": {
+      "commandName": "Project"
+    },
+    "NetRadio (CLI /1 -full)": {
       "commandName": "Project",
       "commandLineArgs": "/1 -full"
     }
