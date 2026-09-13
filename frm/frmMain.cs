@@ -84,6 +84,7 @@ public partial class FrmMain : Form
     private SYNCPROC? _connectFail;
     private SYNCPROC? _deviceFail;
     private SYNCPROC? _metaSync;
+    private SYNCPROC? _oggSync;
     private readonly int _hlsPlugIn = 0;
     private readonly int _opusPlugIn = 0;
     private readonly int _flacPlugIn = 0;
@@ -700,6 +701,17 @@ public partial class FrmMain : Form
             }
             catch (ArgumentOutOfRangeException) { }
         }
+    }
+
+    private void OggSync(int handle, int channel, int data, IntPtr user) // BASS_SYNC_OGG_CHANGE: neuer logischer Bitstream in einem OGG-Stream (Vorbis/Opus/FLAC-in-OGG) = neuer Titel
+    {
+        // OGG-Streams liefern keine ICY-Metadaten (BASS_SYNC_META bleibt stumm), sondern Vorbis-Kommentare je Bitstream;
+        // BASS_TAG_GetFromURL liest diese (BASS_TAG_OGG) wie beim Start und aktualisiert _tagInfo
+        try
+        {
+            if (_tagInfo != null && BassTags.BASS_TAG_GetFromURL(channel, _tagInfo)) { BeginInvoke(UpdateTagDisplay); }
+        }
+        catch (ArgumentOutOfRangeException) { }
     }
 
     private void UpdateStatusDisplay(string txt) => toolStripStatusLabel.Text = txt;
@@ -3108,6 +3120,12 @@ public partial class FrmMain : Form
             if (Bass.BASS_ChannelSetSync(_stream, BASSSync.BASS_SYNC_META, 0, _metaSync, IntPtr.Zero) == 0)
             {
                 Utilities.MsgTaskDialog(this, Lng.T("Setting up a meta synchronizer failed."), "", TaskDialogIcon.Warning);
+            }
+
+            _oggSync = new SYNCPROC(OggSync);
+            if (Bass.BASS_ChannelSetSync(_stream, BASSSync.BASS_SYNC_OGG_CHANGE, 0, _oggSync, IntPtr.Zero) == 0)
+            {
+                LogEvent("Setting up an OGG synchronizer failed: " + Bass.BASS_ErrorGetCode()); // nur relevant für OGG-Streams, daher kein Dialog
             }
 
             // Playback starten

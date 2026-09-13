@@ -392,3 +392,6 @@ FodyWeavers.xsd
 /AudiodatenSpektrum.pdf
 /CLAUDE.md
 /CLAUDE.local.md
+
+# Persönliche Claude-Code-Einstellungen (nicht auf GitHub)
+.claude/settings.local.json
