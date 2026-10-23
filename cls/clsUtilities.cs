@@ -339,7 +339,6 @@ internal partial class Utilities // internal is standard
             BASSError.BASS_ERROR_ENDED => "The channel/file has ended",
             BASSError.BASS_ERROR_BUSY => "The device is busy (eg. in exclusive use by another process)",
             BASSError.BASS_ERROR_SERVER_CERT => "missing/invalid certificate",
-            BASSError.BASS_ERROR_MP4_NOSTREAM => "BASS_AAC: non-streamable due to MP4 atom order ('mdat' before 'moov')",
             _ => "Unknown Error",
         });
     }
